@@ -127,7 +127,7 @@ typedef struct {
     Mode mode, pause_return;
     uint32_t seed, rng;
     bool today, muted, low_fx, running, live, won;
-    bool shop_due, go_confirm, defrag_select, shop_all, elite_spawned, chest_active, seek_spoken, bad_spoken;
+    bool shop_due, go_confirm, defrag_select, shop_all, elite_spawned, chest_active, seek_spoken, bad_spoken, cheated;
     uint8_t kingdom_mask, directive, distinct_mask, trash_count, bad_count, burst_mask;
     uint8_t hp, shop_sel, defrag_sel, tutorial, purchase_n, previous_card;
     uint8_t log_ids[2], log_shown, fragment_count;
@@ -628,10 +628,10 @@ static void global_input(void) {
     if(pressed('M')) g.muted=!g.muted;
     if(pressed(VK_F1)) g.low_fx=!g.low_fx;
 #ifdef DEV_LOG
-    if(pressed(VK_F5)&&g.mode==PLAY&&!g.live){g.dead_ticks=GOLIVE_EARLIEST_SEC*TICK_HZ;enter_shop();}
-    if(pressed(VK_F6)&&g.mode==PLAY){g.dead_ticks=GOLIVE_EARLIEST_SEC*TICK_HZ;start_live();}
-    if(pressed(VK_F7)&&g.live)add_signal(16);
-    if(pressed(VK_F8)&&(g.mode==PLAY||g.mode==SHOP)){g.hp=0;finish_run(false);}
+    if(pressed(VK_F5)&&g.mode==PLAY&&!g.live){g.cheated=true;g.dead_ticks=GOLIVE_EARLIEST_SEC*TICK_HZ;enter_shop();}
+    if(pressed(VK_F6)&&g.mode==PLAY){g.cheated=true;g.dead_ticks=GOLIVE_EARLIEST_SEC*TICK_HZ;start_live();}
+    if(pressed(VK_F7)&&g.live){g.cheated=true;add_signal(16);}
+    if(pressed(VK_F8)&&(g.mode==PLAY||g.mode==SHOP)){g.cheated=true;g.hp=0;finish_run(false);}
     if(pressed(VK_F9)&&g.mode==ENDING)g.ending_ticks=1;
 #endif
 }
@@ -801,15 +801,15 @@ static void dev_log_result(void) {
     char path[MAX_PATH];GetModuleFileNameA(0,path,MAX_PATH);int slash=lstrlenA(path)-1;while(slash>=0&&path[slash]!='\\')--slash;lstrcpyA(path+slash+1,"playtest.csv");
     HANDLE h=CreateFileA(path,FILE_APPEND_DATA,FILE_SHARE_READ,0,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,0);
     if(h==INVALID_HANDLE_VALUE)return;
-    DWORD wrote;if(GetFileSize(h,0)==0){static const char header[]="seed,kingdom_mask,directive,buy_count,purchase_ids,trash_count,final_deck_ids,first_shuffle_sec,seek_used,live_start_sec,predicted_sig_at_live,live_clear_sec,end_signal,hp,result,fail_reason\r\n";WriteFile(h,header,sizeof(header)-1,&wrote,0);}
+    DWORD wrote;if(GetFileSize(h,0)==0){static const char header[]="seed,kingdom_mask,directive,buy_count,purchase_ids,trash_count,final_deck_ids,first_shuffle_sec,seek_used,live_start_sec,predicted_sig_at_live,live_clear_sec,end_signal,hp,result,fail_reason,cheated\r\n";WriteFile(h,header,sizeof(header)-1,&wrote,0);}
     char line[1024];int n=wsprintfA(line,"%u,%02X,%u,%u,",g.seed,g.kingdom_mask,g.directive,g.purchase_n);
     for(int i=0;i<g.purchase_n;++i)n+=wsprintfA(line+n,"%s%u",i?"|":"",g.purchases[i]);
     n+=wsprintfA(line+n,",%u,",g.trash_count);
     bool first=true;CardId *lists[]={g.deck.draw,g.deck.discard,g.deck.hand};int counts[]={g.deck.draw_n,g.deck.discard_n,g.deck.hand_n};
     for(int l=0;l<3;++l)for(int i=0;i<counts[l];++i){n+=wsprintfA(line+n,"%s%u",first?"":"|",lists[l][i]);first=false;}
     const char *reason=g.won?"none":!g.live?"prelive_hp":g.hp?"format":"hp";
-    n+=wsprintfA(line+n,",%d,%u,%d,%d,%d,%d,%u,%s,%s\r\n",g.first_shuffle_ticks/TICK_HZ,g.seek_spoken?1:0,
-        g.live_start_ticks/TICK_HZ,g.predicted_at_live,g.won?g.live_ticks/TICK_HZ:-1,g.signal,g.hp,g.won?"win":"loss",reason);
+    n+=wsprintfA(line+n,",%d,%u,%d,%d,%d,%d,%u,%s,%s,%d\r\n",g.first_shuffle_ticks/TICK_HZ,g.seek_spoken?1:0,
+        g.live_start_ticks/TICK_HZ,g.predicted_at_live,g.won?g.live_ticks/TICK_HZ:-1,g.signal,g.hp,g.won?"win":"loss",reason,g.cheated?1:0);
     WriteFile(h,line,(DWORD)n,&wrote,0);CloseHandle(h);
 }
 #else
