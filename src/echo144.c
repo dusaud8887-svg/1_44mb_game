@@ -1156,6 +1156,55 @@ static void assert_live_clear(void) {
     assert(g.mode==ENDING&&g.signal>=64);
 }
 
+/* ===== SIM — 스크립트 구매 정책 몬테카를로 (docs/20_BALANCE.md §SIM)
+   전투를 매 틱 비워 회피 실력 변수를 제거하고 덱·경제·신호 수학만 검증한다. ===== */
+static void sim_clear_combat(void) {
+    for(int i=0;i<MAX_ENEMIES;++i)g.enemies[i].active=0;
+    for(int i=0;i<MAX_BULLETS;++i)g.bullets[i].active=0;
+    for(int i=0;i<MAX_ENEMY_SHOTS;++i)g.enemy_shots[i].active=0;
+    g.spawn_budget=0;
+}
+
+static bool sim_try_buy(CardId id) {
+    int slot=-1;
+    for(int i=0;i<10;++i)if(shop_card(i)==id){slot=i;break;}
+    if(slot<0||!can_buy(id))return false;
+    if(id==C_DEFRAG){
+        int target=-1;
+        for(int i=0;i<g.deck.hand_n&&target<0;++i)if(g.deck.hand[i]==C_BAD)target=i;
+        for(int i=0;i<g.deck.hand_n&&target<0;++i)if(g.deck.hand[i]==C_2400)target=i;
+        if(target<0)return false;
+        g.shop_sel=(uint8_t)slot;buy_selected();g.defrag_sel=(uint8_t)target;trash_shop_hand();return true;
+    }
+    g.shop_sel=(uint8_t)slot;buy_selected();return true;
+}
+
+static void sim_policy_shop(int policy) {
+    static const CardId econ[]={C_CLIP,C_56K,C_VOICE,C_14K};
+    static const CardId util[]={C_VOICE,C_PREFETCH,C_MULTI,C_CHAT};
+    static const CardId clean[]={C_DEFRAG,C_VOICE,C_CHAT};
+    static const CardId mirror[]={C_VOICE,C_CHAT,C_14K};
+    static const CardId *prio[4]={econ,util,clean,mirror};
+    static const int prio_n[4]={4,4,3,3};
+    for(int i=0;i<prio_n[policy];++i)if(sim_try_buy(prio[policy][i]))return;
+    leave_shop();
+}
+
+static bool sim_run(int policy,bool early,uint32_t seed,FILE *csv) {
+    prepare_channel(seed,false);start_run();g.tutorial=0;
+    for(int guard=0;guard<80000&&g.mode!=RESULT&&g.mode!=ENDING;++guard){
+        if(g.mode==SHOP){
+            if(early&&g.dead_ticks>=GOLIVE_EARLIEST_SEC*TICK_HZ)start_live();
+            else sim_policy_shop(policy);
+        } else if(g.mode==PLAY){g.hp=HP_START;update_play();sim_clear_combat();}
+        else break;
+    }
+    bool won=g.mode==ENDING&&g.won;
+    if(csv)fprintf(csv,"%d,%s,%u,%u,%d,%d,%s,%d\n",policy,early?"early":"forced",seed,
+        g.directive,deck_total(),g.signal,won?"win":"loss",won?g.live_ticks/TICK_HZ:-1);
+    return won;
+}
+
 int main(void) {
     for(int m=0;m<(int)ARRAY_COUNT(VALID_MASKS);++m){uint8_t v=VALID_MASKS[m];assert(popcount8(v)==5);assert(popcount8(v&0x66)>=2);assert(v&0x88);assert(v&0x90);}
     g.running=true;prepare_channel(12345,false);uint8_t mask=g.kingdom_mask,dir=g.directive,log0=g.log_ids[0],log1=g.log_ids[1];
@@ -1193,6 +1242,23 @@ int main(void) {
     prepare_channel(404,false);start_run();g.directive=DIR_MIRROR;for(int i=0;i<2;++i)deck_add_discard(C_VOICE);for(int i=0;i<4;++i)deck_add_discard(C_CHAT);for(int i=0;i<3;++i)deck_add_discard(C_14K);assert(deck_total()==19&&directive_bonus()==16);assert_live_clear();printf("build-path smoke: ECON/CLIP, UTIL/LINK, CLEAN, MIRROR(9-buy) PASS\n");
     prepare_channel(405,false);start_run();for(int i=0;i<5;++i)deck_add_discard(C_VOICE);g.dead_ticks=270*TICK_HZ;assert_live_clear();assert(g.live_start_ticks==270*TICK_HZ);
     prepare_channel(406,false);start_run();for(int i=0;i<5;++i)deck_add_discard(C_VOICE);g.dead_ticks=360*TICK_HZ;assert_live_clear();assert(g.live_start_ticks==360*TICK_HZ);printf("GO LIVE smoke: early and forced entry PASS\n");
+    {
+        static const char *pname[4]={"ECON","UTIL","CLEAN","MIRROR"};
+        int wins[4][2]={{0}};
+        FILE *csv=fopen("build\\simtest.csv","w");
+        if(csv)fprintf(csv,"policy,golive,seed,directive,final_deck,end_signal,result,live_clear_sec\n");
+        for(int p=0;p<4;++p)for(int e=0;e<2;++e)for(uint32_t s=0;s<30;++s)
+            if(sim_run(p,e==0,1000+s,csv))++wins[p][e];
+        if(csv)fclose(csv);
+        int total=0,best=0;
+        for(int p=0;p<4;++p){
+            int w=wins[p][0]+wins[p][1];total+=w;if(w>best)best=w;
+            printf("SIM %-6s early %2d/30  forced %2d/30\n",pname[p],wins[p][0],wins[p][1]);
+        }
+        for(int p=0;p<4;++p)assert(wins[p][0]+wins[p][1]>0); /* 4경로 모두 승리 가능 */
+        assert(best*100<=total*70);                          /* 단일 정책 70% 독점 금지 */
+        printf("SIM acceptance: PASS (top policy share %d%%)\n",best*100/total);
+    }
     ZeroMemory(g.enemies,sizeof(g.enemies));ZeroMemory(g.bullets,sizeof(g.bullets));
     for(int i=0;i<MAX_ENEMIES;++i){g.enemies[i].active=1;g.enemies[i].x=310;g.enemies[i].y=180;g.enemies[i].hp=30000;}
     for(int i=0;i<MAX_BULLETS;++i){g.bullets[i].active=1;g.bullets[i].x=10;g.bullets[i].y=10;g.bullets[i].life=1000;g.bullets[i].hits=1;g.bullets[i].last_hit=-1;}
