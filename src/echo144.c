@@ -1005,7 +1005,11 @@ static void draw_shop(void) {
     if(g.dead_ticks>=GOLIVE_EARLIEST_SEC*TICK_HZ)number_text(229,222,COL_MAGENTA,L"F 방송 ≥%d",estimate_signal());
     if(g.defrag_select){rect(25,105,270,45,COL_BLACK);frame(25,105,270,45,COL_AMBER);text_at(42,116,COL_WHITE,L"정리할 공개 카드 1장을 고르세요.");text_at(77,132,COL_DIM,L"←→ / ENTER");}
     if(g.go_confirm){rect(25,96,270,55,COL_BLACK);frame(25,96,270,55,COL_MAGENTA);text_at(39,108,COL_WHITE,L"구매를 포기하고 마지막 방송 시작?");text_at(116,129,COL_DIM,L"Y / N");}
-    if(g.tutorial==2){rect(23,91,274,69,COL_BLACK);frame(23,91,274,69,COL_WHITE);text_at(34,101,COL_WHITE,L"모뎀은 지금 강하고, 조각은 LIVE에서 송출.");text_at(34,119,COL_WHITE,L"다음 5장의 B 합으로 1장만 받습니다.");text_at(92,139,COL_DIM,L"ENTER로 계속");}
+    if(g.tutorial==2){rect(23,74,274,103,COL_BLACK);frame(23,74,274,103,COL_WHITE);
+        text_at(34,84,COL_WHITE,L"모뎀은 지금 강하고, 조각은 LIVE에서 송출.");
+        text_at(34,102,COL_WHITE,L"다음 5장의 B 합으로 1장만 받습니다.");
+        card_box(85,122,C_CHAT,false,false);text_at(146,129,COL_MAGENTA,L"→");card_box(163,122,C_CHAT,false,true);
+        text_at(92,157,COL_DIM,L"ENTER로 계속");}
 }
 
 static void draw_pause(void) {
