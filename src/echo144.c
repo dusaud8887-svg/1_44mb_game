@@ -44,6 +44,9 @@ enum {
     DIR_INDEX_PER = 2, DIR_INDEX_CAP = 10,
     DIR_CLEAN_PER = 2, DIR_CLEAN_CAP = 12,
     DIR_MIRROR_PER = 2, DIR_MIRROR_CAP = 16, /* 실전 최대 덱 19장 기준 도달 가능 — 20 §결함-1 */
+    MARKER_TARGETS = 6, MARKER_DURATION_TICKS = 150, /* 2.5초 */
+    SURGE_TARGETS = 4,
+    RANSOM_FIRE_TICKS = 300, /* 5초 */
     DMG_2400 = 6,  DMG_14K = 9,   DMG_56K = 16,
     DMG_CHAT = 12, DMG_VOICE = 28, DMG_CLIP = 30,
     DMG_PATCH = 24, DMG_CACHE = 4, DMG_SURGE = 7
@@ -234,14 +237,18 @@ static int directive_bonus(void) {
     return clampi((deck_total() - deck_count(C_PATCH) - 10) * DIR_MIRROR_PER, 0, DIR_MIRROR_CAP);
 }
 
+static int signal_sum(void) {
+    int sum=0;for(int id=0;id<CARD_COUNT;++id)sum+=deck_count((CardId)id)*CARD[id].signal;return sum;
+}
+
+/* 보수 예상 공식 — docs/20_BALANCE.md B-공식. MULTI 단축·PREFETCH +1 제외 */
+static int live_signal_estimate(int deck_n, int sig, int bonus) {
+    int cycle = CARD_TICKS_NORMAL * deck_n + CARD_TICKS_SWAP * ((deck_n + 4) / 5);
+    return bonus + (cycle ? (LIVE_MAX_TICKS / cycle) * sig : 0);
+}
+
 static int estimate_signal(void) {
-    int sig = 0;
-    for (int i = 0; i < g.deck.draw_n; ++i) sig += CARD[g.deck.draw[i]].signal;
-    for (int i = 0; i < g.deck.discard_n; ++i) sig += CARD[g.deck.discard[i]].signal;
-    for (int i = 0; i < g.deck.hand_n; ++i) sig += CARD[g.deck.hand[i]].signal;
-    int n = deck_total();
-    int cycle_ticks = CARD_TICKS_NORMAL * n + CARD_TICKS_SWAP * ((n + 4) / 5);
-    return directive_bonus() + (cycle_ticks ? (LIVE_MAX_TICKS / cycle_ticks) * sig : 0);
+    return live_signal_estimate(deck_total(), signal_sum(), directive_bonus());
 }
 
 static int card_now(CardId id) {
@@ -260,16 +267,12 @@ static int now_total(void) {
 
 static int now_score(void) { int n=deck_total();return n?now_total()/n:0; }
 
-static int signal_sum(void) {
-    int sum=0;for(int id=0;id<CARD_COUNT;++id)sum+=deck_count((CardId)id)*CARD[id].signal;return sum;
-}
-
 static int estimate_signal_with(CardId id) {
     if(id==C_DEFRAG)return estimate_signal();
     int n=deck_total()+1,bonus=directive_bonus(),bit=kingdom_bit(id);
     if(g.directive==DIR_INDEX&&bit>=0)bonus=clampi(popcount8(g.distinct_mask|(1u<<bit))*DIR_INDEX_PER,0,DIR_INDEX_CAP);
     if(g.directive==DIR_MIRROR)bonus=clampi((n-deck_count(C_PATCH)-(id==C_PATCH)-10)*DIR_MIRROR_PER,0,DIR_MIRROR_CAP);
-    int cycle=CARD_TICKS_NORMAL*n+CARD_TICKS_SWAP*((n+4)/5);return bonus+(cycle?(LIVE_MAX_TICKS/cycle)*(signal_sum()+CARD[id].signal):0);
+    return live_signal_estimate(n,signal_sum()+CARD[id].signal,bonus);
 }
 
 static int now_with(CardId id) {
@@ -400,27 +403,28 @@ static void add_signal(int amount) {
     if(g.signal>=32&&g.signal-amount<32)show_message(7);
 }
 
+static int nearest_unused_enemy(const bool *used) {
+    int best = -1; float bd = 1e30f;
+    for (int i = 0; i < MAX_ENEMIES; ++i) if (g.enemies[i].active && !used[i]) {
+        float d = length2(g.enemies[i].x-g.px, g.enemies[i].y-g.py);
+        if (d < bd) { bd = d; best = i; }
+    }
+    return best;
+}
+
 static void mark_nearest(int count) {
     bool used[MAX_ENEMIES] = {0};
     for (int k = 0; k < count; ++k) {
-        int best = -1; float bd = 1e30f;
-        for (int i = 0; i < MAX_ENEMIES; ++i) if (g.enemies[i].active && !used[i]) {
-            float d = length2(g.enemies[i].x-g.px, g.enemies[i].y-g.py);
-            if (d < bd) { bd = d; best = i; }
-        }
+        int best = nearest_unused_enemy(used);
         if (best < 0) break;
-        used[best] = true; g.enemies[best].marked = 150;
+        used[best] = true; g.enemies[best].marked = MARKER_DURATION_TICKS;
     }
 }
 
 static void surge_damage(int damage) {
     bool used[MAX_ENEMIES] = {0};
-    for (int k = 0; k < 4; ++k) {
-        int best = -1; float bd = 1e30f;
-        for (int i = 0; i < MAX_ENEMIES; ++i) if (g.enemies[i].active && !used[i]) {
-            float d = length2(g.enemies[i].x-g.px, g.enemies[i].y-g.py);
-            if (d < bd) { bd = d; best = i; }
-        }
+    for (int k = 0; k < SURGE_TARGETS; ++k) {
+        int best = nearest_unused_enemy(used);
         if (best < 0) break;
         used[best] = true; damage_enemy(best, damage);
     }
@@ -470,7 +474,7 @@ static void execute_card(CardId id) {
             g.enemies[i].x += dx*18; g.enemies[i].y += dy*18;
         } break;
     case C_PREFETCH: g.deck.prefetch_pending = true; break;
-    case C_MARKER: mark_nearest(6); break;
+    case C_MARKER: mark_nearest(MARKER_TARGETS); break;
     case C_BAD: g.flash_ticks = g.low_fx?0:1; sfx(90,3); break;
     default: attack_card(id,100,true); break;
     }
@@ -704,7 +708,7 @@ static void update_enemies(void) {
         if(e->type==RANSOM) {
             if(d2<50*50) { vx=-dx; vy=-dy; }
             else if(d2<75*75) { vx=-dy; vy=dx; }
-            if(e->fire) --e->fire; else { spawn_enemy_shot(e->x,e->y); e->fire=300; }
+            if(e->fire) --e->fire; else { spawn_enemy_shot(e->x,e->y); e->fire=RANSOM_FIRE_TICKS; }
         }
         float live_speed=!g.live?1.0f:g.live_ticks<20*TICK_HZ?1.1f:g.live_ticks<45*TICK_HZ?1.2f:1.3f;
         e->x+=vx*ENEMY_SPEED[e->type]*live_speed/TICK_HZ;
