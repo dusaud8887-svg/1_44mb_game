@@ -19,6 +19,33 @@
 #define MAX_ENEMY_SHOTS 128
 #define ARRAY_COUNT(a) (sizeof(a) / sizeof((a)[0]))
 
+/* ===== 밸런스 상수 — 수치 정본: docs/20_BALANCE.md. 문서와 다르면 버그다.
+   selftest는 의도적으로 리터럴을 유지해 이 값들을 교차 검증한다. ===== */
+enum {
+    SIGNAL_GOAL         = 64,
+    HP_START            = 5,
+    DECK_MIN            = 5,
+    BAD_CAP             = 5,
+    CARD_TICKS_NORMAL   = 30,  /* 카드 간격 0.50초 */
+    CARD_TICKS_SWAP     = 15,  /* 손패 교체 0.25초 */
+    CARD_TICKS_PREFETCH = 3,   /* 프리패치 예약 조각 0.05초 */
+    SHOP_FIRST_SEC      = 30,
+    SHOP_INTERVAL_SEC   = 40,
+    GOLIVE_EARLIEST_SEC = 270, /* 4:30 */
+    LIVE_FORCED_SEC     = 360, /* 6:00 */
+    LIVE_MAX_TICKS      = 60 * TICK_HZ,
+    CHEST_INTERVAL_SEC  = 45,
+    HIT_INVULN_TICKS    = 48,  /* 피격 무적 0.8초 */
+    FIREWALL_INVULN_TICKS = 45,
+    BAD_IMMUNE_TICKS    = 240, /* 오염 면역 4초 */
+    STAMP_EARLY_SEC     = 310, /* 조기 방송: LIVE 시작 < 5:10 */
+    STAMP_FAST_SEC      = 30,
+    ELITE_HP_MULT       = 4,
+    DMG_2400 = 6,  DMG_14K = 9,   DMG_56K = 16,
+    DMG_CHAT = 12, DMG_VOICE = 28, DMG_CLIP = 30,
+    DMG_PATCH = 24, DMG_CACHE = 4, DMG_SURGE = 7
+};
+
 enum {
     COL_BG = 0x00100d18, COL_PANEL = 0x00201c2b, COL_WHITE = 0x00f2f0e6,
     COL_DIM = 0x007b7b86, COL_CYAN = 0x004ddbc8, COL_AMBER = 0x00e5a84b,
@@ -62,6 +89,11 @@ static const uint8_t VALID_MASKS[] = {
     0xAB,0xAD,0xAE,0xB3,0xB5,0xB6,0xBA,0xBC,0xC7,0xCB,0xCD,0xCE,0xD3,0xD5,
     0xD6,0xDA,0xDC,0xE3,0xE5,0xE6,0xE9,0xEA,0xEC,0xF1,0xF2,0xF4,0xF8
 };
+
+/* WORM, POPUP, TROJAN, RANSOM 순 — docs/20_BALANCE.md B-적 */
+static const int ENEMY_HP[4] = {6, 4, 28, 16};
+static const float ENEMY_SPEED[4] = {14, 28, 10, 12};
+static const float ENEMY_COST[4] = {1.0f, 1.2f, 4.0f, 3.0f};
 
 typedef struct {
     CardId draw[MAX_DECK], discard[MAX_DECK], hand[5];
@@ -113,6 +145,7 @@ static Game g;
 static uint8_t key_down[256], key_pressed[256], key_pending[256];
 static bool onboarding_seen, shop_help_seen;
 
+/* ===== 공용 유틸 ===== */
 static uint32_t rng_next(void) {
     uint32_t x = g.rng ? g.rng : 0x6d2b79f5u;
     x ^= x << 13; x ^= x >> 17; x ^= x << 5;
@@ -139,6 +172,7 @@ static void sfx(int freq, int ticks);
 static void show_message(int id);
 static int kingdom_bit(CardId id);
 
+/* ===== 덱 엔진 — 규칙: docs/10_MECHANICS.md §2·§3 ===== */
 static void shuffle(CardId *cards, int n) {
     for (int i = n - 1; i > 0; --i) {
         int j = (int)(rng_next() % (uint32_t)(i + 1));
@@ -182,7 +216,7 @@ static void deck_new_hand(void) {
         g.deck.hand[g.deck.hand_n++] = deck_draw_one();
     g.deck.seek_used = false;
     g.previous_card = 255;
-    g.card_ticks = 15;
+    g.card_ticks = CARD_TICKS_SWAP;
 }
 
 static int buy_power(void) {
@@ -203,13 +237,13 @@ static int estimate_signal(void) {
     for (int i = 0; i < g.deck.discard_n; ++i) sig += CARD[g.deck.discard[i]].signal;
     for (int i = 0; i < g.deck.hand_n; ++i) sig += CARD[g.deck.hand[i]].signal;
     int n = deck_total();
-    int cycle_ticks = 30 * n + 15 * ((n + 4) / 5);
-    return directive_bonus() + (cycle_ticks ? (3600 / cycle_ticks) * sig : 0);
+    int cycle_ticks = CARD_TICKS_NORMAL * n + CARD_TICKS_SWAP * ((n + 4) / 5);
+    return directive_bonus() + (cycle_ticks ? (LIVE_MAX_TICKS / cycle_ticks) * sig : 0);
 }
 
 static int card_now(CardId id) {
-    switch(id){case C_2400:return 6;case C_14K:return 9;case C_56K:return 16;
-        case C_PATCH:return 24;case C_CACHE:return 12;case C_SURGE:return 28;default:return 0;}
+    switch(id){case C_2400:return DMG_2400;case C_14K:return DMG_14K;case C_56K:return DMG_56K;
+        case C_PATCH:return DMG_PATCH;case C_CACHE:return 3*DMG_CACHE;case C_SURGE:return 4*DMG_SURGE;default:return 0;}
 }
 
 static int now_total(void) {
@@ -232,7 +266,7 @@ static int estimate_signal_with(CardId id) {
     int n=deck_total()+1,bonus=directive_bonus(),bit=kingdom_bit(id);
     if(g.directive==DIR_INDEX&&bit>=0)bonus=clampi(popcount8(g.distinct_mask|(1u<<bit))*2,0,10);
     if(g.directive==DIR_MIRROR)bonus=clampi(n-deck_count(C_PATCH)-(id==C_PATCH)-10,0,12);
-    int cycle=30*n+15*((n+4)/5);return bonus+(cycle?(3600/cycle)*(signal_sum()+CARD[id].signal):0);
+    int cycle=CARD_TICKS_NORMAL*n+CARD_TICKS_SWAP*((n+4)/5);return bonus+(cycle?(LIVE_MAX_TICKS/cycle)*(signal_sum()+CARD[id].signal):0);
 }
 
 static int now_with(CardId id) {
@@ -251,6 +285,7 @@ static void remove_bad_once(void) {
     }
 }
 
+/* ===== 전투 — 조준·탄·적·웨이브: docs/10_MECHANICS.md §5 ===== */
 static int nearest_enemy(float x, float y) {
     int best = -1; float best_d = 1e30f;
     for (int i = 0; i < MAX_ENEMIES; ++i) if (g.enemies[i].active) {
@@ -288,11 +323,10 @@ static void spawn_enemy_shot(float x, float y) {
 }
 
 static void spawn_enemy(int type, bool elite, float x, float y) {
-    static const int hp[] = {6,4,28,16};
     for (int i = 0; i < MAX_ENEMIES; ++i) if (!g.enemies[i].active) {
         Enemy *e = &g.enemies[i];
         e->active = 1; e->type = (uint8_t)type; e->elite = elite ? 1 : 0;
-        e->x = x; e->y = y; e->hp = (int16_t)(hp[type] * (elite ? 4 : 1));
+        e->x = x; e->y = y; e->hp = (int16_t)(ENEMY_HP[type] * (elite ? ELITE_HP_MULT : 1));
         e->fire = (uint16_t)(60 + rng_next() % 240); e->marked = 0; return;
     }
 }
@@ -389,6 +423,7 @@ static void surge_damage(int damage) {
     }
 }
 
+/* ===== 카드 실행 — 해석 순서: docs/10_MECHANICS.md §4 ===== */
 static bool is_fragment(CardId id) { return id == C_CHAT || id == C_VOICE || id == C_CLIP; }
 
 static void show_message(int id) { g.message_id=id; g.message_ticks=72; }
@@ -398,18 +433,18 @@ static void attack_card(CardId id, int scale, bool real_card) {
     int live = g.live ? 1 : 0;
     bool damage_payload=true;
     switch (id) {
-    case C_2400: spawn_bullet(g.px,g.py,dx,dy,6*scale/100,1,0); break;
-    case C_14K: spawn_bullet(g.px,g.py,dx,dy,9*scale/100,2,0); break;
-    case C_56K: spawn_bullet(g.px,g.py,dx,dy,16*scale/100,1,12); break;
-    case C_CHAT: if (live) area_damage(g.px,g.py,14,12*scale/100); else damage_payload=false; break;
-    case C_VOICE: if (live) area_damage(g.px,g.py,28,28*scale/100); else damage_payload=false; break;
-    case C_CLIP: if (live) { all_damage(30*scale/100);g.flash_ticks=g.low_fx?0:6;g.hitstop_ticks=6; } else damage_payload=false; break;
-    case C_PATCH: all_damage(24*scale/100); break;
+    case C_2400: spawn_bullet(g.px,g.py,dx,dy,DMG_2400*scale/100,1,0); break;
+    case C_14K: spawn_bullet(g.px,g.py,dx,dy,DMG_14K*scale/100,2,0); break;
+    case C_56K: spawn_bullet(g.px,g.py,dx,dy,DMG_56K*scale/100,1,12); break;
+    case C_CHAT: if (live) area_damage(g.px,g.py,14,DMG_CHAT*scale/100); else damage_payload=false; break;
+    case C_VOICE: if (live) area_damage(g.px,g.py,28,DMG_VOICE*scale/100); else damage_payload=false; break;
+    case C_CLIP: if (live) { all_damage(DMG_CLIP*scale/100);g.flash_ticks=g.low_fx?0:6;g.hitstop_ticks=6; } else damage_payload=false; break;
+    case C_PATCH: all_damage(DMG_PATCH*scale/100); break;
     case C_CACHE:
-        spawn_bullet(g.px,g.py,dx,dy,4*scale/100,1,0);
-        spawn_bullet(g.px,g.py,dx*0.9f-dy*0.35f,dy*0.9f+dx*0.35f,4*scale/100,1,0);
-        spawn_bullet(g.px,g.py,dx*0.9f+dy*0.35f,dy*0.9f-dx*0.35f,4*scale/100,1,0); break;
-    case C_SURGE: surge_damage(7*scale/100); break;
+        spawn_bullet(g.px,g.py,dx,dy,DMG_CACHE*scale/100,1,0);
+        spawn_bullet(g.px,g.py,dx*0.9f-dy*0.35f,dy*0.9f+dx*0.35f,DMG_CACHE*scale/100,1,0);
+        spawn_bullet(g.px,g.py,dx*0.9f+dy*0.35f,dy*0.9f-dx*0.35f,DMG_CACHE*scale/100,1,0); break;
+    case C_SURGE: surge_damage(DMG_SURGE*scale/100); break;
     default: damage_payload=false; break;
     }
     if (real_card && damage_payload)
@@ -425,7 +460,7 @@ static void execute_card(CardId id) {
     case C_MULTI: g.deck.multi_next = true; break;
     case C_MACRO: if (g.last_damage_card >= 0) attack_card((CardId)g.last_damage_card,70,false); break;
     case C_FIREWALL:
-        if (g.invuln_ticks < 45) g.invuln_ticks = 45;
+        if (g.invuln_ticks < FIREWALL_INVULN_TICKS) g.invuln_ticks = FIREWALL_INVULN_TICKS;
         for (int i=0;i<MAX_ENEMIES;++i) if(g.enemies[i].active &&
             length2(g.enemies[i].x-g.px,g.enemies[i].y-g.py)<24*24) {
             float dx=g.enemies[i].x-g.px,dy=g.enemies[i].y-g.py; normalize(&dx,&dy);
@@ -445,6 +480,7 @@ static void execute_card(CardId id) {
     if (id != C_BAD && id != C_MULTI && id != C_PREFETCH) sfx(260 + CARD[id].cost*45, 2);
 }
 
+/* ===== 런 상태머신 — docs/10_MECHANICS.md §1·§6 ===== */
 static void prepare_channel(uint32_t seed, bool today) {
     bool muted = g.muted, low = g.low_fx, running = g.running;
     ZeroMemory(&g, sizeof(g));
@@ -462,9 +498,9 @@ static void start_run(void) {
     uint8_t mask = g.kingdom_mask, directive = g.directive, log0=g.log_ids[0], log1=g.log_ids[1];
     ZeroMemory(&g, sizeof(g));
     g.seed=seed; g.rng=rng; g.today=today; g.muted=muted; g.low_fx=low; g.running=running;
-    g.kingdom_mask=mask; g.directive=directive;g.log_ids[0]=log0;g.log_ids[1]=log1;g.mode=PLAY;g.hp=5;
+    g.kingdom_mask=mask; g.directive=directive;g.log_ids[0]=log0;g.log_ids[1]=log1;g.mode=PLAY;g.hp=HP_START;
     g.px=160; g.py=96; g.last_dx=1; g.last_dy=0; g.last_damage_card=-1;
-    g.next_shop_ticks=30*TICK_HZ;g.next_chest_ticks=45*TICK_HZ;g.tutorial=onboarding_seen?0:1;onboarding_seen=true;
+    g.next_shop_ticks=SHOP_FIRST_SEC*TICK_HZ;g.next_chest_ticks=CHEST_INTERVAL_SEC*TICK_HZ;g.tutorial=onboarding_seen?0:1;onboarding_seen=true;
     for (int i=0;i<7;++i) g.deck.draw[g.deck.draw_n++]=C_2400;
     for (int i=0;i<3;++i) g.deck.draw[g.deck.draw_n++]=C_CHAT;
     shuffle(g.deck.draw,g.deck.draw_n); deck_new_hand();
@@ -479,13 +515,13 @@ static void finish_run(bool won) {
 
 static uint8_t stamp_mask(void) {
     if(!g.won)return 0;
-    return (uint8_t)((g.live_start_ticks<310*TICK_HZ?1:0)|(g.bad_count==0?2:0)|(g.live_ticks<=30*TICK_HZ?4:0));
+    return (uint8_t)((g.live_start_ticks<STAMP_EARLY_SEC*TICK_HZ?1:0)|(g.bad_count==0?2:0)|(g.live_ticks<=STAMP_FAST_SEC*TICK_HZ?4:0));
 }
 
 static void start_live(void) {
     if (g.live) return;
     g.live=true; g.go_confirm=false; g.mode=PLAY; g.live_start_ticks=g.dead_ticks;
-    g.predicted_at_live=estimate_signal();g.live_ticks=0;g.signal=directive_bonus();g.burst_mask=0;g.transition_ticks=21;show_message(g.dead_ticks<360*TICK_HZ?8:6);
+    g.predicted_at_live=estimate_signal();g.live_ticks=0;g.signal=directive_bonus();g.burst_mask=0;g.transition_ticks=21;show_message(g.dead_ticks<LIVE_FORCED_SEC*TICK_HZ?8:6);
     for(int i=0;i<MAX_ENEMY_SHOTS;++i)if(g.enemy_shots[i].active){
         float dx=g.enemy_shots[i].x-g.px,dy=g.enemy_shots[i].y-g.py;normalize(&dx,&dy);
         g.enemy_shots[i].x+=dx*28;g.enemy_shots[i].y+=dy*28;
@@ -515,13 +551,13 @@ static int kingdom_bit(CardId id) {
 
 static bool can_buy(CardId id) {
     if(CARD[id].cost>buy_power()) return false;
-    if(id==C_DEFRAG) return deck_total()>5;
+    if(id==C_DEFRAG) return deck_total()>DECK_MIN;
     return deck_total()<MAX_DECK;
 }
 
 static void leave_shop(void) {
     g.mode=PLAY; g.shop_due=false; g.go_confirm=false; g.defrag_select=false;
-    g.card_ticks=15;
+    g.card_ticks=CARD_TICKS_SWAP;
 }
 
 static void buy_selected(void) {
@@ -535,7 +571,7 @@ static void buy_selected(void) {
 }
 
 static void trash_shop_hand(void) {
-    if(g.defrag_sel>=g.deck.hand_n || deck_total()<=5) return;
+    if(g.defrag_sel>=g.deck.hand_n || deck_total()<=DECK_MIN) return;
     CardId id=g.deck.hand[g.defrag_sel];
     for(int i=g.defrag_sel;i+1<g.deck.hand_n;++i) g.deck.hand[i]=g.deck.hand[i+1];
     --g.deck.hand_n; ++g.trash_count; if(id==C_BAD && g.bad_count) --g.bad_count;
@@ -554,7 +590,7 @@ static void seek(void) {
     CardId first=g.deck.hand[0];
     for(int i=0;i+1<g.deck.hand_n;++i) g.deck.hand[i]=g.deck.hand[i+1];
     g.deck.hand[g.deck.hand_n-1]=first;
-    if(g.deck.prefetch_pending&&g.card_ticks<=3&&!is_fragment(g.deck.hand[0]))g.card_ticks=30;
+    if(g.deck.prefetch_pending&&g.card_ticks<=CARD_TICKS_PREFETCH&&!is_fragment(g.deck.hand[0]))g.card_ticks=CARD_TICKS_NORMAL;
     g.deck.seek_used=true;g.seek_fx_ticks=8;if(!g.seek_spoken){g.seek_spoken=true;show_message(5);}sfx(340,4);
 }
 
@@ -564,17 +600,18 @@ static void trigger_next_card(void) {
     for(int i=0;i+1<g.deck.hand_n;++i) g.deck.hand[i]=g.deck.hand[i+1];
     --g.deck.hand_n;
     execute_card(id);
-    if(id!=C_PATCH||deck_total()<5) g.deck.discard[g.deck.discard_n++]=id;
+    if(id!=C_PATCH||deck_total()<DECK_MIN) g.deck.discard[g.deck.discard_n++]=id;
     if(!g.deck.hand_n) {
         if(g.shop_due && !g.live) enter_shop();
         else deck_new_hand();
         return;
     }
     if(g.deck.multi_next) { g.deck.multi_next=false; g.card_ticks=0; }
-    else if(g.deck.prefetch_pending && is_fragment(g.deck.hand[0])) g.card_ticks=3;
-    else g.card_ticks=30;
+    else if(g.deck.prefetch_pending && is_fragment(g.deck.hand[0])) g.card_ticks=CARD_TICKS_PREFETCH;
+    else g.card_ticks=CARD_TICKS_NORMAL;
 }
 
+/* ===== 입력·모드 업데이트 ===== */
 static void poll_keys(void) {
     for(int i=0;i<256;++i) {
         key_pressed[i]=key_pending[i]; key_pending[i]=0;
@@ -588,8 +625,8 @@ static void global_input(void) {
     if(pressed('M')) g.muted=!g.muted;
     if(pressed(VK_F1)) g.low_fx=!g.low_fx;
 #ifdef DEV_LOG
-    if(pressed(VK_F5)&&g.mode==PLAY&&!g.live){g.dead_ticks=270*TICK_HZ;enter_shop();}
-    if(pressed(VK_F6)&&g.mode==PLAY){g.dead_ticks=270*TICK_HZ;start_live();}
+    if(pressed(VK_F5)&&g.mode==PLAY&&!g.live){g.dead_ticks=GOLIVE_EARLIEST_SEC*TICK_HZ;enter_shop();}
+    if(pressed(VK_F6)&&g.mode==PLAY){g.dead_ticks=GOLIVE_EARLIEST_SEC*TICK_HZ;start_live();}
     if(pressed(VK_F7)&&g.live)add_signal(16);
     if(pressed(VK_F8)&&(g.mode==PLAY||g.mode==SHOP)){g.hp=0;finish_run(false);}
     if(pressed(VK_F9)&&g.mode==ENDING)g.ending_ticks=1;
@@ -631,7 +668,7 @@ static void shop_input(void) {
     if(move)for(int tries=0;tries<10;++tries){g.shop_sel=(uint8_t)((g.shop_sel+10+move)%10);if(g.shop_all||can_buy(shop_card(g.shop_sel)))break;}
     if(pressed(VK_RETURN)) buy_selected();
     if(pressed(VK_ESCAPE)) leave_shop();
-    if(pressed('F')&&g.dead_ticks>=270*TICK_HZ) g.go_confirm=true;
+    if(pressed('F')&&g.dead_ticks>=GOLIVE_EARLIEST_SEC*TICK_HZ) g.go_confirm=true;
 }
 
 static void result_input(void) {
@@ -652,12 +689,11 @@ static void player_input(void) {
 }
 
 static void insert_bad(void) {
-    if(g.bad_count>=5 || deck_total()>=MAX_DECK || g.bad_immune_ticks) return;
-    deck_add_discard(C_BAD);++g.bad_count;g.bad_immune_ticks=240;if(!g.bad_spoken){g.bad_spoken=true;show_message(9);}sfx(100,10);
+    if(g.bad_count>=BAD_CAP || deck_total()>=MAX_DECK || g.bad_immune_ticks) return;
+    deck_add_discard(C_BAD);++g.bad_count;g.bad_immune_ticks=BAD_IMMUNE_TICKS;if(!g.bad_spoken){g.bad_spoken=true;show_message(9);}sfx(100,10);
 }
 
 static void update_enemies(void) {
-    static const float speed[]={14,28,10,12};
     for(int i=0;i<MAX_ENEMIES;++i) if(g.enemies[i].active) {
         Enemy *e=&g.enemies[i]; float dx=g.px-e->x,dy=g.py-e->y,d2=length2(dx,dy); normalize(&dx,&dy);
         float vx=dx,vy=dy;
@@ -668,13 +704,13 @@ static void update_enemies(void) {
             if(e->fire) --e->fire; else { spawn_enemy_shot(e->x,e->y); e->fire=300; }
         }
         float live_speed=!g.live?1.0f:g.live_ticks<20*TICK_HZ?1.1f:g.live_ticks<45*TICK_HZ?1.2f:1.3f;
-        e->x+=vx*speed[e->type]*live_speed/TICK_HZ;
-        e->y+=vy*speed[e->type]*live_speed/TICK_HZ;
+        e->x+=vx*ENEMY_SPEED[e->type]*live_speed/TICK_HZ;
+        e->y+=vy*ENEMY_SPEED[e->type]*live_speed/TICK_HZ;
         e->x=(float)clampi((int)e->x,3,317);e->y=(float)clampi((int)e->y,3,189);
         if(e->marked) --e->marked;
         int contact=e->elite?12:e->type==TROJAN?10:7;
         if(length2(e->x-g.px,e->y-g.py)<contact*contact && !g.invuln_ticks) {
-            if(g.hp) --g.hp; g.invuln_ticks=48; sfx(120,8);
+            if(g.hp) --g.hp; g.invuln_ticks=HIT_INVULN_TICKS; sfx(120,8);
         }
     }
 }
@@ -684,7 +720,7 @@ static void update_bullets(void) {
         Bullet *p=&g.bullets[b]; p->x+=p->vx; p->y+=p->vy;
         if(--p->life<=0||p->x<0||p->x>=SCREEN_W||p->y<0||p->y>=ARENA_H) {p->active=0;continue;}
         if(g.chest_active&&length2(p->x-g.chest_x,p->y-g.chest_y)<49) {
-            g.chest_active=false; if(g.hp<5)++g.hp; p->active=0; sfx(700,6); continue;
+            g.chest_active=false; if(g.hp<HP_START)++g.hp; p->active=0; sfx(700,6); continue;
         }
         for(int i=0;i<MAX_ENEMIES;++i) if(g.enemies[i].active&&i!=p->last_hit){int hit=g.enemies[i].elite?8:g.enemies[i].type==TROJAN?6:4;if(
             length2(g.enemies[i].x-p->x,g.enemies[i].y-p->y)<hit*hit) {
@@ -710,8 +746,8 @@ static void spawn_wave(void) {
         else if(sec>=180) type=r<45?WORM:r<70?POPUP:r<86?TROJAN:RANSOM;
         else if(sec>=120) type=r<60?WORM:r<82?POPUP:TROJAN;
         else if(sec>=60) type=r<70?WORM:POPUP;
-        float cost=type==WORM?1.0f:type==POPUP?1.2f:type==TROJAN?4.0f:3.0f;
-        if(cost>g.spawn_budget) { type=WORM; cost=1.0f; }
+        float cost=ENEMY_COST[type];
+        if(cost>g.spawn_budget) { type=WORM; cost=ENEMY_COST[WORM]; }
         spawn_edge_enemy(type,false); g.spawn_budget-=cost;
     }
     if(!g.live&&!g.elite_spawned&&g.dead_ticks>=180*TICK_HZ) {
@@ -728,17 +764,17 @@ static void update_play(void) {
     if(g.link_ticks)--g.link_ticks;if(g.card_fx_ticks)--g.card_fx_ticks;if(g.seek_fx_ticks)--g.seek_fx_ticks;if(g.message_ticks)--g.message_ticks;
     if(!g.live) {
         ++g.dead_ticks;
-        if(g.dead_ticks>=g.next_shop_ticks) {g.shop_due=true;g.next_shop_ticks+=40*TICK_HZ;}
-        if(g.dead_ticks>=g.next_chest_ticks){g.chest_active=true;g.chest_x=(float)(24+rng_next()%272);g.chest_y=(float)(20+rng_next()%150);g.next_chest_ticks+=45*TICK_HZ;}
+        if(g.dead_ticks>=g.next_shop_ticks) {g.shop_due=true;g.next_shop_ticks+=SHOP_INTERVAL_SEC*TICK_HZ;}
+        if(g.dead_ticks>=g.next_chest_ticks){g.chest_active=true;g.chest_x=(float)(24+rng_next()%272);g.chest_y=(float)(20+rng_next()%150);g.next_chest_ticks+=CHEST_INTERVAL_SEC*TICK_HZ;}
         if(g.dead_ticks==60*TICK_HZ)show_message(1);
         if(g.dead_ticks==120*TICK_HZ)show_message(2);
-        if(g.dead_ticks>=360*TICK_HZ) start_live();
+        if(g.dead_ticks>=LIVE_FORCED_SEC*TICK_HZ) start_live();
     }
     spawn_wave(); update_enemies(); update_bullets();
     if(g.card_ticks>0)--g.card_ticks; else trigger_next_card();
-    if(g.signal>=64) {finish_run(true);return;}
+    if(g.signal>=SIGNAL_GOAL) {finish_run(true);return;}
     if(!g.hp) {finish_run(false);return;}
-    if(g.live&&++g.live_ticks>=60*TICK_HZ) finish_run(false);
+    if(g.live&&++g.live_ticks>=LIVE_MAX_TICKS) finish_run(false);
 }
 
 static void game_tick(void) {
@@ -777,6 +813,7 @@ static void dev_log_result(void) {
 static void dev_log_result(void) {}
 #endif
 
+/* ===== 렌더 — 팔레트: docs/40_ART_AUDIO_TEXT.md §2 ===== */
 static HINSTANCE app_instance;
 static HWND app_window;
 static HDC back_dc;
@@ -898,10 +935,10 @@ static void draw_world(void) {
 static void draw_hud(void) {
     rect(0,ARENA_H,SCREEN_W,SCREEN_H-ARENA_H,COL_PANEL);line(0,ARENA_H,319,ARENA_H,g.live?COL_MAGENTA:COL_CYAN);
     wchar_t top[128];
-    if(g.live)wsprintfW(top,L"HP %d   송출 신호 %d/64   종료 진행 %d%%",g.hp,g.signal,g.live_ticks/36);
+    if(g.live)wsprintfW(top,L"HP %d   송출 신호 %d/64   종료 진행 %d%%",g.hp,g.signal,g.live_ticks/(LIVE_MAX_TICKS/100));
     else wsprintfW(top,L"HP %d   %d:%02d   현재 %d   신호 ≥%d/64",g.hp,g.dead_ticks/3600,(g.dead_ticks/60)%60,now_score(),estimate_signal());
     text_at(5,3,COL_WHITE,top);
-    if(g.live){int sw=118*clampi(g.signal,0,64)/64,fw=123*clampi(g.live_ticks,0,3600)/3600;frame(5,15,120,5,COL_MAGENTA);rect(6,16,sw,3,COL_MAGENTA);frame(190,15,125,5,COL_RED);rect(314-fw,16,fw,3,COL_RED);}
+    if(g.live){int sw=118*clampi(g.signal,0,SIGNAL_GOAL)/SIGNAL_GOAL,fw=123*clampi(g.live_ticks,0,LIVE_MAX_TICKS)/LIVE_MAX_TICKS;frame(5,15,120,5,COL_MAGENTA);rect(6,16,sw,3,COL_MAGENTA);frame(190,15,125,5,COL_RED);rect(314-fw,16,fw,3,COL_RED);}
     int count=g.deck.hand_n;for(int i=0;i<count;++i)card_box(4+i*63,198-(i==0?2:0),g.deck.hand[i],i==0,false);
     if(g.seek_fx_ticks)line(31,195,31+(8-g.seek_fx_ticks)*252/8,195,COL_AMBER);
     if(!count)text_at(110,207,COL_DIM,L"셔플 중...");
@@ -962,7 +999,7 @@ static void draw_shop(void) {
     number_text(118,202,COL_AMBER,L"가격 %dB",CARD[selected].cost);
     if(selected!=C_DEFRAG){wchar_t delta[96];wsprintfW(delta,L"NOW %d→%d  SIG %d→%d",now_score(),now_with(selected),estimate_signal(),estimate_signal_with(selected));text_at(187,202,COL_CYAN,delta);}
     text_at(5,222,COL_DIM,L"←→ 선택 ENTER 구매 ESC 패스");text_at(165,222,COL_DIM,L"TAB 전체");
-    if(g.dead_ticks>=270*TICK_HZ)number_text(229,222,COL_MAGENTA,L"F 방송 ≥%d",estimate_signal());
+    if(g.dead_ticks>=GOLIVE_EARLIEST_SEC*TICK_HZ)number_text(229,222,COL_MAGENTA,L"F 방송 ≥%d",estimate_signal());
     if(g.defrag_select){rect(25,105,270,45,COL_BLACK);frame(25,105,270,45,COL_AMBER);text_at(42,116,COL_WHITE,L"정리할 공개 카드 1장을 고르세요.");text_at(77,132,COL_DIM,L"←→ / ENTER");}
     if(g.go_confirm){rect(25,96,270,55,COL_BLACK);frame(25,96,270,55,COL_MAGENTA);text_at(39,108,COL_WHITE,L"구매를 포기하고 마지막 방송 시작?");text_at(116,129,COL_DIM,L"Y / N");}
     if(g.tutorial==2){rect(23,91,274,69,COL_BLACK);frame(23,91,274,69,COL_WHITE);text_at(34,101,COL_WHITE,L"모뎀은 지금 강하고, 조각은 LIVE에서 송출.");text_at(34,119,COL_WHITE,L"다음 5장의 B 합으로 1장만 받습니다.");text_at(92,139,COL_DIM,L"ENTER로 계속");}
@@ -1001,6 +1038,7 @@ static void render(void) {
     if(g.muted)text_at(292,2,COL_DIM,L"M");if(g.low_fx)text_at(278,2,COL_DIM,L"F1");
 }
 
+/* ===== 오디오 합성 — docs/40_ART_AUDIO_TEXT.md §4 ===== */
 static HWAVEOUT wave;
 static WAVEHDR wave_headers[4];
 static int16_t wave_samples[4][1024];
@@ -1055,6 +1093,7 @@ static void present(void) {
     BitBlt(dc,0,0,r.right,r.bottom,present_dc,0,0,SRCCOPY);ReleaseDC(app_window,dc);
 }
 
+/* ===== Win32 플랫폼 ===== */
 static LRESULT CALLBACK window_proc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
     if(msg==MM_WOM_DONE){if(audio_ready)fill_audio((WAVEHDR*)lp);return 0;}
     switch(msg){
