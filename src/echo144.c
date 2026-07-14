@@ -41,6 +41,9 @@ enum {
     STAMP_EARLY_SEC     = 310, /* 조기 방송: LIVE 시작 < 5:10 */
     STAMP_FAST_SEC      = 30,
     ELITE_HP_MULT       = 4,
+    DIR_INDEX_PER = 2, DIR_INDEX_CAP = 10,
+    DIR_CLEAN_PER = 2, DIR_CLEAN_CAP = 12,
+    DIR_MIRROR_PER = 2, DIR_MIRROR_CAP = 16, /* 실전 최대 덱 19장 기준 도달 가능 — 20 §결함-1 */
     DMG_2400 = 6,  DMG_14K = 9,   DMG_56K = 16,
     DMG_CHAT = 12, DMG_VOICE = 28, DMG_CLIP = 30,
     DMG_PATCH = 24, DMG_CACHE = 4, DMG_SURGE = 7
@@ -226,9 +229,9 @@ static int buy_power(void) {
 }
 
 static int directive_bonus(void) {
-    if (g.directive == DIR_INDEX) return clampi(popcount8(g.distinct_mask) * 2, 0, 10);
-    if (g.directive == DIR_CLEAN) return clampi(g.trash_count * 2, 0, 12);
-    return clampi(deck_total() - deck_count(C_PATCH) - 10, 0, 12);
+    if (g.directive == DIR_INDEX) return clampi(popcount8(g.distinct_mask) * DIR_INDEX_PER, 0, DIR_INDEX_CAP);
+    if (g.directive == DIR_CLEAN) return clampi(g.trash_count * DIR_CLEAN_PER, 0, DIR_CLEAN_CAP);
+    return clampi((deck_total() - deck_count(C_PATCH) - 10) * DIR_MIRROR_PER, 0, DIR_MIRROR_CAP);
 }
 
 static int estimate_signal(void) {
@@ -264,8 +267,8 @@ static int signal_sum(void) {
 static int estimate_signal_with(CardId id) {
     if(id==C_DEFRAG)return estimate_signal();
     int n=deck_total()+1,bonus=directive_bonus(),bit=kingdom_bit(id);
-    if(g.directive==DIR_INDEX&&bit>=0)bonus=clampi(popcount8(g.distinct_mask|(1u<<bit))*2,0,10);
-    if(g.directive==DIR_MIRROR)bonus=clampi(n-deck_count(C_PATCH)-(id==C_PATCH)-10,0,12);
+    if(g.directive==DIR_INDEX&&bit>=0)bonus=clampi(popcount8(g.distinct_mask|(1u<<bit))*DIR_INDEX_PER,0,DIR_INDEX_CAP);
+    if(g.directive==DIR_MIRROR)bonus=clampi((n-deck_count(C_PATCH)-(id==C_PATCH)-10)*DIR_MIRROR_PER,0,DIR_MIRROR_CAP);
     int cycle=CARD_TICKS_NORMAL*n+CARD_TICKS_SWAP*((n+4)/5);return bonus+(cycle?(LIVE_MAX_TICKS/cycle)*(signal_sum()+CARD[id].signal):0);
 }
 
@@ -1163,7 +1166,8 @@ int main(void) {
     g.low_fx=true;g.signal=15;g.burst_mask=0;g.flash_ticks=g.shake_ticks=0;add_signal(1);assert(!g.flash_ticks&&!g.shake_ticks&&(g.burst_mask&1));g.low_fx=false;
     g.signal=15;g.burst_mask=0;add_signal(40);assert((g.burst_mask&7)==7);uint8_t bursts=g.burst_mask;add_signal(1);assert(g.burst_mask==bursts);
     g.directive=DIR_CLEAN;g.trash_count=9;assert(directive_bonus()==12);
-    prepare_channel(7,false);start_run();g.directive=DIR_MIRROR;deck_add_discard(C_PATCH);assert(directive_bonus()==0);deck_add_discard(C_14K);assert(directive_bonus()==1);
+    prepare_channel(7,false);start_run();g.directive=DIR_MIRROR;deck_add_discard(C_PATCH);assert(directive_bonus()==0);deck_add_discard(C_14K);assert(directive_bonus()==2);
+    for(int i=0;i<9;++i)deck_add_discard(C_CHAT);assert(directive_bonus()==16);
     g.bad_count=0;for(int i=0;i<8;++i){g.bad_immune_ticks=0;insert_bad();}assert(g.bad_count==5);
     ZeroMemory(&g.deck,sizeof(g.deck));for(int i=0;i<4;++i)g.deck.draw[g.deck.draw_n++]=C_2400;g.deck.hand[0]=C_PATCH;g.deck.hand_n=1;trigger_next_card();assert(deck_total()==5);
     prepare_channel(9,false);start_run();g.hp=255;for(int i=0;i<2100&&g.mode==PLAY;++i)update_play();assert(g.mode==SHOP);
@@ -1182,7 +1186,7 @@ int main(void) {
     prepare_channel(401,false);start_run();deck_add_discard(C_56K);deck_add_discard(C_CLIP);deck_add_discard(C_CLIP);assert_live_clear();
     prepare_channel(402,false);start_run();g.previous_card=C_PREFETCH;execute_card(C_CHAT);assert(g.link_ticks==24);g.previous_card=C_MULTI;execute_card(C_MACRO);assert(g.link_ticks==24);g.previous_card=C_MARKER;execute_card(C_SURGE);assert(g.link_ticks==24);for(int i=0;i<2;++i){deck_add_discard(C_PREFETCH);deck_add_discard(C_MULTI);}for(int i=0;i<3;++i)deck_add_discard(C_VOICE);assert_live_clear();
     prepare_channel(403,false);start_run();ZeroMemory(&g.deck,sizeof(g.deck));for(int i=0;i<2;++i)g.deck.draw[g.deck.draw_n++]=C_2400;for(int i=0;i<3;++i)g.deck.draw[g.deck.draw_n++]=C_CHAT;g.directive=DIR_CLEAN;g.trash_count=5;shuffle(g.deck.draw,g.deck.draw_n);deck_new_hand();assert_live_clear();
-    prepare_channel(404,false);start_run();g.directive=DIR_MIRROR;for(int i=0;i<4;++i)deck_add_discard(C_VOICE);for(int i=0;i<8;++i)deck_add_discard(C_14K);assert_live_clear();printf("build-path smoke: ECON/CLIP, UTIL/LINK, CLEAN, MIRROR PASS\n");
+    prepare_channel(404,false);start_run();g.directive=DIR_MIRROR;for(int i=0;i<2;++i)deck_add_discard(C_VOICE);for(int i=0;i<4;++i)deck_add_discard(C_CHAT);for(int i=0;i<3;++i)deck_add_discard(C_14K);assert(deck_total()==19&&directive_bonus()==16);assert_live_clear();printf("build-path smoke: ECON/CLIP, UTIL/LINK, CLEAN, MIRROR(9-buy) PASS\n");
     prepare_channel(405,false);start_run();for(int i=0;i<5;++i)deck_add_discard(C_VOICE);g.dead_ticks=270*TICK_HZ;assert_live_clear();assert(g.live_start_ticks==270*TICK_HZ);
     prepare_channel(406,false);start_run();for(int i=0;i<5;++i)deck_add_discard(C_VOICE);g.dead_ticks=360*TICK_HZ;assert_live_clear();assert(g.live_start_ticks==360*TICK_HZ);printf("GO LIVE smoke: early and forced entry PASS\n");
     ZeroMemory(g.enemies,sizeof(g.enemies));ZeroMemory(g.bullets,sizeof(g.bullets));
