@@ -910,10 +910,6 @@ static void line(int x0,int y0,int x1,int y1,uint32_t color) {
         if(x0==x1&&y0==y1)break;int e2=err*2;if(e2>=dy){err+=dy;x0+=sx;}if(e2<=dx){err+=dx;y0+=sy;}}
 }
 
-static void disk(int cx,int cy,int r,uint32_t color) {
-    int rr=r*r;for(int y=-r;y<=r;++y)for(int x=-r;x<=r;++x)if(x*x+y*y<=rr)rect(cx+x,cy+y,1,1,color);
-}
-
 /* ---- W5 픽셀 아트 (정본: assets/px 디렉터리의 .px 그리드, 규격: docs/41_PIXEL_ART.md) ----
    2bpp MSB-first 4px/바이트, 인덱스 0=투명 1=어둠 2=강조 3=광.
    재생성: python3 tools/px_render.py --emit-c assets/px/<이름>.px */
@@ -1223,14 +1219,98 @@ static const uint8_t PX_PORTRAIT_FORMAT_48[576] = {
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 };
 
+/* ---- 시스템 글리프 요소 (도형=시스템 유지, 41 §4): 적·탄·플로피 보물상자 ---- */
+/* worm_8  8x8  2bpp MSB-first, 16 bytes */
+static const uint8_t PX_WORM_8[16] = {
+    0x0A,0xA0,
+    0x2E,0xB8,
+    0x29,0x68,
+    0x2A,0xA8,
+    0x2A,0xA8,
+    0x29,0x68,
+    0x0A,0xA0,
+    0x00,0x00,
+};
+/* popup_8  8x8  2bpp MSB-first, 16 bytes */
+static const uint8_t PX_POPUP_8[16] = {
+    0xAA,0xAA,
+    0xBF,0xF6,
+    0xAA,0xAA,
+    0x95,0x56,
+    0x9F,0xF6,
+    0x9D,0x56,
+    0x95,0x56,
+    0xAA,0xAA,
+};
+/* ransom_8  8x8  2bpp MSB-first, 16 bytes */
+static const uint8_t PX_RANSOM_8[16] = {
+    0x03,0xC0,
+    0x0C,0x30,
+    0x0C,0x30,
+    0x2A,0xA8,
+    0x2B,0xE8,
+    0x29,0x68,
+    0x2A,0x68,
+    0x2A,0xA8,
+};
+/* trojan_12  12x12  2bpp MSB-first, 36 bytes */
+static const uint8_t PX_TROJAN_12[36] = {
+    0x00,0x00,0x00,
+    0x00,0xC3,0x00,
+    0x03,0x3C,0xC0,
+    0x02,0xAA,0x80,
+    0x0A,0xBB,0xA0,
+    0x0F,0xFF,0xF0,
+    0x0A,0xBB,0xA0,
+    0x0A,0xBB,0xA0,
+    0x0A,0xBB,0xA0,
+    0x0A,0xAA,0xA0,
+    0x01,0x55,0x40,
+    0x00,0x00,0x00,
+};
+/* shot_6  6x6  2bpp MSB-first, 12 bytes */
+static const uint8_t PX_SHOT_6[12] = {
+    0x0A,0x00,
+    0x2F,0x80,
+    0xBF,0xE0,
+    0xBF,0xE0,
+    0x2F,0x80,
+    0x0A,0x00,
+};
+/* bit_4  4x4  2bpp MSB-first, 4 bytes */
+static const uint8_t PX_BIT_4[4] = {
+    0x28,
+    0xBE,
+    0xBE,
+    0x28,
+};
+/* disk_12  12x12  2bpp MSB-first, 36 bytes */
+static const uint8_t PX_DISK_12[36] = {
+    0x2A,0xAA,0x60,
+    0x2F,0xFF,0xA0,
+    0x2F,0xFF,0xA0,
+    0x2D,0x57,0xA0,
+    0x2F,0xFF,0xA0,
+    0x2A,0xAA,0xA0,
+    0x2A,0xAA,0xA0,
+    0x2B,0xFE,0xA0,
+    0x2B,0xFE,0xA0,
+    0x2B,0xFE,0xA0,
+    0x2A,0xAA,0xA0,
+    0x00,0x00,0x00,
+};
+
 static const uint32_t PAL_ECHO[4]   = { 0, 0x001a1626, COL_CYAN,    COL_WHITE };
 static const uint32_t PAL_SEEK[4]   = { 0, 0x001a1626, COL_AMBER,   COL_WHITE };
 static const uint32_t PAL_FORMAT[4] = { 0, 0x001a1626, COL_MAGENTA, COL_WHITE };
+static const uint32_t PAL_WORM[4]   = { 0, 0x001a1626, COL_DIM,     COL_WHITE };
+static const uint32_t PAL_RED[4]    = { 0, 0x001a1626, COL_RED,     COL_WHITE };
+static const uint32_t PAL_BLUE[4]   = { 0, 0x001a1626, COL_BLUE,    COL_WHITE };
 
 static void draw_sprite_2bpp(int cx,int cy,const uint8_t *data,int size,const uint32_t *pal,int scale) {
-    int half=size*scale/2;
+    int half=size*scale/2, stride=(size+3)/4;   /* emit는 행마다 ceil(w/4) 바이트로 패딩 */
     for(int y=0;y<size;++y)for(int x=0;x<size;++x){
-        int v=(data[(y*size+x)/4]>>(6-2*(x&3)))&3;
+        int v=(data[y*stride+(x>>2)]>>(6-2*(x&3)))&3;
         if(v)rect(cx-half+x*scale,cy-half+y*scale,scale,scale,pal[v]);
     }
 }
@@ -1309,15 +1389,20 @@ static void draw_background(void) {
 }
 
 static void draw_world(void) {
-    if(g.chest_active){rect((int)g.chest_x-4,(int)g.chest_y-4,9,9,COL_AMBER);frame((int)g.chest_x-5,(int)g.chest_y-5,11,11,COL_WHITE);}
+    /* 보물상자 = 3.5인치 플로피(1.44MB 온브랜드) */
+    if(g.chest_active)draw_sprite_2bpp((int)g.chest_x,(int)g.chest_y,PX_DISK_12,12,PAL_SEEK,1);
     for(int i=0;i<MAX_ENEMIES;++i)if(g.enemies[i].active){
         Enemy *e=&g.enemies[i];int x=(int)e->x,y=(int)e->y;
-        uint32_t c=e->elite?COL_AMBER:e->type==RANSOM?COL_RED:e->type==TROJAN?COL_BLUE:e->type==POPUP?COL_MAGENTA:COL_DIM;
-        int r=e->elite?7:e->type==TROJAN?5:3;disk(x,y,r,c);if(e->marked)frame(x-r-2,y-r-2,2*r+5,2*r+5,COL_WHITE);
         if(e->elite)draw_seek(x,y,1);
+        else if(e->type==TROJAN)draw_sprite_2bpp(x,y,PX_TROJAN_12,12,PAL_BLUE,1);
+        else if(e->type==RANSOM)draw_sprite_2bpp(x,y,PX_RANSOM_8,8,PAL_RED,1);
+        else if(e->type==POPUP)draw_sprite_2bpp(x,y,PX_POPUP_8,8,PAL_FORMAT,1);
+        else draw_sprite_2bpp(x,y,PX_WORM_8,8,PAL_WORM,1);
+        int r=e->elite?7:e->type==TROJAN?5:3;
+        if(e->marked)frame(x-r-2,y-r-2,2*r+5,2*r+5,COL_WHITE);
     }
-    for(int i=0;i<MAX_BULLETS;++i)if(g.bullets[i].active)disk((int)g.bullets[i].x,(int)g.bullets[i].y,1,COL_CYAN);
-    for(int i=0;i<MAX_ENEMY_SHOTS;++i)if(g.enemy_shots[i].active){int x=(int)g.enemy_shots[i].x,y=(int)g.enemy_shots[i].y;frame(x-2,y-2,5,5,COL_RED);}
+    for(int i=0;i<MAX_BULLETS;++i)if(g.bullets[i].active)draw_sprite_2bpp((int)g.bullets[i].x,(int)g.bullets[i].y,PX_BIT_4,4,PAL_ECHO,1);
+    for(int i=0;i<MAX_ENEMY_SHOTS;++i)if(g.enemy_shots[i].active)draw_sprite_2bpp((int)g.enemy_shots[i].x,(int)g.enemy_shots[i].y,PX_SHOT_6,6,PAL_RED,1);
     if(!g.invuln_ticks||(g.invuln_ticks&4))draw_echo((int)g.px,(int)g.py,1);
 }
 
