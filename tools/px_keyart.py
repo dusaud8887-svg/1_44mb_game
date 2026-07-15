@@ -27,6 +27,7 @@ PAL = {
     "b": "2a6f68",  # 청록 글로우 중간톤
     "c": "6e3a5a",  # 자홍 글로우 중간톤
     "d": "080610",  # 최외곽 암부
+    "e": "6b5326",  # 호박 글로우 중간톤
 }
 BG = "9"
 
@@ -183,13 +184,24 @@ def seek_eye(cv, cx, cy):
                 cv[y][x] = "1"
 
 
-# 3x5 마이크로 폰트 — 브랜드 모티프 "A:\>" 프롬프트용 최소 글리프.
+# 3x5 마이크로 폰트 — 브랜드 모티프("A:\>")·연도·퍼센트용 최소 글리프.
 FONT = {
     "A": [".#.", "#.#", "###", "#.#", "#.#"],
     ":": ["...", ".#.", "...", ".#.", "..."],
     "\\": ["#..", ".#.", ".#.", "..#", "..#"],
     ">": ["#..", ".#.", "..#", ".#.", "#.."],
+    "%": ["#.#", "..#", ".#.", "#..", "#.#"],
     " ": ["...", "...", "...", "...", "..."],
+    "0": ["###", "#.#", "#.#", "#.#", "###"],
+    "1": [".#.", "##.", ".#.", ".#.", "###"],
+    "2": ["###", "..#", "###", "#..", "###"],
+    "3": ["###", "..#", ".##", "..#", "###"],
+    "4": ["#.#", "#.#", "###", "..#", "..#"],
+    "5": ["###", "#..", "###", "..#", "###"],
+    "6": ["###", "#..", "###", "#.#", "###"],
+    "7": ["###", "..#", ".#.", ".#.", ".#."],
+    "8": ["###", "#.#", "###", "#.#", "###"],
+    "9": ["###", "#.#", "###", "..#", "###"],
 }
 
 
@@ -205,11 +217,22 @@ def stamp_text(cv, s, ox, oy, color):
     return cx
 
 
-def build():
+def scene_base(disk_at, disk_col):
     cv = blank()
     vignette(cv)
     pcb_grid(cv)
-    disk_ring(cv, 150, 54, 44, "b")
+    disk_ring(cv, disk_at[0], disk_at[1], disk_at[2], disk_col)
+    return cv
+
+
+def corner_prompt(cv, x, y, dim, cursor_col):
+    cx = stamp_text(cv, "A:\\>", x, y, dim)
+    for dy in range(5):
+        put(cv, cx, y + dy, cursor_col); put(cv, cx + 1, y + dy, cursor_col)
+
+
+def build_echo():
+    cv = scene_base((150, 54, 44), "b")
 
     # ECHO 뒤 청록 역광 글로우 (머리 중심에 집중)
     glow(cv, 54, 34, 34, "b")
@@ -238,17 +261,93 @@ def build():
     seek_eye(cv, 156, 58)
 
     # 좌하단 코너: A:\> 프롬프트 + 커서 블록 (1997·플로피 모티프)
-    cx = stamp_text(cv, "A:\\>", 8, 99, "6")
-    for dy in range(5):                        # 깜빡이는 커서 블록(정지 프레임)
-        put(cv, cx, 99 + dy, "2"); put(cv, cx + 1, 99 + dy, "2")
-
+    corner_prompt(cv, 8, 99, "6", "2")
     return cv
 
 
-def save_px(cv, path):
+def build_seek():
+    """시크 단독 — '지켜보는 자'. 어둠 속 멀리 청록 신호를 응시한다."""
+    cv = scene_base((44, 56, 40), "e")     # 플로피 링을 왼쪽으로(시선 방향)
+
+    # 시크가 응시하는 것: 왼쪽 어둠 속 작은 청록 신호 하나 (네거티브 스페이스)
+    glow(cv, 26, 52, 16, "b")
+    for (fx, fy) in [(24, 50), (25, 51), (27, 49)]:
+        put(cv, fx, fy, "2")
+    put(cv, 26, 52, "5")
+
+    # SEEK 히어로: 초상 2배, 우측 배치 — 눈이 왼쪽(신호)을 향하도록
+    glow(cv, 128, 64, 30, "e")
+    ox, oy = 82, 14
+    sf = blit(cv, "assets/px/portrait_seek_48.px", ox, oy, 2,
+              {"1": "1", "2": "3", "3": "5"})
+    # 역광 림: 신호(왼쪽)가 실루엣 왼쪽 가장자리를 청록으로 물들인다
+    rim(cv, sf, "2", [(-1, 0), (-1, -1)])
+    rim(cv, sf, "3", [(1, 0), (0, 1), (1, 1)])   # 반대쪽은 호박 자기광
+
+    # 깨진 버퍼 링 조각이 시크 주위를 돈다(호박)
+    for (fx, fy) in [(120, 18), (150, 26), (168, 60), (112, 84), (156, 90)]:
+        put(cv, fx, fy, "3"); put(cv, fx + 1, fy, "3")
+        put(cv, fx, fy + 1, "3"); put(cv, fx + 1, fy + 1, "3")
+    put(cv, 151, 26, "5")   # 조각 광점
+
+    # 리본 케이블: 시크 오른쪽에서 아래로 끊긴 분절
+    for (bx, by) in [(174, 58), (178, 66), (176, 74), (180, 82)]:
+        put(cv, bx, by, "3"); put(cv, bx + 1, by, "3"); put(cv, bx, by + 1, "3")
+
+    corner_prompt(cv, 8, 99, "6", "3")
+    return cv
+
+
+def build_format():
+    """포맷 단독 — '닫는 자'. 종료 진행 75% 막대 + 최대 네거티브 스페이스."""
+    cv = scene_base((150, 54, 46), "c")
+
+    # 포맷 뒤 자홍 냉광 (초상 뒤에 집중)
+    glow(cv, 74, 46, 30, "c")
+
+    # FORMAT 히어로: 초상 2배, 좌측-중앙 수직 배치
+    ox, oy = 22, 6
+    ff = blit(cv, "assets/px/portrait_format_48.px", ox, oy, 2,
+              {"1": "1", "2": "4", "3": "5"})
+    rim(cv, ff, "4", [(1, 0), (1, 1), (0, 1), (-1, 0)])
+
+    # 종료 진행 막대: 우측 수직 컬럼, 75% 채움(FORMAT 경고 임계와 동일 숫자)
+    bx0, by0, bw, bh = 150, 20, 10, 72
+    frame_rect(cv, bx0, by0, bw, bh, "4")
+    fill_h = int(bh * 0.75)
+    for y in range(by0 + bh - fill_h, by0 + bh):          # 아래에서 위로 채움
+        for x in range(bx0 + 1, bx0 + bw - 1):
+            if (x + y) % 2 == 0 or y > by0 + bh - fill_h + 3:
+                cv[y][x] = "4"
+    for y in range(by0 + 4, by0 + bh, 6):                  # 눈금
+        for x in range(bx0 + 1, bx0 + bw - 1):
+            cv[y][x] = "1"
+    stamp_text(cv, "75%", bx0 - 4, by0 - 8, "4")           # 라벨
+    put(cv, bx0 + bw // 2, by0 - 2, "5")
+
+    # 떠 있는 잘못된 연도 "1997" (희미, 한 글자만 자홍 글리치)
+    tx = 120
+    stamp_text(cv, "1997", tx, 30, "6")
+    for dy in range(5):                                    # '9' 하나를 자홍으로 글리치
+        for dx in range(3):
+            if FONT["9"][dy][dx] == "#":
+                put(cv, tx + 4 + dx, 30 + dy, "4")
+
+    corner_prompt(cv, 8, 99, "6", "4")
+    return cv
+
+
+def frame_rect(cv, x, y, w, h, c):
+    for i in range(w):
+        put(cv, x + i, y, c); put(cv, x + i, y + h - 1, c)
+    for j in range(h):
+        put(cv, x, y + j, c); put(cv, x + w - 1, y + j, c)
+
+
+def save_px(cv, path, title):
     palette = " ".join(f"{k}={v}" for k, v in PAL.items())
     lines = [
-        "# keyart_last_live - 에코/144 마케팅 키아트 (생성물, 인게임 자산 아님)",
+        f"# {title}",
         "# 설계: docs/42_VISUAL_HOOK.md / 재생성: python3 tools/px_keyart.py",
         "# 확장 9색 브랜드 팔레트(렌더 전용, emit-c 불가)",
         f"# palette: {palette}",
@@ -261,4 +360,9 @@ def save_px(cv, path):
 
 if __name__ == "__main__":
     os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-    save_px(build(), "assets/px/keyart_last_live.px")
+    save_px(build_echo(), "assets/px/keyart_last_live.px",
+            "keyart_last_live - 에코/144 마케팅 키아트 (에코 중심, 인게임 자산 아님)")
+    save_px(build_seek(), "assets/px/keyart_seek.px",
+            "keyart_seek - 시크 웜 단독 키비주얼 '지켜보는 자' (인게임 자산 아님)")
+    save_px(build_format(), "assets/px/keyart_format.px",
+            "keyart_format - 포맷 제로 단독 키비주얼 '닫는 자' (인게임 자산 아님)")

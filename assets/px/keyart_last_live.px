@@ -1,7 +1,7 @@
-# keyart_last_live - 에코/144 마케팅 키아트 (생성물, 인게임 자산 아님)
+# keyart_last_live - 에코/144 마케팅 키아트 (에코 중심, 인게임 자산 아님)
 # 설계: docs/42_VISUAL_HOOK.md / 재생성: python3 tools/px_keyart.py
 # 확장 9색 브랜드 팔레트(렌더 전용, emit-c 불가)
-# palette: 1=1a1626 2=4ddbc8 3=e5a84b 4=ed4f9a 5=f2f0e6 6=7b7b86 7=6da9e8 8=e55b57 9=100d18 a=130918 b=2a6f68 c=6e3a5a d=080610
+# palette: 1=1a1626 2=4ddbc8 3=e5a84b 4=ed4f9a 5=f2f0e6 6=7b7b86 7=6da9e8 8=e55b57 9=100d18 a=130918 b=2a6f68 c=6e3a5a d=080610 e=6b5326
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
