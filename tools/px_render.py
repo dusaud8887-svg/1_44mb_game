@@ -25,10 +25,12 @@ def parse_px(path):
             ln = ln.rstrip("\n")
             if ln.lstrip().startswith("#"):
                 if "palette:" in ln:
+                    # 인게임 스프라이트는 1..3 (2bpp)만 쓴다. 마케팅 키아트는
+                    # 확장 팔레트(1..9, a..f)를 렌더 전용으로 쓸 수 있다(emit-c 불가).
                     for tok in ln.split("palette:", 1)[1].split():
                         if "=" in tok:
                             k, v = tok.split("=", 1)
-                            if k in "123" and len(v) == 6:
+                            if len(k) == 1 and k in "123456789abcdef" and len(v) == 6:
                                 palette[k] = v
             elif ln.strip():
                 grid.append(ln.rstrip())
@@ -92,6 +94,9 @@ def emit_c(path, grid, w, h):
             b = 0
             for k in range(4):
                 c = grid[y][x + k] if x + k < w else "."
+                if c not in ".0123":
+                    raise SystemExit(f"emit-c는 2bpp(인덱스 0..3)만 지원한다. '{c}' 발견 "
+                                     "— 확장 팔레트 키아트는 emit 대상이 아니다.")
                 b = (b << 2) | (0 if c == "." else int(c))
             row.append(b)
         lines.append(row)

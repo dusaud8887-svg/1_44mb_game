@@ -7,6 +7,8 @@ Windows 10/11용 1.44MB 덱빌딩 서바이버다. 문서 정본은 다음과 �
 - [docs/20_BALANCE.md](docs/20_BALANCE.md) — 모든 튜닝 수치의 단일 정본
 - [docs/30_TECH.md](docs/30_TECH.md) — 기술 설계·구현 현황·테스트
 - [docs/40_ART_AUDIO_TEXT.md](docs/40_ART_AUDIO_TEXT.md) — 아트·사운드·텍스트
+- [docs/41_PIXEL_ART.md](docs/41_PIXEL_ART.md) — 픽셀 아트 제작 규격·공정
+- [docs/42_VISUAL_HOOK.md](docs/42_VISUAL_HOOK.md) — 비주얼 후킹·마케팅 키아트·AI 프롬프트 부록
 - [docs/50_PRODUCTION.md](docs/50_PRODUCTION.md) — 일정·게이트·리스크
 - [docs/CHANGELOG.md](docs/CHANGELOG.md) — 변경 이력. 구 단일 스펙은 `docs/archive/`에 동결
 
