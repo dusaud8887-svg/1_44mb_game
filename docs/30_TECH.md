@@ -57,9 +57,9 @@ C11 + MSVC `/O1 /GL /Gy /Gw /GS /MT`, x64 무패킹, Win32 직접 호출. 렌더
 
 수정 필요: MIRROR 스모크가 12장 추가(실전 불가 경제)로 통과 중 → [20_BALANCE.md](20_BALANCE.md) 결함-1 수정 시 9구매 제약 덱으로 교체.
 
-### SIM (신규, W-BAL)
+### SIM (구현 완료, 2026-07-14)
 
-20_BALANCE §SIM 명세의 몬테카를로를 SELF_TEST 하니스에 `SIM_RUNS` 정의로 추가. 릴리스 빌드에 코드가 남지 않아야 한다(컴파일 제외 확인).
+20_BALANCE §SIM 명세의 몬테카를로가 SELF_TEST 하니스에 포함되어 `build.bat test`마다 실행된다(240런, 수 초). 정책별 결과는 `build/simtest.csv`, 수용 기준(4경로 승리 가능·70% 독점 금지)은 assert로 강제된다. SELF_TEST 전용 코드이므로 릴리스에 포함되지 않는다.
 
 ### DEV 빌드 (`build.bat debug`, DEV_LOG 정의)
 

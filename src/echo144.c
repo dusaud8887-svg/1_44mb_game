@@ -44,6 +44,9 @@ enum {
     DIR_INDEX_PER = 2, DIR_INDEX_CAP = 10,
     DIR_CLEAN_PER = 2, DIR_CLEAN_CAP = 12,
     DIR_MIRROR_PER = 2, DIR_MIRROR_CAP = 16, /* 실전 최대 덱 19장 기준 도달 가능 — 20 §결함-1 */
+    MARKER_TARGETS = 6, MARKER_DURATION_TICKS = 150, /* 2.5초 */
+    SURGE_TARGETS = 4,
+    RANSOM_FIRE_TICKS = 300, /* 5초 */
     DMG_2400 = 6,  DMG_14K = 9,   DMG_56K = 16,
     DMG_CHAT = 12, DMG_VOICE = 28, DMG_CLIP = 30,
     DMG_PATCH = 24, DMG_CACHE = 4, DMG_SURGE = 7
@@ -234,14 +237,18 @@ static int directive_bonus(void) {
     return clampi((deck_total() - deck_count(C_PATCH) - 10) * DIR_MIRROR_PER, 0, DIR_MIRROR_CAP);
 }
 
+static int signal_sum(void) {
+    int sum=0;for(int id=0;id<CARD_COUNT;++id)sum+=deck_count((CardId)id)*CARD[id].signal;return sum;
+}
+
+/* 보수 예상 공식 — docs/20_BALANCE.md B-공식. MULTI 단축·PREFETCH +1 제외 */
+static int live_signal_estimate(int deck_n, int sig, int bonus) {
+    int cycle = CARD_TICKS_NORMAL * deck_n + CARD_TICKS_SWAP * ((deck_n + 4) / 5);
+    return bonus + (cycle ? (LIVE_MAX_TICKS / cycle) * sig : 0);
+}
+
 static int estimate_signal(void) {
-    int sig = 0;
-    for (int i = 0; i < g.deck.draw_n; ++i) sig += CARD[g.deck.draw[i]].signal;
-    for (int i = 0; i < g.deck.discard_n; ++i) sig += CARD[g.deck.discard[i]].signal;
-    for (int i = 0; i < g.deck.hand_n; ++i) sig += CARD[g.deck.hand[i]].signal;
-    int n = deck_total();
-    int cycle_ticks = CARD_TICKS_NORMAL * n + CARD_TICKS_SWAP * ((n + 4) / 5);
-    return directive_bonus() + (cycle_ticks ? (LIVE_MAX_TICKS / cycle_ticks) * sig : 0);
+    return live_signal_estimate(deck_total(), signal_sum(), directive_bonus());
 }
 
 static int card_now(CardId id) {
@@ -260,16 +267,12 @@ static int now_total(void) {
 
 static int now_score(void) { int n=deck_total();return n?now_total()/n:0; }
 
-static int signal_sum(void) {
-    int sum=0;for(int id=0;id<CARD_COUNT;++id)sum+=deck_count((CardId)id)*CARD[id].signal;return sum;
-}
-
 static int estimate_signal_with(CardId id) {
     if(id==C_DEFRAG)return estimate_signal();
     int n=deck_total()+1,bonus=directive_bonus(),bit=kingdom_bit(id);
     if(g.directive==DIR_INDEX&&bit>=0)bonus=clampi(popcount8(g.distinct_mask|(1u<<bit))*DIR_INDEX_PER,0,DIR_INDEX_CAP);
     if(g.directive==DIR_MIRROR)bonus=clampi((n-deck_count(C_PATCH)-(id==C_PATCH)-10)*DIR_MIRROR_PER,0,DIR_MIRROR_CAP);
-    int cycle=CARD_TICKS_NORMAL*n+CARD_TICKS_SWAP*((n+4)/5);return bonus+(cycle?(LIVE_MAX_TICKS/cycle)*(signal_sum()+CARD[id].signal):0);
+    return live_signal_estimate(n,signal_sum()+CARD[id].signal,bonus);
 }
 
 static int now_with(CardId id) {
@@ -400,27 +403,28 @@ static void add_signal(int amount) {
     if(g.signal>=32&&g.signal-amount<32)show_message(7);
 }
 
+static int nearest_unused_enemy(const bool *used) {
+    int best = -1; float bd = 1e30f;
+    for (int i = 0; i < MAX_ENEMIES; ++i) if (g.enemies[i].active && !used[i]) {
+        float d = length2(g.enemies[i].x-g.px, g.enemies[i].y-g.py);
+        if (d < bd) { bd = d; best = i; }
+    }
+    return best;
+}
+
 static void mark_nearest(int count) {
     bool used[MAX_ENEMIES] = {0};
     for (int k = 0; k < count; ++k) {
-        int best = -1; float bd = 1e30f;
-        for (int i = 0; i < MAX_ENEMIES; ++i) if (g.enemies[i].active && !used[i]) {
-            float d = length2(g.enemies[i].x-g.px, g.enemies[i].y-g.py);
-            if (d < bd) { bd = d; best = i; }
-        }
+        int best = nearest_unused_enemy(used);
         if (best < 0) break;
-        used[best] = true; g.enemies[best].marked = 150;
+        used[best] = true; g.enemies[best].marked = MARKER_DURATION_TICKS;
     }
 }
 
 static void surge_damage(int damage) {
     bool used[MAX_ENEMIES] = {0};
-    for (int k = 0; k < 4; ++k) {
-        int best = -1; float bd = 1e30f;
-        for (int i = 0; i < MAX_ENEMIES; ++i) if (g.enemies[i].active && !used[i]) {
-            float d = length2(g.enemies[i].x-g.px, g.enemies[i].y-g.py);
-            if (d < bd) { bd = d; best = i; }
-        }
+    for (int k = 0; k < SURGE_TARGETS; ++k) {
+        int best = nearest_unused_enemy(used);
         if (best < 0) break;
         used[best] = true; damage_enemy(best, damage);
     }
@@ -470,7 +474,7 @@ static void execute_card(CardId id) {
             g.enemies[i].x += dx*18; g.enemies[i].y += dy*18;
         } break;
     case C_PREFETCH: g.deck.prefetch_pending = true; break;
-    case C_MARKER: mark_nearest(6); break;
+    case C_MARKER: mark_nearest(MARKER_TARGETS); break;
     case C_BAD: g.flash_ticks = g.low_fx?0:1; sfx(90,3); break;
     default: attack_card(id,100,true); break;
     }
@@ -704,7 +708,7 @@ static void update_enemies(void) {
         if(e->type==RANSOM) {
             if(d2<50*50) { vx=-dx; vy=-dy; }
             else if(d2<75*75) { vx=-dy; vy=dx; }
-            if(e->fire) --e->fire; else { spawn_enemy_shot(e->x,e->y); e->fire=300; }
+            if(e->fire) --e->fire; else { spawn_enemy_shot(e->x,e->y); e->fire=RANSOM_FIRE_TICKS; }
         }
         float live_speed=!g.live?1.0f:g.live_ticks<20*TICK_HZ?1.1f:g.live_ticks<45*TICK_HZ?1.2f:1.3f;
         e->x+=vx*ENEMY_SPEED[e->type]*live_speed/TICK_HZ;
@@ -1156,6 +1160,55 @@ static void assert_live_clear(void) {
     assert(g.mode==ENDING&&g.signal>=64);
 }
 
+/* ===== SIM — 스크립트 구매 정책 몬테카를로 (docs/20_BALANCE.md §SIM)
+   전투를 매 틱 비워 회피 실력 변수를 제거하고 덱·경제·신호 수학만 검증한다. ===== */
+static void sim_clear_combat(void) {
+    for(int i=0;i<MAX_ENEMIES;++i)g.enemies[i].active=0;
+    for(int i=0;i<MAX_BULLETS;++i)g.bullets[i].active=0;
+    for(int i=0;i<MAX_ENEMY_SHOTS;++i)g.enemy_shots[i].active=0;
+    g.spawn_budget=0;
+}
+
+static bool sim_try_buy(CardId id) {
+    int slot=-1;
+    for(int i=0;i<10;++i)if(shop_card(i)==id){slot=i;break;}
+    if(slot<0||!can_buy(id))return false;
+    if(id==C_DEFRAG){
+        int target=-1;
+        for(int i=0;i<g.deck.hand_n&&target<0;++i)if(g.deck.hand[i]==C_BAD)target=i;
+        for(int i=0;i<g.deck.hand_n&&target<0;++i)if(g.deck.hand[i]==C_2400)target=i;
+        if(target<0)return false;
+        g.shop_sel=(uint8_t)slot;buy_selected();g.defrag_sel=(uint8_t)target;trash_shop_hand();return true;
+    }
+    g.shop_sel=(uint8_t)slot;buy_selected();return true;
+}
+
+static void sim_policy_shop(int policy) {
+    static const CardId econ[]={C_CLIP,C_56K,C_VOICE,C_14K};
+    static const CardId util[]={C_VOICE,C_PREFETCH,C_MULTI,C_CHAT};
+    static const CardId clean[]={C_DEFRAG,C_VOICE,C_CHAT};
+    static const CardId mirror[]={C_VOICE,C_CHAT,C_14K};
+    static const CardId *prio[4]={econ,util,clean,mirror};
+    static const int prio_n[4]={4,4,3,3};
+    for(int i=0;i<prio_n[policy];++i)if(sim_try_buy(prio[policy][i]))return;
+    leave_shop();
+}
+
+static bool sim_run(int policy,bool early,uint32_t seed,FILE *csv) {
+    prepare_channel(seed,false);start_run();g.tutorial=0;
+    for(int guard=0;guard<80000&&g.mode!=RESULT&&g.mode!=ENDING;++guard){
+        if(g.mode==SHOP){
+            if(early&&g.dead_ticks>=GOLIVE_EARLIEST_SEC*TICK_HZ)start_live();
+            else sim_policy_shop(policy);
+        } else if(g.mode==PLAY){g.hp=HP_START;update_play();sim_clear_combat();}
+        else break;
+    }
+    bool won=g.mode==ENDING&&g.won;
+    if(csv)fprintf(csv,"%d,%s,%u,%u,%d,%d,%s,%d\n",policy,early?"early":"forced",seed,
+        g.directive,deck_total(),g.signal,won?"win":"loss",won?g.live_ticks/TICK_HZ:-1);
+    return won;
+}
+
 int main(void) {
     for(int m=0;m<(int)ARRAY_COUNT(VALID_MASKS);++m){uint8_t v=VALID_MASKS[m];assert(popcount8(v)==5);assert(popcount8(v&0x66)>=2);assert(v&0x88);assert(v&0x90);}
     g.running=true;prepare_channel(12345,false);uint8_t mask=g.kingdom_mask,dir=g.directive,log0=g.log_ids[0],log1=g.log_ids[1];
@@ -1193,6 +1246,23 @@ int main(void) {
     prepare_channel(404,false);start_run();g.directive=DIR_MIRROR;for(int i=0;i<2;++i)deck_add_discard(C_VOICE);for(int i=0;i<4;++i)deck_add_discard(C_CHAT);for(int i=0;i<3;++i)deck_add_discard(C_14K);assert(deck_total()==19&&directive_bonus()==16);assert_live_clear();printf("build-path smoke: ECON/CLIP, UTIL/LINK, CLEAN, MIRROR(9-buy) PASS\n");
     prepare_channel(405,false);start_run();for(int i=0;i<5;++i)deck_add_discard(C_VOICE);g.dead_ticks=270*TICK_HZ;assert_live_clear();assert(g.live_start_ticks==270*TICK_HZ);
     prepare_channel(406,false);start_run();for(int i=0;i<5;++i)deck_add_discard(C_VOICE);g.dead_ticks=360*TICK_HZ;assert_live_clear();assert(g.live_start_ticks==360*TICK_HZ);printf("GO LIVE smoke: early and forced entry PASS\n");
+    {
+        static const char *pname[4]={"ECON","UTIL","CLEAN","MIRROR"};
+        int wins[4][2]={{0}};
+        FILE *csv=fopen("build\\simtest.csv","w");
+        if(csv)fprintf(csv,"policy,golive,seed,directive,final_deck,end_signal,result,live_clear_sec\n");
+        for(int p=0;p<4;++p)for(int e=0;e<2;++e)for(uint32_t s=0;s<30;++s)
+            if(sim_run(p,e==0,1000+s,csv))++wins[p][e];
+        if(csv)fclose(csv);
+        int total=0,best=0;
+        for(int p=0;p<4;++p){
+            int w=wins[p][0]+wins[p][1];total+=w;if(w>best)best=w;
+            printf("SIM %-6s early %2d/30  forced %2d/30\n",pname[p],wins[p][0],wins[p][1]);
+        }
+        for(int p=0;p<4;++p)assert(wins[p][0]+wins[p][1]>0); /* 4경로 모두 승리 가능 */
+        assert(best*100<=total*70);                          /* 단일 정책 70% 독점 금지 */
+        printf("SIM acceptance: PASS (top policy share %d%%)\n",best*100/total);
+    }
     ZeroMemory(g.enemies,sizeof(g.enemies));ZeroMemory(g.bullets,sizeof(g.bullets));
     for(int i=0;i<MAX_ENEMIES;++i){g.enemies[i].active=1;g.enemies[i].x=310;g.enemies[i].y=180;g.enemies[i].hp=30000;}
     for(int i=0;i<MAX_BULLETS;++i){g.bullets[i].active=1;g.bullets[i].x=10;g.bullets[i].y=10;g.bullets[i].life=1000;g.bullets[i].hits=1;g.bullets[i].last_hit=-1;}
