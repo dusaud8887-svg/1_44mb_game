@@ -514,9 +514,11 @@ static void start_run(void) {
     g.kingdom_mask=mask; g.directive=directive;g.log_ids[0]=log0;g.log_ids[1]=log1;g.mode=PLAY;g.hp=HP_START;
     g.px=160; g.py=96; g.last_dx=1; g.last_dy=0; g.last_damage_card=-1;
     g.next_shop_ticks=SHOP_FIRST_SEC*TICK_HZ;g.next_chest_ticks=CHEST_INTERVAL_SEC*TICK_HZ;g.tutorial=onboarding_seen?0:1;onboarding_seen=true;
+#ifndef FIXED_GUN
     for (int i=0;i<7;++i) g.deck.draw[g.deck.draw_n++]=C_2400;
     for (int i=0;i<3;++i) g.deck.draw[g.deck.draw_n++]=C_CHAT;
     shuffle(g.deck.draw,g.deck.draw_n); deck_new_hand();
+#endif
     sfx_motif(NOTE_E4,NOTE_G4,NOTE_B4,5); /* 에코 등장 — 정방향 */
 }
 
@@ -724,10 +726,12 @@ static void update_enemies(void) {
         e->y+=vy*ENEMY_SPEED[e->type]*live_speed/TICK_HZ;
         e->x=(float)clampi((int)e->x,3,317);e->y=(float)clampi((int)e->y,3,189);
         if(e->marked) --e->marked;
+#ifndef NO_THREAT /* 대조 빌드: 무적 더미 — 접촉 피해 없음, BAD 오염은 유지 */
         int contact=e->elite?12:e->type==TROJAN?10:7;
         if(length2(e->x-g.px,e->y-g.py)<contact*contact && !g.invuln_ticks) {
             if(g.hp) --g.hp; g.invuln_ticks=HIT_INVULN_TICKS; sfx(120,8);
         }
+#endif
     }
 }
 
@@ -781,20 +785,31 @@ static void update_play(void) {
     if(g.link_ticks)--g.link_ticks;if(g.card_fx_ticks)--g.card_fx_ticks;if(g.seek_fx_ticks)--g.seek_fx_ticks;if(g.message_ticks)--g.message_ticks;
     if(!g.live) {
         ++g.dead_ticks;
+#ifndef FIXED_GUN /* 대조 빌드: 상점·덱 없음 — docs/50 §2 */
         if(g.dead_ticks>=g.next_shop_ticks) {g.shop_due=true;g.next_shop_ticks+=SHOP_INTERVAL_SEC*TICK_HZ;}
+#endif
         if(g.dead_ticks>=g.next_chest_ticks){g.chest_active=true;g.chest_x=(float)(24+rng_next()%272);g.chest_y=(float)(20+rng_next()%150);g.next_chest_ticks+=CHEST_INTERVAL_SEC*TICK_HZ;}
         if(g.dead_ticks==60*TICK_HZ)show_message(1);
         if(g.dead_ticks==120*TICK_HZ)show_message(2);
         if(g.dead_ticks>=LIVE_FORCED_SEC*TICK_HZ) start_live();
     }
     spawn_wave(); update_enemies(); update_bullets();
+#ifdef FIXED_GUN
+    if(g.card_ticks>0)--g.card_ticks;
+    else { float dx,dy; aim(&dx,&dy); spawn_bullet(g.px,g.py,dx,dy,8,1,0); g.card_ticks=CARD_TICKS_NORMAL; }
+#else
     if(g.card_ticks>0)--g.card_ticks; else trigger_next_card();
+#endif
     if(g.signal>=SIGNAL_GOAL) {finish_run(true);return;}
     if(!g.hp) {finish_run(false);return;}
     if(g.live){
         ++g.live_ticks;
         if(g.live_ticks==LIVE_MAX_TICKS*3/4)sfx_motif(NOTE_B4,NOTE_B4,0,6); /* 종료 진행 75% — 제로 단음 */
+#ifdef FIXED_GUN
+        if(g.live_ticks>=LIVE_MAX_TICKS)finish_run(true); /* 대조 빌드: 60초 생존 = 승리 */
+#else
         if(g.live_ticks>=LIVE_MAX_TICKS)finish_run(false);
+#endif
     }
 }
 
@@ -962,7 +977,11 @@ static void draw_hud(void) {
     if(g.live){int sw=118*clampi(g.signal,0,SIGNAL_GOAL)/SIGNAL_GOAL,fw=123*clampi(g.live_ticks,0,LIVE_MAX_TICKS)/LIVE_MAX_TICKS;frame(5,15,120,5,COL_MAGENTA);rect(6,16,sw,3,COL_MAGENTA);frame(190,15,125,5,COL_RED);rect(314-fw,16,fw,3,COL_RED);}
     int count=g.deck.hand_n;for(int i=0;i<count;++i)card_box(4+i*63,198-(i==0?2:0),g.deck.hand[i],i==0,false);
     if(g.seek_fx_ticks)line(31,195,31+(8-g.seek_fx_ticks)*252/8,195,COL_AMBER);
+#ifdef FIXED_GUN
+    if(!count)text_at(96,207,COL_DIM,L"대조 빌드 — 고정 총");
+#else
     if(!count)text_at(110,207,COL_DIM,L"셔플 중...");
+#endif
     text_at(5,229,COL_DIM,g.deck.seek_used?L"SEEK 사용":L"SPACE SEEK");
     text_at(121,229,COL_AMBER,directive_name());text_at(258,229,COL_DIM,L"시청자 1");
     if(g.shuffle_ticks){text_at(137,181,COL_AMBER,L"SHUFFLE");rect((15-g.shuffle_ticks)*SCREEN_W/15,ARENA_H,3,SCREEN_H-ARENA_H,COL_AMBER);}
@@ -1061,6 +1080,9 @@ static void render(void) {
     SetBkMode(back_dc,TRANSPARENT);SelectObject(back_dc,font_small);
     switch(g.mode){case TITLE:draw_title();break;case CHANNEL:draw_channel();break;case PLAY:draw_play();break;case SHOP:draw_shop();break;case PAUSE_MODE:draw_pause();break;case ENDING:draw_ending();break;case RESULT:draw_result();break;}
     if(g.muted)text_at(292,2,COL_DIM,L"M");if(g.low_fx)text_at(278,2,COL_DIM,L"F1");
+#ifdef NO_THREAT
+    text_at(234,2,COL_DIM,L"DUMMY");
+#endif
 }
 
 /* ===== 오디오 합성 — docs/40_ART_AUDIO_TEXT.md §4 ===== */

@@ -61,6 +61,10 @@ C11 + MSVC `/O1 /GL /Gy /Gw /GS /MT`, x64 무패킹, Win32 직접 호출. 렌더
 
 20_BALANCE §SIM 명세의 몬테카를로가 SELF_TEST 하니스에 포함되어 `build.bat test`마다 실행된다(240런, 수 초). 정책별 결과는 `build/simtest.csv`, 수용 기준(4경로 승리 가능·70% 독점 금지)은 assert로 강제된다. SELF_TEST 전용 코드이므로 릴리스에 포함되지 않는다.
 
+### 대조 빌드 (구현 완료, 2026-07-14)
+
+G2 반증 실험용(50 §2·§3). `build.bat gun` → `FIXED_GUN`: 덱·상점·조각 없이 0.5초당 피해 8 고정 총, LIVE 60초 생존이 승리. `build.bat dummy` → `NO_THREAT`: 접촉 피해 없음(BAD 오염은 유지). 둘 다 DEV_LOG 포함이라 playtest.csv를 남기며, 릴리스 경로와 무관한 `#ifdef`다.
+
 ### DEV 빌드 (`build.bat debug`, DEV_LOG 정의)
 
 - 종료 시 `playtest.csv` 1줄 기록(스키마는 코드 정본). **주의: F5~F9 치트키 사용 세션이 섞이므로 밸런스 집계 전 반드시 분리** — 치트 사용 시 `cheated` 컬럼 1을 기록하도록 W-BAL에서 스키마에 추가한다.

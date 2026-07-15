@@ -28,6 +28,19 @@ if /i "%~1"=="test" (
   exit /b 0
 )
 
+rem G2 comparison builds (docs/50_PRODUCTION.md s2). gun: fixed gun, no deck/shop. dummy: no contact damage.
+if /i "%~1"=="gun" (
+  cl /nologo /std:c11 /W4 /O1 /MT /DDEV_LOG /DFIXED_GUN /DUNICODE /D_UNICODE src\echo144.c /Fe:build\ECHO144_GUN.EXE /Fo:build\echo144_gun.obj /link /SUBSYSTEM:WINDOWS user32.lib gdi32.lib winmm.lib || exit /b 1
+  echo comparison build: build\ECHO144_GUN.EXE
+  exit /b 0
+)
+
+if /i "%~1"=="dummy" (
+  cl /nologo /std:c11 /W4 /O1 /MT /DDEV_LOG /DNO_THREAT /DUNICODE /D_UNICODE src\echo144.c /Fe:build\ECHO144_DUMMY.EXE /Fo:build\echo144_dummy.obj /link /SUBSYSTEM:WINDOWS user32.lib gdi32.lib winmm.lib || exit /b 1
+  echo comparison build: build\ECHO144_DUMMY.EXE
+  exit /b 0
+)
+
 set "CFLAGS=/nologo /std:c11 /W4 /O1 /GL /Gy /Gw /GS /MT /DNDEBUG /DUNICODE /D_UNICODE"
 set "LFLAGS=/link /SUBSYSTEM:WINDOWS /LTCG /OPT:REF,ICF /INCREMENTAL:NO /MAP:build\ECHO144.map user32.lib gdi32.lib winmm.lib"
 set "OUTPUT=out\ECHO144.EXE"
