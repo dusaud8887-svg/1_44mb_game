@@ -225,17 +225,23 @@ def scene_base(disk_at, disk_col):
     return cv
 
 
-def corner_prompt(cv, x, y, dim, cursor_col):
+def corner_prompt(cv, x, y, dim, cursor_col, show_cursor=True):
     cx = stamp_text(cv, "A:\\>", x, y, dim)
-    for dy in range(5):
-        put(cv, cx, y + dy, cursor_col); put(cv, cx + 1, y + dy, cursor_col)
+    if show_cursor:
+        for dy in range(5):
+            put(cv, cx, y + dy, cursor_col); put(cv, cx + 1, y + dy, cursor_col)
 
 
-def build_echo():
+def build_echo(phase=0):
+    # phase>0: 소셜 루프 GIF용 미세 애니메이션(정지 키아트는 phase=0으로 불변)
+    gd = [0, 1, 2, 1, 0, -1][phase % 6]          # 글로우 맥동
+    fdy = [0, -1, -1, 0, 1, 1][phase % 6]        # 조각 표류
+    cur = phase % 2 == 0                          # 커서 깜빡임
+
     cv = scene_base((150, 54, 44), "b")
 
     # ECHO 뒤 청록 역광 글로우 (머리 중심에 집중)
-    glow(cv, 54, 34, 34, "b")
+    glow(cv, 54, 34, 34 + gd, "b")
 
     # ECHO 히어로: 초상 2배 (96x96), 좌측 상단 포커스
     ex, ey = 6, 8
@@ -253,15 +259,16 @@ def build_echo():
 
     # 떠 있는 조각(자홍) — 상단·빔 주변, 하나는 글리치 1px
     for (fx, fy) in [(120, 22), (140, 30), (96, 16), (168, 40), (150, 74)]:
+        fy += fdy
         put(cv, fx, fy, "4"); put(cv, fx + 1, fy, "4")
         put(cv, fx, fy + 1, "4"); put(cv, fx + 1, fy + 1, "4")
-    put(cv, 141, 30, "2")   # 조각 속 잘못된 픽셀(글리치)
+    put(cv, 141, 30 + fdy, "2")   # 조각 속 잘못된 픽셀(글리치)
 
     # SEEK: 어둠 속의 눈 하나 (네거티브 스페이스 미스터리)
     seek_eye(cv, 156, 58)
 
     # 좌하단 코너: A:\> 프롬프트 + 커서 블록 (1997·플로피 모티프)
-    corner_prompt(cv, 8, 99, "6", "2")
+    corner_prompt(cv, 8, 99, "6", "2", show_cursor=cur)
     return cv
 
 

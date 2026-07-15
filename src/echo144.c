@@ -1504,7 +1504,10 @@ static void draw_pause(void) {
 }
 
 static void draw_result(void) {
-    clear(COL_BG);SelectObject(back_dc,font_big);text_at(g.won?98:110,17,g.won?COL_CYAN:COL_RED,g.won?L"송출 성공":L"연결 종료");SelectObject(back_dc,font_small);
+    clear(COL_BG);
+    /* 우측 여백에 결과 초상 — 승리=에코(송출), 패배=포맷(종료) */
+    draw_sprite_2bpp(280,92,g.won?PX_PORTRAIT_ECHO_48:PX_PORTRAIT_FORMAT_48,48,g.won?PAL_ECHO:PAL_FORMAT,1);
+    SelectObject(back_dc,font_big);text_at(g.won?98:110,17,g.won?COL_CYAN:COL_RED,g.won?L"송출 성공":L"연결 종료");SelectObject(back_dc,font_small);
     if(g.won){number_text(92,49,COL_MAGENTA,L"A:\\ SIGNAL %d/64",g.signal);text_at(83,65,COL_WHITE,L"NO CARRIER — 시청자 1");}
     else if(g.live){number_text(103,49,COL_RED,L"SIGNAL %d/64",g.signal);text_at(105,65,COL_DIM,g.hp?L"DEAD AIR":L"CARRIER LOST");text_at(67,76,COL_DIM,L"불편을 드려 유감이며, 예정대로입니다.");}
     else text_at(70,52,COL_RED,L"CARRIER LOST — CURRENT OUTPUT LOW");
@@ -1522,7 +1525,10 @@ static void draw_result(void) {
 }
 
 static void draw_ending(void) {
-    clear(COL_BLACK);SelectObject(back_dc,font_big);text_at(69,77,COL_MAGENTA,L"A:\\ SIGNAL 64/64");SelectObject(back_dc,font_small);
+    clear(COL_BLACK);
+    /* 검은 화면에 에코 홀로 — LIVE 팔들기, 성공했지만 시청자 1 */
+    draw_sprite_2bpp(160,40,PX_ECHO_16_LIVE,16,PAL_ECHO,2);
+    SelectObject(back_dc,font_big);text_at(69,77,COL_MAGENTA,L"A:\\ SIGNAL 64/64");SelectObject(back_dc,font_small);
     text_at(84,122,COL_WHITE,L"NO CARRIER — 시청자 1");text_at(71,143,COL_DIM,L"시청자 수는 정정하지 않겠습니다.");
 }
 

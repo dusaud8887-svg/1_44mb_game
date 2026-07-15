@@ -1,4 +1,5 @@
 build/
 out/
 assets/px/*.png
+assets/px/*.gif
 __pycache__/
