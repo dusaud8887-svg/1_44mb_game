@@ -135,13 +135,13 @@ typedef struct {
     bool today, muted, low_fx, running, live, won;
     bool shop_due, go_confirm, defrag_select, shop_all, elite_spawned, chest_active, seek_spoken, bad_spoken, cheated;
     uint8_t kingdom_mask, directive, distinct_mask, trash_count, bad_count, burst_mask;
-    uint8_t hp, shop_sel, defrag_sel, tutorial, purchase_n, previous_card;
+    uint8_t hp, shop_sel, defrag_sel, tutorial, purchase_n, previous_card, debut_id, debut_slot;
     uint8_t log_ids[2], log_shown, fragment_count;
     CardId purchases[16];
     int dead_ticks, live_ticks, live_start_ticks, next_shop_ticks, next_chest_ticks;
     int card_ticks, invuln_ticks, bad_immune_ticks, flash_ticks, shake_ticks, shuffle_ticks;
     int transition_ticks, ending_ticks, result_ticks, hitstop_ticks, link_ticks, card_fx_ticks, seek_fx_ticks, message_ticks, message_id;
-    int first_shuffle_ticks, predicted_at_live;
+    int first_shuffle_ticks, predicted_at_live, debut_ticks, sig_pulse_ticks;
     int signal, last_damage_card;
     float px, py, last_dx, last_dy, spawn_budget, chest_x, chest_y;
     Deck deck;
@@ -213,8 +213,10 @@ static CardId deck_draw_one(void) {
         g.deck.discard_n = 0;
         shuffle(g.deck.draw, g.deck.draw_n);
         if(!g.first_shuffle_ticks)g.first_shuffle_ticks=g.dead_ticks+(g.live?g.live_ticks:0);
-        g.shuffle_ticks = 15;
-        sfx(180, 4);
+        /* 셔플 정지 0.3초 — 덱이 한 바퀴 돌았다는 체크포인트를 몸으로 인지시킨다 */
+        g.shuffle_ticks = 33;
+        if(g.hitstop_ticks<18)g.hitstop_ticks=18;
+        sfx(180, 8);
     }
     assert(g.deck.draw_n > 0);
     return g.deck.draw[--g.deck.draw_n];
@@ -226,7 +228,13 @@ static void deck_new_hand(void) {
         g.deck.hand[g.deck.hand_n++] = deck_draw_one();
     g.deck.seek_used = false;
     g.previous_card = 255;
-    g.card_ticks = CARD_TICKS_SWAP;
+    /* DEAD AIR에서는 새 구절을 읽을 반 박자를 더 준다. LIVE 순환(B-공식)은 그대로 */
+    g.card_ticks = g.live ? CARD_TICKS_SWAP : CARD_TICKS_SWAP * 2;
+    for (int i = 0; i < g.deck.hand_n; ++i) if (g.deck.hand[i] == g.debut_id) {
+        g.debut_id = 255; g.debut_slot = (uint8_t)i; g.debut_ticks = 90;
+        sfx(NOTE_E5, 3); /* 산 카드의 첫 귀환 */
+        break;
+    }
 }
 
 static int buy_power(void) {
@@ -437,6 +445,11 @@ static void surge_damage(int damage) {
 /* ===== 카드 실행 — 해석 순서: docs/10_MECHANICS.md §4 ===== */
 static bool is_fragment(CardId id) { return id == C_CHAT || id == C_VOICE || id == C_CLIP; }
 
+/* 연속 발동 시 LINK!가 성립하는 쌍 — 손패에 인접해 있으면 예고선을 긋는다 */
+static bool combo_pair(CardId a, CardId b) {
+    return (a==C_MARKER&&b==C_SURGE)||(a==C_MULTI&&b==C_MACRO)||(a==C_PREFETCH&&is_fragment(b));
+}
+
 static void show_message(int id) { g.message_id=id; g.message_ticks=72; }
 
 static void attack_card(CardId id, int scale, bool real_card) {
@@ -487,10 +500,17 @@ static void execute_card(CardId id) {
         ++g.fragment_count;
         if(g.log_shown<2 && (g.fragment_count==2||g.fragment_count==5)) show_message(10+g.log_ids[g.log_shown++]);
     }
-    g.previous_card=id;g.card_fx_ticks=7;
-    /* 모뎀은 등급이 높을수록 낮고 두꺼운 발사음(2400=300 → 56K=180), 그 외는 가격 비례 상승 */
-    if (id != C_BAD && id != C_MULTI && id != C_PREFETCH)
-        sfx(id<=C_56K ? 300-CARD[id].cost*20 : 260+CARD[id].cost*45, 2);
+    g.previous_card=id;
+    bool silent=is_fragment(id)&&!g.live;
+    /* 무음 조각은 공격처럼 들리거나 보이면 안 된다: 궤적선 없음, 낮은 캐리어 틱, 신호 펄스만 */
+    g.card_fx_ticks=(id==C_BAD||silent)?0:7;
+    if(silent){g.sig_pulse_ticks=20;sfx(130,2);}
+    else if (id != C_BAD && id != C_MULTI && id != C_PREFETCH) {
+        /* 모뎀은 등급이 높을수록 낮고 두꺼운 발사음(2400=300 → 56K=180), 그 외는 가격 비례 상승 */
+        int f = id<=C_56K ? 300-CARD[id].cost*20 : 260+CARD[id].cost*45;
+        if(!g.deck.hand_n) f=f*3/4; /* 5장 구절의 마지막 카드만 낮은 종결음 */
+        sfx(f,2);
+    }
 }
 
 /* ===== 런 상태머신 — docs/10_MECHANICS.md §1·§6 ===== */
@@ -512,7 +532,7 @@ static void start_run(void) {
     ZeroMemory(&g, sizeof(g));
     g.seed=seed; g.rng=rng; g.today=today; g.muted=muted; g.low_fx=low; g.running=running;
     g.kingdom_mask=mask; g.directive=directive;g.log_ids[0]=log0;g.log_ids[1]=log1;g.mode=PLAY;g.hp=HP_START;
-    g.px=160; g.py=96; g.last_dx=1; g.last_dy=0; g.last_damage_card=-1;
+    g.px=160; g.py=96; g.last_dx=1; g.last_dy=0; g.last_damage_card=-1; g.debut_id=255;
     g.next_shop_ticks=SHOP_FIRST_SEC*TICK_HZ;g.next_chest_ticks=CHEST_INTERVAL_SEC*TICK_HZ;g.tutorial=onboarding_seen?0:1;onboarding_seen=true;
 #ifndef FIXED_GUN
     for (int i=0;i<7;++i) g.deck.draw[g.deck.draw_n++]=C_2400;
@@ -583,6 +603,7 @@ static void buy_selected(void) {
     if(!can_buy(id)) { sfx(90,4); return; }
     if(id==C_DEFRAG) { g.defrag_select=true; g.defrag_sel=0; return; }
     deck_add_discard(id);
+    g.debut_id=id; /* 셔플 뒤 첫 귀환 때 NEW 표시 */
     int bit=kingdom_bit(id); if(bit>=0) g.distinct_mask|=(uint8_t)(1u<<bit);
     if(g.purchase_n<ARRAY_COUNT(g.purchases)) g.purchases[g.purchase_n++]=id;
     sfx(620,5); leave_shop();
@@ -598,7 +619,7 @@ static void trash_shop_hand(void) {
 }
 
 static void enter_shop(void) {
-    deck_new_hand();g.mode=SHOP;g.shop_due=false;g.shop_sel=0;g.shop_all=false;
+    deck_new_hand();g.mode=SHOP;g.shop_due=false;g.shop_sel=0;g.shop_all=false;g.hitstop_ticks=0;
     if(!shop_help_seen){g.tutorial=2;shop_help_seen=true;}
     for(int i=0;i<10;++i) if(can_buy(shop_card(i))) { g.shop_sel=(uint8_t)i; break; }
 }
@@ -608,15 +629,21 @@ static void seek(void) {
     CardId first=g.deck.hand[0];
     for(int i=0;i+1<g.deck.hand_n;++i) g.deck.hand[i]=g.deck.hand[i+1];
     g.deck.hand[g.deck.hand_n-1]=first;
+    if(g.debut_ticks)g.debut_slot=(uint8_t)(g.debut_slot?g.debut_slot-1:g.deck.hand_n-1);
     if(g.deck.prefetch_pending&&g.card_ticks<=CARD_TICKS_PREFETCH&&!is_fragment(g.deck.hand[0]))g.card_ticks=CARD_TICKS_NORMAL;
     g.deck.seek_used=true;g.seek_fx_ticks=8;if(!g.seek_spoken){g.seek_spoken=true;show_message(5);}sfx(340,4);
 }
 
 static void trigger_next_card(void) {
-    if(!g.deck.hand_n) return;
+    if(!g.deck.hand_n) { /* 외부 요인(엘리트의 BAD 제거)으로 손패가 비면 여기서 회복한다 — 교착 방지 */
+        if(g.shop_due && !g.live) enter_shop();
+        else deck_new_hand();
+        return;
+    }
     CardId id=g.deck.hand[0];
     for(int i=0;i+1<g.deck.hand_n;++i) g.deck.hand[i]=g.deck.hand[i+1];
     --g.deck.hand_n;
+    if(g.debut_ticks){if(g.debut_slot)--g.debut_slot;else g.debut_ticks=0;}
     execute_card(id);
     if(id!=C_PATCH||deck_total()<DECK_MIN) g.deck.discard[g.deck.discard_n++]=id;
     if(!g.deck.hand_n) {
@@ -676,6 +703,7 @@ static void shop_input(void) {
         return;
     }
     if(g.defrag_select) {
+        if(pressed(VK_ESCAPE)){g.defrag_select=false;return;} /* 구매 확정 전 취소 */
         if(pressed(VK_LEFT)||pressed(VK_UP)) g.defrag_sel=(uint8_t)((g.defrag_sel+g.deck.hand_n-1)%g.deck.hand_n);
         if(pressed(VK_RIGHT)||pressed(VK_DOWN)) g.defrag_sel=(uint8_t)((g.defrag_sel+1)%g.deck.hand_n);
         if(pressed(VK_RETURN)) trash_shop_hand();
@@ -783,6 +811,7 @@ static void update_play(void) {
     if(g.invuln_ticks)--g.invuln_ticks; if(g.bad_immune_ticks)--g.bad_immune_ticks;
     if(g.flash_ticks)--g.flash_ticks;if(g.shake_ticks)--g.shake_ticks;if(g.shuffle_ticks)--g.shuffle_ticks;
     if(g.link_ticks)--g.link_ticks;if(g.card_fx_ticks)--g.card_fx_ticks;if(g.seek_fx_ticks)--g.seek_fx_ticks;if(g.message_ticks)--g.message_ticks;
+    if(g.debut_ticks)--g.debut_ticks;if(g.sig_pulse_ticks)--g.sig_pulse_ticks;
     if(!g.live) {
         ++g.dead_ticks;
 #ifndef FIXED_GUN /* 대조 빌드: 상점·덱 없음 — docs/50 §2 */
@@ -971,11 +1000,21 @@ static void draw_world(void) {
 static void draw_hud(void) {
     rect(0,ARENA_H,SCREEN_W,SCREEN_H-ARENA_H,COL_PANEL);line(0,ARENA_H,319,ARENA_H,g.live?COL_MAGENTA:COL_CYAN);
     wchar_t top[128];
-    if(g.live)wsprintfW(top,L"HP %d   송출 신호 %d/64   종료 진행 %d%%",g.hp,g.signal,g.live_ticks/(LIVE_MAX_TICKS/100));
-    else wsprintfW(top,L"HP %d   %d:%02d   현재 %d   신호 ≥%d/64",g.hp,g.dead_ticks/3600,(g.dead_ticks/60)%60,now_score(),estimate_signal());
-    text_at(5,3,COL_WHITE,top);
+    if(g.live){
+        wsprintfW(top,L"HP %d   송출 신호 %d/64   종료 진행 %d%%",g.hp,g.signal,g.live_ticks/(LIVE_MAX_TICKS/100));
+        text_at(5,3,COL_WHITE,top);
+    } else {
+        wsprintfW(top,L"HP %d   %d:%02d   현재 %d",g.hp,g.dead_ticks/3600,(g.dead_ticks/60)%60,now_score());
+        text_at(5,3,COL_WHITE,top);
+        wsprintfW(top,L"신호 ≥%d/64",estimate_signal());
+        text_at(196,3,g.sig_pulse_ticks?COL_MAGENTA:COL_WHITE,top); /* 무음 조각 발동 펄스 */
+    }
     if(g.live){int sw=118*clampi(g.signal,0,SIGNAL_GOAL)/SIGNAL_GOAL,fw=123*clampi(g.live_ticks,0,LIVE_MAX_TICKS)/LIVE_MAX_TICKS;frame(5,15,120,5,COL_MAGENTA);rect(6,16,sw,3,COL_MAGENTA);frame(190,15,125,5,COL_RED);rect(314-fw,16,fw,3,COL_RED);}
     int count=g.deck.hand_n;for(int i=0;i<count;++i)card_box(4+i*63,198-(i==0?2:0),g.deck.hand[i],i==0,false);
+    for(int i=0;i+1<count;++i)if(combo_pair(g.deck.hand[i],g.deck.hand[i+1]))
+        line(31+i*63,227,31+(i+1)*63,227,COL_MAGENTA); /* 자연 조합 예고선 */
+    if(g.debut_ticks&&g.debut_slot<count){int dx=3+g.debut_slot*63;frame(dx,197,57,29,COL_AMBER);if(g.debut_ticks&8)text_at(dx+17,184,COL_AMBER,L"NEW");}
+    if(g.seek_fx_ticks&&count)frame(3+(count-1)*63,197,57,29,COL_AMBER); /* SEEK로 보낸 카드 */
     if(g.seek_fx_ticks)line(31,195,31+(8-g.seek_fx_ticks)*252/8,195,COL_AMBER);
 #ifdef FIXED_GUN
     if(!count)text_at(96,207,COL_DIM,L"대조 빌드 — 고정 총");
@@ -983,7 +1022,9 @@ static void draw_hud(void) {
     if(!count)text_at(110,207,COL_DIM,L"셔플 중...");
 #endif
     text_at(5,229,COL_DIM,g.deck.seek_used?L"SEEK 사용":L"SPACE SEEK");
-    text_at(121,229,COL_AMBER,directive_name());text_at(258,229,COL_DIM,L"시청자 1");
+    text_at(121,229,COL_AMBER,directive_name());
+    if(!g.live&&g.shop_due)text_at(252,229,(g.dead_ticks&16)?COL_CYAN:COL_DIM,L"접속 대기"); /* NODE 예고 */
+    else text_at(258,229,COL_DIM,L"시청자 1");
     if(g.shuffle_ticks){text_at(137,181,COL_AMBER,L"SHUFFLE");rect((15-g.shuffle_ticks)*SCREEN_W/15,ARENA_H,3,SCREEN_H-ARENA_H,COL_AMBER);}
     if(g.link_ticks)text_at(145,181,COL_MAGENTA,L"LINK!");
     if(g.live)for(int i=0;i<4;++i){uint32_t c=g.signal>=(i+1)*16?COL_MAGENTA:COL_DIM;frame(278+i*9,20,7,7,c);if(g.signal>=(i+1)*16)rect(280+i*9,22,3,3,c);}
@@ -1271,6 +1312,12 @@ int main(void) {
     for(int i=0;i<9;++i)deck_add_discard(C_CHAT);assert(directive_bonus()==16);
     g.bad_count=0;for(int i=0;i<8;++i){g.bad_immune_ticks=0;insert_bad();}assert(g.bad_count==5);
     ZeroMemory(&g.deck,sizeof(g.deck));for(int i=0;i<4;++i)g.deck.draw[g.deck.draw_n++]=C_2400;g.deck.hand[0]=C_PATCH;g.deck.hand_n=1;trigger_next_card();assert(deck_total()==5);
+    /* 엘리트의 BAD 제거로 손패가 빈 뒤에도 카드 순환이 회복되는지 — 교착 회귀 테스트 */
+    prepare_channel(500,false);start_run();
+    ZeroMemory(&g.deck,sizeof(g.deck));for(int i=0;i<9;++i)g.deck.discard[g.deck.discard_n++]=C_2400;
+    g.deck.hand[0]=C_BAD;g.deck.hand_n=1;g.bad_count=1;
+    remove_bad_once();assert(g.deck.hand_n==0);
+    g.card_ticks=0;g.hp=255;update_play();assert(g.deck.hand_n==5);printf("empty-hand recovery: PASS\n");
     prepare_channel(9,false);start_run();g.hp=255;for(int i=0;i<2100&&g.mode==PLAY;++i)update_play();assert(g.mode==SHOP);
     g.mode=PLAY;g.live=true;g.transition_ticks=0;g.live_ticks=3599;g.signal=64;g.hp=5;update_play();assert(g.mode==ENDING&&g.won);
     prepare_channel(88,false);start_run();g.live=true;g.transition_ticks=0;g.live_ticks=3599;g.signal=0;g.hp=5;update_play();assert(g.mode==RESULT&&!g.won);
