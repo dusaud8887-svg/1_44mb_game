@@ -36,6 +36,11 @@ def blank():
     return [[BG for _ in range(W)] for _ in range(H)]
 
 
+def set_canvas(w, h):
+    global W, H
+    W, H = w, h
+
+
 def put(cv, x, y, c):
     if 0 <= x < W and 0 <= y < H:
         cv[y][x] = c
@@ -233,6 +238,7 @@ def corner_prompt(cv, x, y, dim, cursor_col, show_cursor=True):
 
 
 def build_echo(phase=0):
+    set_canvas(192, 108)
     # phase>0: 소셜 루프 GIF용 미세 애니메이션(정지 키아트는 phase=0으로 불변)
     gd = [0, 1, 2, 1, 0, -1][phase % 6]          # 글로우 맥동
     fdy = [0, -1, -1, 0, 1, 1][phase % 6]        # 조각 표류
@@ -274,6 +280,7 @@ def build_echo(phase=0):
 
 def build_seek():
     """시크 단독 — '지켜보는 자'. 어둠 속 멀리 청록 신호를 응시한다."""
+    set_canvas(192, 108)
     cv = scene_base((44, 56, 40), "e")     # 플로피 링을 왼쪽으로(시선 방향)
 
     # 시크가 응시하는 것: 왼쪽 어둠 속 작은 청록 신호 하나 (네거티브 스페이스)
@@ -307,6 +314,7 @@ def build_seek():
 
 def build_format():
     """포맷 단독 — '닫는 자'. 종료 진행 75% 막대 + 최대 네거티브 스페이스."""
+    set_canvas(192, 108)
     cv = scene_base((150, 54, 46), "c")
 
     # 포맷 뒤 자홍 냉광 (초상 뒤에 집중)
@@ -351,6 +359,74 @@ def frame_rect(cv, x, y, w, h, c):
         put(cv, x, y + j, c); put(cv, x + w - 1, y + j, c)
 
 
+def build_main():
+    """메인 키아트 — 3인·관계·배경·컨셉·상황.
+    ECHO가 LAST LIVE를 송출(중앙 히어로) / FORMAT이 위에서 종료하러 강림(위협) /
+    SEEK이 어둠 속에서 지켜본다(유일한 시청자). 1997·A:\\ 디스크·CRT 세계."""
+    set_canvas(256, 160)
+    cv = blank()
+    vignette(cv)
+    pcb_grid(cv)
+    disk_ring(cv, 128, 84, 74, "b")           # 거대한 A:\ 플로피 원반(무대)
+    disk_ring(cv, 128, 84, 40, "b")
+
+    # FORMAT: 위에서 강림하는 종결자(자홍) — 초상 2배, 상단, 위협적으로 큰 그림자
+    glow(cv, 60, 34, 40, "c")
+    ff = blit(cv, "assets/px/portrait_format_48.px", 12, -6, 2,
+              {"1": "1", "2": "4", "3": "5"})
+    rim(cv, ff, "4", [(1, 1), (0, 1)])         # 하단 림만 — 상단은 어둠에서 강림
+    # 종료 진행 막대(상단, FORMAT에서 뻗음) — 상황: 카운트다운
+    frame_rect(cv, 74, 12, 60, 8, "4")
+    for x in range(75, 75 + int(58 * 0.75)):
+        if (x + 15) % 2 == 0 or x < 75 + 40:
+            cv[15][x] = "4"; cv[16][x] = "4"
+    stamp_text(cv, "75%", 138, 12, "4")
+
+    # SEEK: 우하단 어둠 속 관찰자(호박) — 초상 2배, 그림자에 잠겨 살짝 프레임 안으로
+    glow(cv, 206, 118, 30, "e")
+    sf = blit(cv, "assets/px/portrait_seek_48.px", 168, 78, 2,
+              {"1": "1", "2": "3", "3": "5"})
+    rim(cv, sf, "3", [(-1, 0), (-1, -1)])
+    # 지켜보는 시선: SEEK 눈 → ECHO 점선(관계 — 유일한 시청자가 지켜본다)
+    for i, x in enumerate(range(122, 184, 4)):
+        put(cv, x, 106 - i // 3, "3")
+
+    # ECHO: 중앙 히어로, LAST LIVE 송출(청록) — 초상 2배, 가장 앞
+    glow(cv, 116, 96, 34, "b")
+    ef = blit(cv, "assets/px/portrait_echo_48.px", 74, 60, 2,
+              {"1": "1", "2": "2", "3": "5"})
+    put(cv, 74 + 16, 60 + 76, "8"); put(cv, 75 + 16, 60 + 76, "8")   # 빨간 LIVE 핀
+    rim(cv, ef, "2", [(1, 0), (1, 1), (0, 1)])
+    rim(cv, ef, "5", [(-1, 0)])
+
+    # 송출 신호 빔: ECHO 정수리 → 상단 64 게이지 (컨셉: 64패킷 송출), 청록 코어 + 글로우
+    for y in range(20, 62):
+        put(cv, 116, y, "2"); put(cv, 117, y, "2")
+        if y % 4 == 0:
+            put(cv, 116, y, "5"); put(cv, 117, y, "5")   # 흰 펄스
+        if y % 3 == 0:                                    # 빔 글로우 옆번짐
+            put(cv, 115, y, "b"); put(cv, 118, y, "b")
+    # SIGNAL 64/64 게이지(상단 중앙, 만충 = 성공의 약속)
+    frame_rect(cv, 98, 6, 38, 8, "2")
+    for i in range(4):
+        for x in range(100 + i * 9, 100 + i * 9 + 7):
+            cv[9][x] = "2"; cv[10][x] = "5"; cv[11][x] = "2"
+
+    # 떠 있는 조각(자홍) + 글리치 1997 — 우측 밀도 보강
+    for (fx, fy) in [(150, 30), (96, 44), (210, 40), (60, 96), (232, 70),
+                     (44, 62), (198, 96), (176, 60), (150, 120), (224, 128)]:
+        put(cv, fx, fy, "4"); put(cv, fx + 1, fy, "4")
+        put(cv, fx, fy + 1, "4"); put(cv, fx + 1, fy + 1, "4")
+    stamp_text(cv, "1997", 200, 20, "6")
+    for dy in range(5):
+        for dx in range(3):
+            if FONT["9"][dy][dx] == "#":
+                put(cv, 204 + dx, 20 + dy, "4")
+
+    corner_prompt(cv, 8, 148, "6", "2")
+    return cv
+
+
 def save_px(cv, path, title):
     palette = " ".join(f"{k}={v}" for k, v in PAL.items())
     lines = [
@@ -373,3 +449,5 @@ if __name__ == "__main__":
             "keyart_seek - 시크 웜 단독 키비주얼 '지켜보는 자' (인게임 자산 아님)")
     save_px(build_format(), "assets/px/keyart_format.px",
             "keyart_format - 포맷 제로 단독 키비주얼 '닫는 자' (인게임 자산 아님)")
+    save_px(build_main(), "assets/px/keyart_main.px",
+            "keyart_main - 에코/144 메인 키아트 (3인·관계·상황, 인게임 자산 아님)")
