@@ -59,6 +59,9 @@ enum {
     COL_BLACK = 0x00000000
 };
 
+/* 3음 모티프 — docs/40_ART_AUDIO_TEXT.md §4: 에코=정방향, 시크=역방향, 제로=단음 반복 */
+enum { NOTE_E4 = 330, NOTE_G4 = 392, NOTE_B4 = 494, NOTE_E5 = 659, NOTE_G5 = 784, NOTE_B5 = 988 };
+
 typedef uint8_t CardId;
 typedef enum { TITLE, CHANNEL, PLAY, SHOP, PAUSE_MODE, ENDING, RESULT } Mode;
 typedef enum { WORM, POPUP, TROJAN, RANSOM } EnemyType;
@@ -175,6 +178,7 @@ static int popcount8(uint8_t x) {
 }
 
 static void sfx(int freq, int ticks);
+static void sfx_motif(int f0, int f1, int f2, int ticks_per_note);
 static void show_message(int id);
 static int kingdom_bit(CardId id);
 
@@ -355,7 +359,7 @@ static void enemy_killed(int index) {
         remove_bad_once();
         deck_add_discard(C_PATCH);
         show_message(4);
-        sfx(820, 12);
+        sfx_motif(NOTE_B4,NOTE_G4,NOTE_E4,4); /* 시크의 선물 — 역방향 */
     }
 }
 
@@ -484,7 +488,9 @@ static void execute_card(CardId id) {
         if(g.log_shown<2 && (g.fragment_count==2||g.fragment_count==5)) show_message(10+g.log_ids[g.log_shown++]);
     }
     g.previous_card=id;g.card_fx_ticks=7;
-    if (id != C_BAD && id != C_MULTI && id != C_PREFETCH) sfx(260 + CARD[id].cost*45, 2);
+    /* 모뎀은 등급이 높을수록 낮고 두꺼운 발사음(2400=300 → 56K=180), 그 외는 가격 비례 상승 */
+    if (id != C_BAD && id != C_MULTI && id != C_PREFETCH)
+        sfx(id<=C_56K ? 300-CARD[id].cost*20 : 260+CARD[id].cost*45, 2);
 }
 
 /* ===== 런 상태머신 — docs/10_MECHANICS.md §1·§6 ===== */
@@ -511,13 +517,16 @@ static void start_run(void) {
     for (int i=0;i<7;++i) g.deck.draw[g.deck.draw_n++]=C_2400;
     for (int i=0;i<3;++i) g.deck.draw[g.deck.draw_n++]=C_CHAT;
     shuffle(g.deck.draw,g.deck.draw_n); deck_new_hand();
+    sfx_motif(NOTE_E4,NOTE_G4,NOTE_B4,5); /* 에코 등장 — 정방향 */
 }
 
 static void dev_log_result(void);
 
 static void finish_run(bool won) {
     if (g.mode == RESULT||g.mode==ENDING) return;
-    g.won=won;g.mode=won?ENDING:RESULT;g.ending_ticks=won?150:0;sfx(won?960:110,won?18:24);dev_log_result();
+    g.won=won;g.mode=won?ENDING:RESULT;g.ending_ticks=won?150:0;
+    if(won)sfx_motif(NOTE_E5,NOTE_G5,NOTE_B5,8);else sfx(110,24); /* 승리 — 에코 정방향 한 옥타브 위 */
+    dev_log_result();
 }
 
 static uint8_t stamp_mask(void) {
@@ -538,7 +547,7 @@ static void start_live(void) {
         g.enemies[i].x=(float)clampi((int)(g.enemies[i].x+dx*28),4,316);
         g.enemies[i].y=(float)clampi((int)(g.enemies[i].y+dy*28),4,188);
     }
-    g.flash_ticks=g.low_fx?0:15; sfx(520,18);
+    g.flash_ticks=g.low_fx?0:15; sfx_motif(NOTE_B4,NOTE_B4,0,9); /* 제로의 전환 — 단음 반복 */
 }
 
 static CardId shop_card(int slot) {
@@ -759,6 +768,7 @@ static void spawn_wave(void) {
     }
     if(!g.live&&!g.elite_spawned&&g.dead_ticks>=180*TICK_HZ) {
         spawn_edge_enemy(RANSOM,true);g.elite_spawned=true;show_message(3);
+        sfx_motif(NOTE_B4,NOTE_G4,NOTE_E4,6); /* 시크 등장 — 역방향 */
     }
 }
 
@@ -781,7 +791,11 @@ static void update_play(void) {
     if(g.card_ticks>0)--g.card_ticks; else trigger_next_card();
     if(g.signal>=SIGNAL_GOAL) {finish_run(true);return;}
     if(!g.hp) {finish_run(false);return;}
-    if(g.live&&++g.live_ticks>=LIVE_MAX_TICKS) finish_run(false);
+    if(g.live){
+        ++g.live_ticks;
+        if(g.live_ticks==LIVE_MAX_TICKS*3/4)sfx_motif(NOTE_B4,NOTE_B4,0,6); /* 종료 진행 75% — 제로 단음 */
+        if(g.live_ticks>=LIVE_MAX_TICKS)finish_run(false);
+    }
 }
 
 static void game_tick(void) {
@@ -1055,9 +1069,16 @@ static WAVEHDR wave_headers[4];
 static int16_t wave_samples[4][1024];
 static uint32_t audio_phase1,audio_phase2,audio_noise=1,sfx_phase;
 static int sfx_freq,sfx_left,sfx_volume;
+static int sfx_seq_freq[2],sfx_seq_n,sfx_seq_len;
 static bool audio_ready;
 
-static void sfx(int freq,int ticks){sfx_freq=freq;sfx_left=ticks*22050/TICK_HZ;sfx_volume=2200;sfx_phase=0;}
+static void sfx(int freq,int ticks){sfx_freq=freq;sfx_left=ticks*22050/TICK_HZ;sfx_volume=2200;sfx_phase=0;sfx_seq_n=0;}
+
+static void sfx_motif(int f0,int f1,int f2,int ticks_per_note){
+    sfx(f0,ticks_per_note);sfx_seq_len=sfx_left;
+    if(f1)sfx_seq_freq[sfx_seq_n++]=f1;
+    if(f2)sfx_seq_freq[sfx_seq_n++]=f2;
+}
 
 static void fill_audio(WAVEHDR *header) {
     int index=(int)(header-wave_headers);int16_t *out=wave_samples[index];
@@ -1070,6 +1091,7 @@ static void fill_audio(WAVEHDR *header) {
         if(!g.muted){if(f1){audio_phase1+=step1;sample+=(audio_phase1&0x80000000u)?380:-380;}
             if(f2){audio_phase2+=step2;if(!g.live||g.signal>=16)sample+=(audio_phase2&0x80000000u)?220:-220;}
             int noise_mask=g.live&&g.signal>=32?15:127;if(noise_on&&(i&noise_mask)==0){audio_noise=(audio_noise>>1)^((0u-(audio_noise&1u))&0xB400u);sample+=(audio_noise&1)?120:-120;}
+            if(sfx_left<=0&&sfx_seq_n>0){sfx_freq=sfx_seq_freq[0];sfx_seq_freq[0]=sfx_seq_freq[1];--sfx_seq_n;sfx_left=sfx_seq_len;sfx_phase=0;}
             if(sfx_left>0){sfx_phase+=(uint32_t)(((uint64_t)(uint32_t)sfx_freq<<32)/22050);sample+=(sfx_phase&0x80000000u)?sfx_volume:-sfx_volume;--sfx_left;}
         }
         out[i]=(int16_t)clampi(sample,-32767,32767);
