@@ -121,17 +121,33 @@ src/
 
 개발은 분리, 릴리스는 unity `#include` — 크기 최적화(/GL·ICF)와 개발 반복성을 동시에 얻는다.
 
-## 5. 게임 이벤트 — 코어는 렌더·오디오를 호출하지 않는다
+## 5. 명령·상태·이벤트 — 코어는 렌더·오디오를 호출하지 않는다
 
-코어는 이벤트를 출력하고, 렌더·오디오가 소비한다:
+Slay the Web의 액션 큐 구조를 C에 맞게 번안한다([35](35_REFERENCES.md) §3) — 불변 상태 복사 없이 직접 수정 + 명령 로그:
 
-```text
-EVENT_CARD_SELECTED  EVENT_CARD_TRIGGERED  EVENT_CARD_CACHED  EVENT_CARD_RETURNED
-EVENT_SHUFFLE        EVENT_INTENT_REVEALED EVENT_ECHO_GAINED  EVENT_ECHO_CONVERTED
-EVENT_TREND_CHANGED  EVENT_RING_THRESHOLD  EVENT_OPEN_CHANNEL EVENT_ENDING_LOCKED
+```c
+bool game_apply_command(GameState *state, const GameCommand *command, GameEventBuffer *events);
+
+typedef struct GameCommand { uint8_t type, actor, slot; int8_t x, y; } GameCommand;
+/* CMD_SET_CARRIER_TX  CMD_SET_CARRIER_RX  CMD_CUE_PROGRAM  CMD_SEEK_CARD
+   CMD_FIRE_PROGRAM    CMD_BUY_CARD        CMD_OPEN_CHANNEL */
+
+typedef struct GameEvent { uint8_t type, source, target, recipe; int16_t x, y, value; } GameEvent;
+/* EV_CARD_CUED  EV_CARD_FIRED  EV_DAMAGE  EV_ENEMY_KILLED  EV_ECHO_ADDED  EV_ECHO_CONVERTED
+   EV_TREND_SELECTED  EV_SYNC_CHANGED  EV_SHUFFLE  EV_NEW_CARD_RETURNED  EV_RING_THRESHOLD
+   EV_OPEN_CHANNEL  EV_ENDING_LOCKED */
 ```
 
-효과: 정확한 테스트(카드 타임라인 단언은 이벤트 스트림 비교) / 리플레이 / 다른 프런트엔드 / 화면-상태 결합 감소.
+렌더·오디오는 이벤트만 소비하고 상태를 변경하지 않는다. 이 구조가 주는 것: 결정론 리플레이·TODAY 재현 / 명령 단위 테스트(카드 타임라인 = 이벤트 스트림 비교) / **NØA의 플레이어 명령 모방** / **시크의 이전 방송 재생**([10](10_MECHANICS.md) §13 — 명령 로그는 6분 틱당 1B ≈ 21.6KB, 저장 파일 측) / 디버그 로그 / 전략 봇 / 프런트엔드 교체.
+
+### RNG 스트림 분리 — V2에서 즉시 채택 (V1의 "확장판 보류"에서 승격)
+
+하나의 스트림에 셔플·웨이브·연출이 섞이면 파티클 수 하나가 TODAY의 카드 순서를 바꾼다:
+
+```c
+Rng deck_rng;        /* 셔플 */          Rng encounter_rng;  /* 적 의도·웨이브 */
+Rng reward_rng;      /* 시장·보상 */     Rng cosmetic_rng;   /* 파티클·오류 프레임 */
+```
 
 ## 6. 효과 레시피 — 데이터화의 경계
 
@@ -154,7 +170,25 @@ typedef struct {   /* CardDefPacked — 12B */
 - **데이터로 처리**: 탄환, 파동, 벽, 마킹, 연쇄, 잔상, 플래시, 기본 드로우·CUE.
 - **전용 C 코드(hook)**: CACHE 보관, MACRO 형태 재생, PREFETCH 탐색, DEFRAG 삭제, 메아리 색 변환, TREND MIRROR, 엔딩 판정.
 
-노아의 복제 기술은 기존 레시피에 자홍 팔레트·대상/방향 반전을 적용한 **재사용**이다 — 신규 이펙트 비용 최소화.
+노아의 복제 기술은 기존 레시피에 `palette=MAGENTA, target_rule=INVERT, motion=REVERSE`를 적용한 **재사용**이다 — 신규 이펙트 비용 최소화. 레시피 어휘 `[시드값]`: shape = `POINT PACKET LINE ARC RING FRAME GRID GLYPH` / motion = `STRAIGHT ORBIT RETURN CHAIN EXPAND SHRINK FOLLOW DELAYED_REPLAY`. 배경도 같은 원리 — `BackgroundRecipe { base_palette, grid_type, frame_type, noise_density, timestamp_mode, profile_density, scroll_speed, hidden_clue }`로 시간층을 파라미터화한다([40](40_ART_AUDIO_TEXT.md) §5).
+
+### 렌더 아키텍처 — 인덱스 장면 버퍼 `[본 개정 채택 — 원문 §25.2]`
+
+32비트 직접 쓰기에서 한 단계 발전한다:
+
+```c
+uint8_t  scene_index[320*240];   /* 픽셀당 팔레트 인덱스 1B */
+uint32_t present_bgra[320*240];  /* 최종 변환 단계에서만 생성 */
+uint32_t palette_bgra[16];
+```
+
+장점: 팔레트 스왑·시간층 변환·엔딩 색 변형·NØA 자홍 모방이 **인덱스 치환**으로 끝난다. 전체 화면 색 효과에 이미지 재저장 불필요. 팔레트 LUT 세트: `normal / hit_flash / noa_mimic / archive / colorblind`. (런타임 메모리 ≈375KB — 파일 크기 제한과 무관.)
+
+렌더 레이어 순서(고정): `background_base → background_time_layer → floor_marks → effects_under → enemies → player_shadow → player → effects_over → pickups_echoes → bullets_hazard → boss_overlay → HUD → dialogue_portrait → accessibility_overlay`. 위험 탄이 아군 효과에 묻히지 않는 우선순위는 [45](45_UI_UX.md) §5.
+
+프로시저럴 프리미티브(스프라이트보다 코드가 싼 것): 선·점선·원호·사각 프레임·크롭 영역·링 구획·연결 노드·행 오프셋·팔레트 펄스·화면 닫힘 마스크 — 게임에 실제 필요한 도형만 정수 함수로. 범용 벡터 렌더러 금지.
+
+팔레트 리맵 적합 대상: 일반 파티클 / 공통 프로필 원 / 메아리 조각 / NØA가 복제하는 플레이어 효과 / 상태 아이콘. **캐릭터 고유 자산을 색만 바꿔 재사용하지 않는다.**
 
 ## 7. 빌드 타임 콘텐츠 컴파일러 + 수치 단일 원천
 
@@ -194,18 +228,30 @@ struct SaveData {
 
 ## 9. 용량 전략
 
-병목은 저장 용량이 아니라 객체 수·가독성·콘텐츠 생산 시간이다. 픽셀 자산의 실제 비용:
+병목은 저장 용량이 아니라 객체 수·가독성·콘텐츠 생산 시간이다([35](35_REFERENCES.md) §1). 픽셀 자산의 실제 비용:
 
 ```text
-16×16 2bpp 1프레임 = 64B      → 100프레임 = 6.4KB
-48×48 2bpp 초상 1장 = 576B    → 20장 = 11.5KB
-320×240 4bpp 키아트 = 38.4KB
-8×12 1bpp 글리프 500개 ≈ 6KB
+16×16 2bpp 1프레임 = 64B / 24×24 4bpp = 288B → 에코 12프레임 ≈3.4KB, 네임드 3인 ≈10.4KB
+64×64 4bpp 초상 = 2KB → 3장 6KB / 카드 아이콘 24종 16×16 2bpp ≈1.5KB
+320×180 4bpp 키아트 = 28.8KB / 8×12 1bpp 글리프 500개 ≈ 6KB
 ```
 
-따라서 애니메이션 수십 프레임, 표정 초상 다수, **내장 한글 픽셀 폰트**, 카드·의도 아이콘, 팔레트 다수, 압축 키아트 1~2장이 전부 예산 안이다.
+**내부 소프트 캡 900KB** (공모전 상한 1,474,560B, 안전 여유 ≥574KB) `[시드값]`:
 
-압축 우선순위: ① 비트 패킹(1/2/4bpp, 투명 인덱스, 팔레트 런타임) → ② 애니메이션 델타(기준 프레임+변경 구간) → ③ 반복 행 RLE(`[len:4][color:2]`) → ④ 자산 수백 KB 초과 시에만 블롭 압축(heatshrink / 부분 miniz — **해제 코드 포함한 최종 EXE 크기**로 판단).
+| 영역 | 목표 |
+|---|---:|
+| 플랫폼·게임·렌더 코드 | 250~350KB |
+| 스프라이트·초상·아이콘 | 100~180KB |
+| 비트맵 글꼴 | 8~24KB |
+| 음악 패턴·신스 패치 | 20~50KB |
+| 카드·적·의도 데이터 | 10~30KB |
+| 텍스트·로그·엔딩 | 20~60KB |
+| 빌드 메타·리소스 | 10~30KB |
+| 여유 | 200KB+ |
+
+아트·콘텐츠 세부 배분(캐릭터 24 / 초상·컷인 24 / 적·아이콘 16 / UI·폰트 32 / 배경·키아트 48 / 효과 8 / 음악 16 / 문자열 24 ≈ **192KB 전후**)은 방향이지 상한이 아니다 — 빌드마다 카테고리별 보고서로 추적([41](41_PIXEL_ART.md) §5).
+
+압축 우선순위: ① 비트 패킹(1/2/4bpp, 투명 인덱스, 팔레트 런타임) → ② 투명 영역 크롭(피벗 보존) → ③ 동일 프레임 재사용·팔레트 리맵 → ④ 애니메이션 델타 → ⑤ 반복 행 RLE(`[len:4][color:2]`) → ⑥ 실측 후에만 heatshrink(**해제 코드 포함한 최종 EXE 크기**로 판단 — "자산 파일만 작아졌다"는 채택 사유가 아니다). PNG·JPEG 런타임 로더는 넣지 않는다 — 모든 이미지는 빌드 시 C 배열.
 
 **EXE 패커(UPX 등) 영구 불채택**: 용량 여유 + SmartScreen/Defender 신뢰성 + 크래시 분석. `내부 자산 데이터 압축 가능, 최종 EXE 무패킹`.
 
@@ -213,12 +259,19 @@ struct SaveData {
 
 ### 내장 비트맵 폰트
 
-`8×12(또는 8×14) 1bpp / ASCII 전체 + 게임에서 쓰는 한글 음절만 / 문장은 글리프 ID 배열`. 효과: 시스템 폰트 의존 제거(§3-5), 픽셀 일관성, `TextOutW`·`CreateFontW` 제거, 색·배경·DPI 문제 소멸. 글리프 subset 추출은 콘텐츠 컴파일러(§7)가 문자열 테이블에서 자동 수집 — 누락 글리프는 빌드 실패.
+`ASCII 6×8 고정폭 / 한글 본문 8×12~8×14 / 숫자 6×8 / 제목은 전용 워드마크`. 글리프 테이블: `Glyph { bitmap_offset, width, bearing_x, bearing_y, advance }`. 문장은 글리프 ID 배열. 효과: 시스템 폰트 의존 제거(§3-5), 픽셀 일관성, `TextOutW`·`CreateFontW` 제거, 색·배경·DPI 문제 소멸. 글리프 subset 추출은 콘텐츠 컴파일러(§7)가 문자열 테이블에서 자동 수집 — 누락 글리프는 빌드 실패. 문자열 압축은 양이 늘 때만: ① 중복 문구 토큰화 → ② 글리프 ID 스트림 → ③ 빈용 단어 사전 → ④ 최후에 RLE/Huffman — 수십 KB 이하면 단순 배열이 낫다.
 
-## 10. 결정론과 테스트
+### 오디오 확장
 
-- `QueryPerformanceCounter` 고정 60Hz 유지. RNG는 시드 저장 xorshift32 — **전투·상점·연출 스트림 분리**는 확장판(리플레이 공유·온라인 검증)에서, 고정소수점(24.8 좌표/16.16 속도/256단계 각도)도 그때 검토. 지금의 우선순위는 선택 구조와 카드 개성이다.
-- 테스트 계층: 커밋(셀프테스트+SIM 30시드) / 릴리스(1,000+런) / 사람(5명) — [20](20_BALANCE.md) §SIM.
+`waveOut` 22.05kHz 모노 유지, 보이스: 사각파 2 + 삼각파 1 + 노이즈 1 + SFX 2 `[시드값]`. 패치는 데이터: `SynthPatch { wave, attack, decay, sustain, release, slide, vibrato, crush }` + pitch slide·짧은 아르페지오·LFSR 타악. 음원 파일이 아니라 **패치·음표·패턴을 저장한다** — 수십 KB로 게임 전체의 음악 정체성([40](40_ART_AUDIO_TEXT.md) §6: 3음 모티프, 5장 손패 시퀀서, SYNC 화음 레이어, 엔딩별 마지막 음).
+
+## 10. 결정론·성능·테스트
+
+- `QueryPerformanceCounter` 고정 60Hz 유지. RNG 스트림 4분리는 V2 즉시 채택(§5). 고정소수점(24.8 좌표/16.16 속도/256단계 각도)은 확장판(리플레이 공유·온라인 검증)에서 — 지금의 우선순위는 선택 구조와 카드 개성이다. 단 파티클·이펙트는 처음부터 작은 정수/고정소수 단위가 결정론과 속도에 유리하다.
+- 성능 기법의 채택 기준 (실측 최악 충돌 틱 0.162ms — 조기 최적화 금지):
+  - **지금 채택**: 고정 배열 풀 개선(활성 플래그·자유 인덱스 스택·생성 실패 계측·최대 사용량 기록) / 파티클 전용 풀(게임 판정과 분리, 가득 차면 오래된 장식부터 덮어씀 — 풀 크기·화면 동시 상한은 [45](45_UI_UX.md) §5) / **적 분리 벡터**(겹침 반발 — 군중이 흐르는 움직임, 스프라이트 추가 없이 밀도·난이도 상승) / **근접 탐색 캐시**(자동 CARRIER는 현재 타깃이 유효하면 유지, 매 발사 전체 탐색 금지).
+  - **조건부**: 공간 해시는 `적 ≥384 / 투사체 ≥512 / 충돌 틱 평균 >1ms / 최악 >3ms` 중 하나가 실측될 때만. ECS·멀티스레드 금지.
+- 테스트 계층: 커밋(셀프테스트+SIM 30시드) / 릴리스(1,000+런) / 사람(5명) — [20](20_BALANCE.md) §SIM. 스크린샷 회귀는 [41](41_PIXEL_ART.md) §5.
 
 V1 하니스가 이미 커버하는 것(결정론 리플레이, 덱 불변식, 풀런, 경계값)은 유지하고, **빠져 있던 핵심 테스트**를 추가한다:
 

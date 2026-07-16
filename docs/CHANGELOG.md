@@ -2,6 +2,22 @@
 
 수치·규칙·일정 변경은 반드시 여기 한 줄을 남긴다. 형식: 날짜 / 무엇을 / 왜.
 
+## 2026-07-16 (2차) — 아트·기술 레퍼런스 개정: TX/RX·SYNC·아트 파이프라인 전환
+
+추가 논의 원문 2건을 동결: [archive/ECHO144_V2_ART_VISUAL_REFACTOR.md](archive/ECHO144_V2_ART_VISUAL_REFACTOR.md)(아트·비주얼·픽셀·UI 전면 리팩터링), [archive/ECHO144_144MB_REFERENCE_ANALYSIS.md](archive/ECHO144_144MB_REFERENCE_ANALYSIS.md)(1.44MB 레퍼런스 심층 분석).
+
+**게임플레이 신규 채택** — ① **TX/RX 양면 CARRIER**(ADR-0007): 모뎀을 매 턴 공격 또는 구매력 중 하나로 배분 — "지금 싸울 것인가, 다음 카드를 살 것인가"가 새 중심 선택. 개발 선언문 7문장으로 확장, P0 슬라이스·게이트·SIM 지표에 반영. ② **SYNC 0~3**(Cave Story 번안): 숙련이 방송의 질(연출·편곡)로 나타나는 교차 시스템, 악순환 방지 안전장치 포함. ③ 적 의도 덱 절차 생성 문법(초반3/중반4/후반3/종결2 + 제약 5) + 신규 의도(SPONSORED RAID·LATENCY·EMPTY CHAT). ④ TREND 집계 정교화(실제 발동 + 최근 6구절 가중 + 48 갱신 1회). ⑤ 즉시 재시작(<1초)·같은 시드 재접속·규칙 변주 해금 모드. ⑥ 명령 로그 리플레이의 세계관화(이전 방송 고스트, P2).
+
+**적 리네이밍** — P0 4종 = BOT.CHAT / POP.AD / SPON.GIFT / MOD.MASK (관객·추천·후원·운영의 오작동), 시크 계열 = BUF.WRM·TAG.LARVA, P1 = MIRROR.REPLY·CLIPPER·RETENTION·RAID.GATE·GHOST.VIEWER.
+
+**아트 전면 개정**(ADR-0008) — V1 자산 "재라벨" 방침 철회: **브랜드 DNA만 계승하고 V2 기준 재설계**. `.px`를 원본에서 강등(검수·diff용), 원본은 Aseprite 레이어 파일. 규격: 에코 24×24 4bpp(A/B), 초상 64×64(A/B), 카드 아이콘 16×16, NØA 보스 레이어 합성. **16색 논리 팔레트**(+PHANTOM LAVENDER = 제4 신호) + 색 이외 형태 문법(색각 대응). 감정 배분 70/20/10 → **65/25/10**. 부제 정본 `UNLISTED LIVE`(LAST LIVE는 에피소드명으로 강등). 41 전면 재작성(도구·작화 매뉴얼·자산 컴파일·AI slop 방지·제작 단계 0~7), 42 §7 확장(키아트 세트 A~F·Steam 규격·스크린샷 세트).
+
+**신설 문서** — [35_REFERENCES.md](35_REFERENCES.md)(8원칙·사례별 교훈·불채택표), [45_UI_UX.md](45_UI_UX.md)(레이아웃·카드 표시·링 표시·타격감·접근성).
+
+**기술** — 명령·상태·이벤트 구조(`game_apply_command`) 정식화, **RNG 스트림 4분리를 확장판 보류에서 V2 즉시 채택으로 승격**, 인덱스 장면 버퍼+팔레트 LUT, 렌더 레이어 순서 고정, 성능 채택 기준(분리 벡터·근접 캐시 채택 / 공간 해시 조건부), **내부 소프트 캡 900KB** 카테고리 예산.
+
+**본 개정 구체화** — TX/RX×SEEK 해석 순서, TX/RX HUD 포트 방향 문법, SYNC=편곡 게이지, NØA 오타 풀 데이터화, V1 9색→16색 재인덱싱 매핑, 아트 트랙을 W-V2 슬라이스에 병행 통합.
+
 ## 2026-07-16 — V2 재설계 채택: 문서 전면 재구성
 
 외부 에이전트 협업으로 정리된 V2 설계 통합본을 정본으로 채택. 원문은 [archive/ECHO144_complete_design_history.md](archive/ECHO144_complete_design_history.md)에 동결, V1 문서 8종은 [archive/v1-last-live/](archive/v1-last-live/)에 동결(no-go 시 복원 경로).

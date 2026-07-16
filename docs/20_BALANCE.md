@@ -27,15 +27,28 @@
 | 덱 최소 / 최대 | 5 / 40장 |
 | NOISE 상한 / 오염 면역 | 5장 / 4초 |
 | 이동 속도 | 54 px/s (float 유지 — [30](30_TECH.md) §3-1) |
-| 구매 / BREAK | 1회, BAUD 이월 없음 |
+| 플레이어 히트박스 | 6×7 (보이는 몸 ≈18×21, [45](45_UI_UX.md) §7) |
+| 구매 / BREAK | 1회, BAUD 이월 없음 (매 턴 BREAK — 2구절 A/B는 [10](10_MECHANICS.md) §16-17) |
+| CARRIER TX/RX | 매 턴 카드별 지정. TX = 공격만 / RX = BAUD만. 입문 추천 표시 3턴 |
+
+## B2-SYNC `[시드값]`
+
+| 항목 | 값 |
+|---|---|
+| 범위 | 0~3, 시작 0 |
+| 상승 (+1) | 피격 없는 구절 종료 / 예고 의도 적합 프로그램 / 마킹 연쇄 제거 / 타이밍 창 발동 |
+| 하락 (−1, 피격당 최대 1) | 큰 피해 / CUE 미사용 종료 / MUTE 봉인 / 가짜 메아리 수용 |
+| 회복 | 피격 후 다음 구절 첫 성공 시 즉시 +1 |
+| 효과 | 0 기본 / 1 CARRIER 연출 강화 / 2 프로그램 범위·지속 +10% / 3 구절 종료 시 청록 +1 또는 CUE 환급 25% 확률 |
+| 안전장치 | SYNC 0에서 추가 감소 없음, HP·BAUD 직접 감소 없음, 엔딩 조건 무관 |
 
 ## B2-카드 — 기본 공급
 
-| 카드 | 타입 | 가격 | BAUD | CUE | ECHO | 효과 (ON AIR 자동/수동) |
+| 카드 | 타입 | 가격 | RX BAUD | CUE | ECHO | TX 효과 (자동) |
 |---|---|---:|---:|---:|---:|---|
-| 2400 MODEM | CARRIER | 시작 전용 | 1 | 0 | 0 | 자동: 패킷 1발, 피해 6, 주기 0.8초 |
-| 14K TURBO | CARRIER | 3 | 2 | 0 | 0 | 자동: 패킷 열, 피해 9, 2체 관통, 주기 0.8초 |
-| 56K MAXIMUM | CARRIER | 6 | 3 | 0 | 0 | 자동: 최근접 2체 지속 회선 0.6초, 초당 12, 주기 1.2초 |
+| 2400 MODEM | CARRIER | 시작 전용 | 1 | 0 | 0 | 패킷 1발, 피해 6, 주기 0.8초 |
+| 14K TURBO | CARRIER | 3 | 2 | 0 | 0 | 패킷 열, 피해 9, 2체 관통, 주기 0.8초 |
+| 56K MAXIMUM | CARRIER | 6 | 3 | 0 | 0 | 최근접 2체 지속 회선 0.6초, 초당 12, 재접속 1회, 주기 1.2초 |
 | CHAT.LOG | ARCHIVE | 2 | 0 | — | 1 | OC: 글리프 군집, 반경 14에 12 피해 |
 | VOICE.OGG | ARCHIVE | 5 | 0 | — | 3 | OC: 동심원 음파, 반경 28에 28 피해 + 밀어냄 |
 | CLIP.20?? | ARCHIVE | 7 | 0 | — | 6 | OC: 프레임 절단, 전 화면 30 + 히트스톱 0.1초 |
@@ -122,35 +135,28 @@ OC 순환 시간 = 0.50초 × 덱 장수 + 0.25초 × ceil(덱 장수 / 5)
 
 함의: 시작 덱만으로는 30 + 일반 방송 수급(≤16) < 64 — **ARCHIVE 추가 구매 없이는 승리 불가**가 설계 의도. 반대로 ECHO 합 7 이상(예: CHAT 4 + VOICE 1 추가)이면 이론상 60초 내 도달 가능.
 
-## B2-적 — 필드 적과 역할 적
+## B2-적 — P0 4종·시크 계열·P1 (역할 정의는 [10](10_MECHANICS.md) §9)
 
-기본 필드 적 4종은 V1 스탯·자산 재사용 (검증된 값):
+P0 기본 적 4종 `[시드값 — 이동·비용은 V1 실측치를 시드로 이식]`:
 
-| 적 | HP | 속도 px/s | 스폰 비용 | 행동 |
+| 적 | HP | 속도 px/s | 스폰 비용 | 행동 요지 |
 |---|---:|---:|---:|---|
-| WORM | 6 | 14 | 1.0 | 직진 |
-| POPUP | 4 | 28 | 1.2 | 사인파 접근 |
-| TROJAN | 28 | 10 | 4.0 | 사망 시 WORM 3 분열 (**다음 틱 스폰 큐**) |
-| RANSOM | 16 | 12 | 3.0 | 거리 유지, 저속탄 → 피격 시 NOISE 삽입 |
+| BOT.CHAT | 4 | 22 | 1.0 | 군집 접근, 접촉 시 카드 부착 — 부착당 발동 지연 +0.5초(최대 3). 동일 오타 채팅 생성 |
+| POP.AD | 8 | 0(고정)~14 | 1.2 | 경로 차단 창. 직접 닫기(접촉 0.5초) 또는 관통 공격. HUD 마스크 준수 |
+| SPON.GIFT | 10 | 0 | 2.0 | 위험 지대 보상 상자 — 수령: 강한 효과+자홍 / 파괴: 안전+보상 감소. 가짜율은 SPONSOR 사용량 비례 |
+| MOD.MASK | 14 | 10 | 3.0 | 슬롯 1개 봉인 5초, 봉인 카드 실행 시 NOISE 삽입 |
 
-V2 역할 적 `[시드값]` (기존 자산 변형으로 제작 — [41](41_PIXEL_ART.md) §9):
+시크 계열: BUF.WRM (HP 4 — 카드 지연, 방치 시 카드를 '보관'해 다음 턴으로) / TAG.LARVA (HP 3 — 파편에 날짜표, 호박 경로 강화). P1: MIRROR.REPLY / CLIPPER / RETENTION / RAID.GATE / GHOST.VIEWER (`[시드값]` 미정 — P1 진입 시 책정). 엘리트 SEEK.WRM (7턴): HP = MOD.MASK ×4, ARCHIVE/청록 1개 보관 — 처치 시 반환+청록1, ON AIR 종료까지 방치 시 호박 전환. NØA(OC 보스): 게이지 없음, TREND MIRROR.
 
-| 적 | HP | 행동 | 공격 층 |
-|---|---:|---|---|
-| BUF.WRM | 4 | 카드 아이콘 부착, 부착당 해당 PROGRAM 발동 지연 +0.5초 (최대 3부착) | 손패 |
-| COMMENT WALL | 세그먼트당 12 | 화면에 댓글 벽 생성(이동·시야 차단), 관통·프레임 공격에 약함 | 공간 |
-| SPONSORED GIFT | 10 | 중앙 보상 상자. 파괴 시 회복 또는 BUF.WRM (노아 카드 사용량 비례 가짜율) | 필드 |
-| MOD.MASK | 14 | 손패 슬롯 1개 봉인 5초, 봉인 카드 실행 시 NOISE 삽입 | 덱·CUE |
-| SEEK.WRM (엘리트, 7턴) | RANSOM ×4 | ARCHIVE/청록 1개 링에 보관. 처치 시 반환+청록1, ON AIR 종료까지 방치 시 호박 전환 | 목표 |
-| NØA (OC 보스) | 게이지 없음 | TREND MIRROR — B2-의도 참조 | 습관 |
+군중 규칙: 적 간 분리 벡터(겹침 반발) 적용 — 반발 반경 8px, 최대 보정 0.3px/틱 `[시드값]`.
 
 ## B2-의도 — 의도 덱과 감사 프로토콜
 
-의도 덱 12장 구성 `[시드값]`: BOT RAID ×3, MUTE ×2, GIFT DROP ×2, COMMENT WALL ×2, MIRROR ×1, CLIP THEFT ×1, TREND ×1. 매 턴 EDIT에서 1장 공개·적용. SEEK HUNT는 7턴 고정 이벤트. 정보량: 입문 전체 공개 / 일반 종류+방향 / 고난도 30% 은닉·10% 거짓 `[시드값]`.
+의도 덱 12장 구성 `[시드값]` — 절차 생성 문법([10](10_MECHANICS.md) §5: 초반3 단순/중반4 덱 공격/후반3 전략 대응/종결2 NØA)을 따르는 기본 분포: BOT RAID ×3, MUTE ×2, GIFT DROP ×2, COMMENT WALL ×2, MIRROR ×1, CLIP THEFT ×1, TREND ×1. 상황 의도(LATENCY·EMPTY CHAT·SPONSORED RAID)는 시간층·프로토콜이 치환 삽입. SEEK HUNT는 7턴 고정 이벤트(단, ARCHIVE 미보유 시 금지 규칙 우선). 정보량: 입문 전체 공개 / 일반 종류+방향 / 고난도 30% 은닉·10% 거짓 `[시드값]`.
 
-감사 프로토콜 (런당 1종): CURSE RACE(2턴 연속 실제 메아리·ARCHIVE 무진행 시 NOISE +1) / ENGINE AUDIT(같은 PROGRAM 3연속 발동 시 다음 턴 MUTE) / BANDWIDTH CAP(턴당 BAUD 상한 6) / ARCHIVE HUNT(SEEK.WRM 2회 등장) / PERFECT RETENTION(SPONSOR 등장률 2배·자홍 대가 +1).
+감사 프로토콜 (런당 1종, 정의는 [10](10_MECHANICS.md) §5): RESPONSE RACE(두 BREAK 무수급 시 NOISE +1) / ENGINE AUDIT(구절 내 PROGRAM 3+ 발동 → QUARANTINE 삽입) / BANDWIDTH CAP(BREAK당 BAUD 상한 7) / ARCHIVE HUNT(SEEK.WRM 2회) / PERFECT RETENTION(SPONSOR 2배·자홍 +1).
 
-TREND 집계: **수동 발동 횟수** 최다 PROGRAM. HUD `NØA is learning:` 5턴부터 상시. 최종전 복제 페어링은 [10](10_MECHANICS.md) §9.
+TREND 집계 `[시드값]`: 기본 = **실제 발동 횟수**, 최근 6구절 ×2 가중, 48 메아리에서 1회 갱신, 고난도 = 상위 2개 조합. HUD `NØA is learning:` 5턴부터 상시. 복제 페어링은 [10](10_MECHANICS.md) §9.
 
 ## B2-스폰
 
@@ -165,8 +171,13 @@ OC 초당 예산  = 6.0 + 0.067 × OC경과초
 | 측정 | 목표 | 벗어나면 먼저 바꿀 것 |
 |---|---|---|
 | 입문: 신규 5명 중 EDIT·Space 60초 내 이해 | ≥4/5 | 온보딩 문구, 추천 선택 노출 |
-| 손패 선택: 매 턴 이유를 말로 설명 | 5/5 런당 1회 이상 | 의도 정보량, 카드 OFF AIR 차등 |
+| TX/RX UI 이해 | 30초 내 | 포트 방향 문법([45](45_UI_UX.md) §1), 추천 표시 |
+| 손패 선택: 매 턴 이유를 말로 설명 | ≥70% | 의도 정보량, 카드 OFF AIR 차등 |
 | 같은 손패·다른 의도에서 다른 선택 | 관찰됨 | 의도 덱 구성, 대응 카드 가격 |
+| **TX/RX 배분이 갈리는 구절** | ≥30%, 전부 TX·전부 RX 어느 쪽도 상시 정답 아님 | TX 화력·RX BAUD 비율, 의도 강도 |
+| EDIT 편성 시간 (숙련 후) | 평균 ≤3초 | 카드 정보 밀도, 추천 |
+| "추천 카드만 항상 누름" 비율 | <60% | 의도 다양성, 추천 노출 시점 |
+| SYNC: 숙련자 유지 목표화 / SYNC 0 클리어 가능 | 둘 다 성립 | SYNC 효과 크기 (화력화 금지) |
 | 최소 5개 전략 봇 클리어 가능 | 5/7 이상 | 지침·가격, 목표 64 아님 |
 | 단일 전략 승리 독점 | <40% | 해당 경로 가격·수치 |
 | 복잡 엔진 고점 > BIG BAUD | 성립 | 엔진 카드 상향 (BIG BAUD 하향 아님) |
@@ -184,16 +195,18 @@ OC 초당 예산  = 6.0 + 0.067 × OC경과초
 
 기본 봇 7종 + 고급 3종:
 
+봇 정책은 구매 우선순위 + **TX/RX 배분 규칙** + 편성 우선순위 + OPEN CHANNEL 전환 조건의 4요소다:
+
 ```text
-BIG_BAUD      CARRIER 중심, PROGRAM 최소, 필요한 ARCHIVE만   → 안정적이지만 최고 성능 아님 (기준선)
-LOOP_ENGINE   MULTI·CACHE·PREFETCH·cantrip, 얇은 덱          → 완성되면 강하지만 분산 큼
-ECHO_RUSH     초반 ARCHIVE, 조기 OPEN CHANNEL                → 빠르지만 실패율 높음
-CLEAN_SIGNAL  FIREWALL·CHECKSUM·DEFRAG                       → 느리지만 안정적
-CACHE_COMBO   MARKER→SURGE, MULTI→MACRO, CACHE→강카드        → 고점 높고 손패 의존 큼
-PERFECT_SHOW  NØA SPONSOR 중심                               → 쉽고 강하지만 자홍 엔딩 위험
-THREE_WAY     세 색 균형, 진엔딩 목표                        → 가능하되 난도 최고
+BIG_BAUD      CARRIER 중심·목표 가격까지 RX 우선, PROGRAM 최소  → 안정적이지만 최고 성능 아님 (기준선)
+LOOP_ENGINE   MULTI·CACHE·PREFETCH·cantrip, 얇은 덱             → 완성 전 약함, 완성 후 손패 가치 최고, NOISE 취약
+ECHO_RUSH     초반 ARCHIVE·RX 투자 우선, 조기 OPEN CHANNEL      → 빠르지만 준비 구간 생존 난도 높음
+CLEAN_SIGNAL  FIREWALL·CHECKSUM·DEFRAG·중급 CARRIER             → 느리지만 안정, 자홍 저항
+CACHE_COMBO   MARKER→SURGE, MULTI→MACRO, CACHE→강카드           → 고점 높고 손패 의존 큼
+PERFECT_SHOW  NØA SPONSOR·무료 CUE·즉시 효과, 자홍 수용         → 가장 화려, 빠른 성장, 위험한 엔딩
+THREE_WAY     세 색 균형, 진엔딩 목표                           → 가능하되 난도 최고
 TREND_BAIT    약한 PROGRAM 최다 사용으로 복제 조작 (고급)
-LAST_ARCHIVE  CACHE·시크 거래 중심 (고급)
+LAST_ARCHIVE  CACHE·시크 거래·호박 보관·덱 압축 (고급)          → 장기 안정, 시크 엔딩
 DIRTY_BROADCAST 오염 활용 (확장판 보류)
 ```
 

@@ -9,14 +9,16 @@ Windows 10/11용 1.44MB 덱빌딩 서바이버. **문서는 V2 재설계 정본�
 - [docs/15_CARDS.md](docs/15_CARDS.md) — 카드 설계
 - [docs/20_BALANCE.md](docs/20_BALANCE.md) — 모든 튜닝 수치의 단일 정본
 - [docs/30_TECH.md](docs/30_TECH.md) — 기술 설계 (P0 결함·아키텍처·파이프라인)
-- [docs/40_ART_AUDIO_TEXT.md](docs/40_ART_AUDIO_TEXT.md) — 아트·사운드·텍스트
-- [docs/41_PIXEL_ART.md](docs/41_PIXEL_ART.md) — 픽셀 제작 규격·공정
+- [docs/35_REFERENCES.md](docs/35_REFERENCES.md) — 레퍼런스 분석·차용 원칙
+- [docs/40_ART_AUDIO_TEXT.md](docs/40_ART_AUDIO_TEXT.md) — V2 아트 바이블 (팔레트·캐릭터·사운드·텍스트)
+- [docs/41_PIXEL_ART.md](docs/41_PIXEL_ART.md) — 픽셀 제작 규격·파이프라인·작화 매뉴얼
 - [docs/42_VISUAL_HOOK.md](docs/42_VISUAL_HOOK.md) — 비주얼 후킹·마케팅
+- [docs/45_UI_UX.md](docs/45_UI_UX.md) — UI/UX·화면 연출
 - [docs/50_PRODUCTION.md](docs/50_PRODUCTION.md) — 일정·게이트·리스크
 - [docs/90_STATUS.md](docs/90_STATUS.md) — 구현 상태 (SPEC/STATUS 분리)
 - [docs/adr/](docs/adr/) — 설계 결정 기록
 - [docs/CHANGELOG.md](docs/CHANGELOG.md) — 변경 이력
-- 동결 원문: [docs/archive/ECHO144_complete_design_history.md](docs/archive/ECHO144_complete_design_history.md) (V2 설계 통합본), [docs/archive/v1-last-live/](docs/archive/v1-last-live/) (V1 정본), `docs/archive/ECHO_144_FINAL_SPEC.md` (구 단일 스펙)
+- 동결 원문: [docs/archive/](docs/archive/) — V2 설계 통합본, 아트·비주얼 리팩터링, 1.44MB 레퍼런스 분석, V1 정본(v1-last-live/), 구 단일 스펙
 
 ## 빌드
 
