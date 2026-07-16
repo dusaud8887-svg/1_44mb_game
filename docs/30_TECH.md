@@ -101,6 +101,7 @@ g.px=(float)clampi((int)g.px,7,313);   /* 매 틱 소수부 절삭 */
 | P2 | 프레임 catch-up | 잔여 지연 폐기로 실시간보다 느려짐 | 시간 정의 명시 또는 accumulator 정책 |
 | P2 | MIRROR 지침 | BAD가 카드 수에 포함 — 오염이 보너스 가능 | 의도 명시 |
 | P2 | DEV 로그 | 경계 없는 문자열 누적 | bounded append |
+| P2 | 헤더 | `abs()` 사용 시 `<stdlib.h>` 필요 | 명시적 include |
 | P2 | 오디오 | waveOut 실패 처리 약함 | silent mode + 정리 경로 |
 | P2 | 상태 초기화 | ZeroMemory와 설정 보존 결합 | UserPrefs/RunState/PlatformState 분리 |
 
