@@ -167,8 +167,8 @@ typedef struct {   /* CardDefPacked — 12B */
 } CardDefPacked;
 ```
 
-- **데이터로 처리**: 탄환, 파동, 벽, 마킹, 연쇄, 잔상, 플래시, 기본 드로우·CUE.
-- **전용 C 코드(hook)**: CACHE 보관, MACRO 형태 재생, PREFETCH 탐색, DEFRAG 삭제, 메아리 색 변환, TREND MIRROR, 엔딩 판정.
+- **데이터로 처리**: 탄환, 파동, 벽, 마킹, 연쇄, 잔상, 플래시, 기본 드로우·CUE. 카드 효과는 원자 명령(`EffectOp { opcode, value, arg, flags }` — 카드당 4~6개, 4B×4 ≈ 16B) 조합으로: `DRAW GAIN_CUE RESERVE_CARD REPLAY_LAST SPAWN_PACKET SPAWN_LINE SPAWN_RING SPAWN_FRAME MARK_TARGET LINK_MARKS PUSH_ENEMIES DELETE_PROJECTILES CLEAN_NOISE ADD_ECHO CONVERT_ECHO LOCK_SLOT CHANGE_SYNC` `[시드값]`.
+- **전용 C 코드(hook)**: CACHE 보관, MACRO 형태 재생, PREFETCH 탐색, DEFRAG 삭제, 메아리 색 변환, TREND MIRROR, 엔딩 판정. **80% 데이터, 20% 전용 코드** — 상태를 많이 참조하는 효과까지 범용 VM화하면 오히려 커진다([35](35_REFERENCES.md) §5).
 
 노아의 복제 기술은 기존 레시피에 `palette=MAGENTA, target_rule=INVERT, motion=REVERSE`를 적용한 **재사용**이다 — 신규 이펙트 비용 최소화. 레시피 어휘 `[시드값]`: shape = `POINT PACKET LINE ARC RING FRAME GRID GLYPH` / motion = `STRAIGHT ORBIT RETURN CHAIN EXPAND SHRINK FOLLOW DELAYED_REPLAY`. 배경도 같은 원리 — `BackgroundRecipe { base_palette, grid_type, frame_type, noise_density, timestamp_mode, profile_density, scroll_speed, hidden_clue }`로 시간층을 파라미터화한다([40](40_ART_AUDIO_TEXT.md) §5).
 

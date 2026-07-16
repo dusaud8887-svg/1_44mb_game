@@ -22,6 +22,8 @@ verified_by: 정적 코드 대조 (이 세션은 리눅스 — MSVC 빌드·실�
 | selftest | 2026-07-15 시점 전부 PASS (V1 규칙 기준) |
 | 자산 | V1: 인물 11종 + 글리프 7종 + 아이콘 16종 = 2,952B 배선 완료. **V2 정책: DNA만 계승, 전면 재설계**(ADR-0008) — V1 자산은 no-go 시 그대로 유효 |
 
+V1의 초기 정적 평가(콘셉트 9/10, 런타임 정확성 신뢰도 4.5/10, 기능 완성도 ≈80%·제출 준비도 ≈55~65% — 이동·스케줄러·GDI 수정 전 기준)는 [archive/ECHO144_complete_design_history.md](archive/ECHO144_complete_design_history.md) 부록 A에 동결. V1 자산의 검수 상태 분리 표기 원칙(단품 검수 PASS / Windows 실빌드 검수 PENDING / 외부 테스터 검수 PENDING)은 아래 §2에 반영되어 있다.
+
 ## 2. V1 잔여 작업 (no-go 시 재개할 것)
 
 - Windows 실빌드 스크린샷 검수 (MSVC 필요 — G-게이트 수동 항목).
