@@ -2,6 +2,38 @@
 
 수치·규칙·일정 변경은 반드시 여기 한 줄을 남긴다. 형식: 날짜 / 무엇을 / 왜.
 
+## 2026-07-16 (2차) — 아트·기술 레퍼런스 개정: TX/RX·SYNC·아트 파이프라인 전환
+
+추가 논의 원문 2건을 동결: [archive/ECHO144_V2_ART_VISUAL_REFACTOR.md](archive/ECHO144_V2_ART_VISUAL_REFACTOR.md)(아트·비주얼·픽셀·UI 전면 리팩터링), [archive/ECHO144_144MB_REFERENCE_ANALYSIS.md](archive/ECHO144_144MB_REFERENCE_ANALYSIS.md)(1.44MB 레퍼런스 심층 분석).
+
+**게임플레이 신규 채택** — ① **TX/RX 양면 CARRIER**(ADR-0007): 모뎀을 매 턴 공격 또는 구매력 중 하나로 배분 — "지금 싸울 것인가, 다음 카드를 살 것인가"가 새 중심 선택. 개발 선언문 7문장으로 확장, P0 슬라이스·게이트·SIM 지표에 반영. ② **SYNC 0~3**(Cave Story 번안): 숙련이 방송의 질(연출·편곡)로 나타나는 교차 시스템, 악순환 방지 안전장치 포함. ③ 적 의도 덱 절차 생성 문법(초반3/중반4/후반3/종결2 + 제약 5) + 신규 의도(SPONSORED RAID·LATENCY·EMPTY CHAT). ④ TREND 집계 정교화(실제 발동 + 최근 6구절 가중 + 48 갱신 1회). ⑤ 즉시 재시작(<1초)·같은 시드 재접속·규칙 변주 해금 모드. ⑥ 명령 로그 리플레이의 세계관화(이전 방송 고스트, P2).
+
+**적 리네이밍** — P0 4종 = BOT.CHAT / POP.AD / SPON.GIFT / MOD.MASK (관객·추천·후원·운영의 오작동), 시크 계열 = BUF.WRM·TAG.LARVA, P1 = MIRROR.REPLY·CLIPPER·RETENTION·RAID.GATE·GHOST.VIEWER.
+
+**아트 전면 개정**(ADR-0008) — V1 자산 "재라벨" 방침 철회: **브랜드 DNA만 계승하고 V2 기준 재설계**. `.px`를 원본에서 강등(검수·diff용), 원본은 Aseprite 레이어 파일. 규격: 에코 24×24 4bpp(A/B), 초상 64×64(A/B), 카드 아이콘 16×16, NØA 보스 레이어 합성. **16색 논리 팔레트**(+PHANTOM LAVENDER = 제4 신호) + 색 이외 형태 문법(색각 대응). 감정 배분 70/20/10 → **65/25/10**. 부제 정본 `UNLISTED LIVE`(LAST LIVE는 에피소드명으로 강등). 41 전면 재작성(도구·작화 매뉴얼·자산 컴파일·AI slop 방지·제작 단계 0~7), 42 §7 확장(키아트 세트 A~F·Steam 규격·스크린샷 세트).
+
+**신설 문서** — [35_REFERENCES.md](35_REFERENCES.md)(8원칙·사례별 교훈·불채택표), [45_UI_UX.md](45_UI_UX.md)(레이아웃·카드 표시·링 표시·타격감·접근성).
+
+**기술** — 명령·상태·이벤트 구조(`game_apply_command`) 정식화, **RNG 스트림 4분리를 확장판 보류에서 V2 즉시 채택으로 승격**, 인덱스 장면 버퍼+팔레트 LUT, 렌더 레이어 순서 고정, 성능 채택 기준(분리 벡터·근접 캐시 채택 / 공간 해시 조건부), **내부 소프트 캡 900KB** 카테고리 예산.
+
+**본 개정 구체화** — TX/RX×SEEK 해석 순서, TX/RX HUD 포트 방향 문법, SYNC=편곡 게이지, NØA 오타 풀 데이터화, V1 9색→16색 재인덱싱 매핑, 아트 트랙을 W-V2 슬라이스에 병행 통합.
+
+## 2026-07-16 — V2 재설계 채택: 문서 전면 재구성
+
+외부 에이전트 협업으로 정리된 V2 설계 통합본을 정본으로 채택. 원문은 [archive/ECHO144_complete_design_history.md](archive/ECHO144_complete_design_history.md)에 동결, V1 문서 8종은 [archive/v1-last-live/](archive/v1-last-live/)에 동결(no-go 시 복원 경로).
+
+**세계관·캐릭터** — 폐쇄망/NODE 09 → 여러 시대의 목록 외 방송 UNLISTED LIVE(ADR-0004). FORMAT/0 → 노아 NØA, 모든 시청자를 흉내 내는 최초의 관리자(ADR-0003, 시각 자산 승계). 플레이어 = 에코 직접 조작. 신설: [05_WORLD.md](05_WORLD.md)(5-Why·1997·확정/내부정답/공백 3층), [06_CHARACTERS.md](06_CHARACTERS.md)(바이블·관계·팬워크 킷).
+
+**메커니즘** — 자동 탄창 → EDIT/ON AIR/BREAK/CLEANUP 수동 편성 + CUE 액션 경제(ADR-0002). 단일 SIGNAL → 3색 64칸 링, GO LIVE → OPEN CHANNEL, FORMAT 게이지 → OFFLINE 타이머(ADR-0005). 적 의도 예고 오토마, 노아 TREND MIRROR, 엔딩 4종+실패 2종. 신설: [15_CARDS.md](15_CARDS.md)(카드 설계·최종 방송 프로토콜).
+
+**본 개정에서 추가 구체화** (`[본 개정 구체화]`/`[시드값]` 표기): 링 상시 노출 + 일반 방송 수급 상한(엔딩 예측 가능성) / ARCHIVE의 효과+CUE 이중 반전 / 메아리=채팅 라인 질감 / TREND HUD 상시 공개 / 시크 거래 = DEFRAG와 대비되는 두 번째 덱 압축(엔딩 흔적) / OPEN CHANNEL 실행 규칙(연속 실시간·CUE 리필) / 엔딩 판정 우선순위(균형→자홍→호박→청록) / V2 밸런스 시드 전량([20_BALANCE.md](20_BALANCE.md) — 검산 기준점 30/54는 V1에서 승계) / 온보딩 3문장 V2판 / 저장 손상 시 시크 이스터에그.
+
+**기술** — 스택 유지(ADR-0001), 단일 파일·무저장 원칙 폐기(ADR-0006): core/platform/render 분리+unity build, 게임 이벤트, 효과 레시피, 콘텐츠 컴파일러, balance.def 단일 원천, 내장 비트맵 폰트, 저장 파일. **원문의 P0 결함 주장을 현행 코드(25b3bb1)와 대조 검증 — 전부 실재**: 이동 정수 절삭(:734,:755), 카드 스케줄러 대체+오프바이원(:598,:637-656), COLORREF R/B 반전(:1568), 비정수 StretchBlt(:1857). 상세·수정 계획 [30_TECH.md](30_TECH.md) §3.
+
+**문서 체계** — SPEC/STATUS 분리: 스펙 문서에서 "구현 ✅" 제거, 상태는 신설 [90_STATUS.md](90_STATUS.md)(verified_commit 스탬프)에만. 결정 이력은 [adr/](adr/) 6건. 41·42는 자산 이력 유지 + V2 전환 절(41 §9, 42 §7) 추가.
+
+**프로덕션** — V1 완성 상태에서 7주 마감이므로 V2는 도박이 아니라 게이트로: W-FIX(공용 결함 수정 7/17~19) → V2 수직 슬라이스(7/20~30) → **GV2 go/no-go(8/02)** — go면 V2 제출 경로, no-go면 V1 복원 경로. 어느 쪽이든 버리는 작업이 없도록 설계([50_PRODUCTION.md](50_PRODUCTION.md) §1).
+
 ## 2026-07-15 — 포맷 얼굴 슬림화 + 인게임 UI 아이콘 확장
 
 - **포맷 얼굴 슬림화**: 둥근 얼굴(rx=ry=12)이 통통해 냉정 캐릭터와 안 맞던 것을, 좁은 세로 오벌(rx10 ry13) + 뾰족한 턱 테이퍼로 교정. 볼 홍조 제거(냉정). 둥근 두 캐릭터(에코·시크)와 얼굴형으로도 차별화. 재-emit·키아트/GIF/메인 재생성.
