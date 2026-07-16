@@ -119,3 +119,5 @@ Treasure → **TX/RX 양면 CARRIER** ([10](10_MECHANICS.md) §3-1, ADR-0007) / 
 아트 도구·규격: [Aseprite](https://www.aseprite.org/) · [CLI](https://www.aseprite.org/docs/cli/) / [Pixelorama](https://github.com/Orama-Interactive/Pixelorama) / [LibreSprite](https://libresprite.github.io/) / [LDtk](https://ldtk.io/) / [Tiled](https://www.mapeditor.org/) / [Steam Graphical Assets](https://partner.steamgames.com/doc/store/assets) / [WCAG Contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)
 
 현대 레트로: [Urban Myth Dissolution Center](https://store.steampowered.com/app/2089600/) / [SIGNALIS](https://store.steampowered.com/app/1262350/) / [ENA: Dream BBQ](https://store.steampowered.com/app/2134320/) / [Sorry We're Closed](https://store.steampowered.com/app/1796580/) / [VA-11 Hall-A](https://store.steampowered.com/app/447530/)
+
+차원 통신 참고: [「次元通信 / Signaling」 공식 영상](https://www.youtube.com/watch?v=PqpCRSOUuIE) — **통신을 반복 몸짓과 규칙으로 시각화하는 설계 방식만 참고한다.** 수기 신호·2인 색 분할·동일 서사·멜로디·의상·안무는 복제하지 않는다. ECHO/144의 차별점: 사람 없는 미래의 방송, 64개의 메아리, 실제·보관·모방의 삼각관계, 수동 덱 편성.
