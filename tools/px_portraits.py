@@ -202,9 +202,9 @@ def portrait_format():
     # 긴 히메 뒷머리(수직 커튼) + 정수리 → 그 위에 큰 얼굴
     rect(g, 9, 13, 39, 47, "1")
     ellipse(g, 24, 21, 16, 15, "1")
-    ellipse(g, 24, 25, 10, 13, "3")            # 얼굴(광): 좁은 세로 오벌(슬림)
-    for y in range(30, 40):                     # 턱 테이퍼: 뾰족한 턱(우아, 통통함 제거)
-        halfw = max(2, 9 - (y - 30))
+    ellipse(g, 24, 25, 11, 13, "3")            # 얼굴(광): 세로 오벌(자연스러운 슬림)
+    for y in range(32, 40):                     # 턱: 부드러운 V — 뾰족하지도 통통하지도 않게
+        halfw = max(4, 10 - (y - 31))
         for x in range(48):
             if g[y][x] == "3" and abs(x - 24) > halfw:
                 g[y][x] = "1"
