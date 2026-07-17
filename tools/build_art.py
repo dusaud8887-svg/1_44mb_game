@@ -133,19 +133,20 @@ def echo_portrait(expression: int = 0) -> Canvas:
     # ahoge: one clean antenna strand curving right
     q.px(32, 3, B); q.px(33, 2, B); q.px(34, 1, B); q.px(35, 1, B); q.px(36, 2, B)
 
-    # Sharp modern face: full cheeks, then a straight-edged V jaw to a pointed chin.
+    # Sculpted modern face: wide cheekbone, slimmer cheek, straight V jaw, soft chin.
     face = [
         (16, 22, 41), (17, 21, 43), (18, 20, 44), (19, 19, 45),
-        (20, 18, 46), (21, 18, 46), (22, 17, 47), (23, 17, 47),
-        (24, 17, 47), (25, 17, 47), (26, 17, 47), (27, 17, 47),
-        (28, 17, 47), (29, 17, 47), (30, 17, 47), (31, 17, 47),
-        (32, 17, 47), (33, 17, 47), (34, 18, 47), (35, 18, 46),
-        (36, 18, 46), (37, 19, 45), (38, 20, 45), (39, 21, 44),
-        (40, 22, 43), (41, 24, 42), (42, 25, 41), (43, 27, 39),
+        (20, 18, 46), (21, 18, 46), (22, 17, 47), (23, 17, 47), (24, 17, 47),
+        (25, 17, 47), (26, 18, 46), (27, 18, 46), (28, 18, 46), (29, 18, 46),
+        (30, 18, 46), (31, 18, 46), (32, 18, 46), (33, 18, 46), (34, 18, 46),
+        (35, 19, 46), (36, 19, 45), (37, 20, 45), (38, 20, 44), (39, 21, 44),
+        (40, 23, 43), (41, 24, 42), (42, 26, 41), (43, 27, 39),
         (44, 29, 38), (45, 31, 36), (46, 32, 35),
     ]
     for y, x0, x1 in face:
         runs(q, y, [(x0, x1, W)])
+    # cheekbone planes: one soft shadow under each outer eye gives the face structure
+    q.px(21, 37, D); q.px(43, 37, D)
     # jaw-corner accent: a 1px shadow where cheek turns into the angular jaw
     q.px(18, 36, D); q.px(46, 36, D)
 
@@ -835,86 +836,86 @@ def noa_frame(stage: int) -> Canvas:
 
 
 ENEMY_CHAT = """
-.R..R......R..R.
-R.RR.R....R.RR.R
-.RRRRR....RRRRR.
-.RRWWWWWWWWWWRR.
-.RWWWWWWWWWWWWR.
-RRWWBBWWWWBBWWRR
-.RWWBBWWWWBBWWR.
-.RWWWWWWWWWWWWR.
-.RWWWWWWWWWWWWR.
-.RRWWWBBBBWWWRR.
-..RWWWWBBWWWWR..
-..RRWWWWWWWWRR..
-...RRRRRRRRRR...
-....R......R....
+..RR......RRC...
+..RR......RR.C..
+.RRRRRRRRRRRR...
+.RWWWWWWWWWWR...
+.RWWWWWWWWWWR...
+.RWBBWWWWBBWR...
+.RWBBWWWWBBWR...
+.RWWWWWWWWWWR...
+.RWRRRRRRRWWR...
+.RWWWWWWWRWWR...
+.RRWWWWWWWRR....
+..RRRRRRRR......
+...RWW..........
+..RWW...........
 """
 
 ENEMY_AD = """
 RRRRRRRRRRRRRRRR
-RPPPPPPPPPPPPWWR
-RPPPPPPPPPPPPWWR
-RRRRRRRRRRRRRRRR
-RWWWWWWWWWWWWWWR
-RWWBBWWWWWWBBWWR
-RWWBBWWWWWWBBWWR
-RWWWWWWWWWWWWWWR
-RWWWWRRRRRRWWWWR
-RWWWWWWWWWWWWWWR
-RRRRRRRRRRRRRRRR
-.....RR..RR.....
-....RR....RR....
+RPPPPPPPPPPBWBR.
+RPPPPPPPPPPWBWR.
+RRRRRRRRRRRRRRR.
+RWWWWWWWWWWWWWR.
+RWBBWWWWWWBBWWR.
+RWBBWWWWWWBBWWR.
+RWWWWWWWWWWWWWR.
+RWWWRRRRRRWWWWR.
+RWWWWWWWWWWWWWR.
+RRRRRRRRRRRRRRR.
+...RR....RR.....
+..RR......RR....
 """
 
 ENEMY_GIFT = """
-....MM....MM....
-...MMMM..MMMM...
+...MM......MM...
+..MMMM....MMMM..
 ...MMMMMMMMMM...
-....MMMMMMMM....
-.....PPRRPP.....
 ....PPPRRPPP....
 ...PPPPRRPPPP...
-...RRRRRRRRRR...
-...PPPPRRPPPP...
-...PWWPRRPWWP...
-...PWBPRRPBWP...
-...PPPPRRPPPP...
-...PPPPRRPPPP...
-....PPPPPPPP....
+..PPPPPRRPPPPP..
+..PWWPPRRPPWWP..
+..PWBPPRRPPBWP..
+..PPPPPRRPPPPP..
+..PPWWWRRWWWPP..
+..PPPWWWWWWPPP..
+..PPPPPPPPPPPP..
+...PPPPPPPPPP...
+....RR....RR....
 """
 
 ENEMY_MOD = """
-...MMMMMMMMMM...
 ..MMMMMMMMMMMM..
-..MMBBBBBBBBMM..
-..MBBWWWWWWBBM..
-..MBWWWWWWWWBM..
-..MBWVVVVVVWBM..
-..MBWVVVVVVWBM..
-..MBWWWWWWWWBM..
-..MBWWmmmmWWBM..
-..MBBWWWWWWBBM..
-..MMBBBBBBBBMM..
-...MMMMMMMMMM...
-.....M....M.....
+.MMMMMMMMMMMMMM.
+.MMBBBBBBBBBBMM.
+.MBBWWWWWWWWBBM.
+.MBWWWWWWWWWWBM.
+.MBVVVVVVWWWWBM.
+.MBVVVVVVWmmWBM.
+.MBWWWWWWWWWWBM.
+.MBWWWmmmmWWWBM.
+.MBBWWWWWWWWBBM.
+.MMBBBBBBBBBBMM.
+..MMMMMMMMMMMM..
+...M......M.....
 """
 
 ENEMY_WORM = """
-....aa....aa....
+...aa......aa...
 ...aWa....aWa...
+..aaaaaaaaaaaa..
+..aAAAAAAAAAAa..
+.aAAAAAAAAAAAAa.
+.aAABBAAAABBAAa.
+.aAABWAAAABWAAa.
+.aAAAAAAAAAAAAa.
+.aAAAAaaaaAAAAa.
+..aAAAAAAAAAAa..
+..aaAAAAAAAAaa..
 ...aaaaaaaaaa...
-..aaAAAAAAAAaa..
-..aAAAAAAAAAAa..
-..aABBAAAABBAa..
-..aABWAAAABWAa..
-..aAAAAAAAAAAa..
-..aAAAaaaaAAAa..
-..aaAAAAAAAAaa..
-...aaAAAAAAaa...
-....aaaaaaaa....
-..aa...WWa......
-.aa....WBa......
+.aa....WWWa.....
+aa.....WBWa.....
 """
 
 
@@ -943,7 +944,12 @@ def icon(kind: int) -> Canvas:
     elif kind == 4:
         q.rect(5, 3, 6, 11, c); q.rect(3, 5, 10, 7, c)
         q.line(6, 8, 8, 10, W); q.line(8, 10, 11, 6, W)
-    elif kind == 5: q.line(4, 5, 11, 5, c); q.line(11, 5, 13, 8, c); q.line(13, 8, 10, 11, c); q.line(10, 11, 5, 11, c); q.px(4, 10, W); q.px(11, 4, W)
+    elif kind == 5:                          # send / forward: a bold double chevron
+        q.line(3, 4, 7, 8, c); q.line(7, 8, 3, 12, c)
+        q.line(4, 4, 8, 8, c); q.line(8, 8, 4, 12, c)
+        q.line(8, 4, 12, 8, c); q.line(12, 8, 8, 12, c)
+        q.line(9, 4, 13, 8, c); q.line(13, 8, 9, 12, c)
+        q.px(4, 5, W); q.px(9, 5, W)
     elif kind == 6: q.frame(3, 7, 6, 6, c); q.frame(6, 5, 6, 6, c); q.frame(9, 3, 4, 6, c); q.px(11, 4, W)
     elif kind == 7:
         q.rect(5, 3, 6, 8, c); q.rect(4, 4, 8, 6, c)
