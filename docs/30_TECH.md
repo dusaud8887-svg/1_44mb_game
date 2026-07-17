@@ -41,17 +41,11 @@ void game_make_render_snapshot(const Game *game, RenderSnapshot *out);
 
 ## 3. P0 정확성 결함 — 코드 검증 완료 (2026-07-16)
 
-원문 2부의 결함 주장을 현행 `src/echo144.c`(커밋 `25b3bb1`)와 대조 검증했다. **전부 실재한다.** V1 제출·V2 어느 경로든 최우선 수정 대상. 상태 추적은 [90_STATUS.md](90_STATUS.md) §3.
+원문 2부의 결함 주장은 코드 대조로 실재가 확인되었다 — **코드 위치·검증 커밋·수정 여부는 [90_STATUS.md](90_STATUS.md) §3이 정본**이고, 이 절은 수정 원칙과 필수 테스트(불변 계약)만 담는다. V1 제출·V2 어느 경로든 최우선 수정 대상.
 
 ### 3-1. 이동 정수 절삭 — 방향 비대칭 (P0)
 
-`echo144.c:734` (플레이어), `:755` (적), `:403,569` (넉백):
-
-```c
-g.px=(float)clampi((int)g.px,7,313);   /* 매 틱 소수부 절삭 */
-```
-
-플레이어 54px/s = 틱당 0.9px. 정수 좌표에서 `+0.9`는 매 틱 잘려 **오른쪽·아래로 거의 이동 불가**, `-0.9`는 내림되어 왼쪽·위로 60px/s 과속. 적(틱당 0.17~0.47px)은 접근 방향에 따라 추적 능력이 완전히 달라진다.
+매 틱 `float` 좌표를 `(int)` 절삭 clamp 후 재저장하는 패턴 (위치는 [90](90_STATUS.md) §3-1). 플레이어 54px/s = 틱당 0.9px. 정수 좌표에서 `+0.9`는 매 틱 잘려 **오른쪽·아래로 거의 이동 불가**, `-0.9`는 내림되어 왼쪽·위로 60px/s 과속. 적(틱당 0.17~0.47px)은 접근 방향에 따라 추적 능력이 완전히 달라진다.
 
 수정 원칙: 게임 상태 좌표는 끝까지 float(또는 고정소수점) 유지, clamp도 실수형(`clamp_f32`), **렌더링에서만 int 변환.**
 
@@ -59,7 +53,7 @@ g.px=(float)clampi((int)g.px,7,313);   /* 매 틱 소수부 절삭 */
 
 ### 3-2. 카드 스케줄러 — 문서 공식과 불일치 (P0)
 
-`echo144.c:598,637-656,830`: ① 손패 교체 시 `card_ticks=SWAP(15)`가 기본 30틱을 **대체**한다 — 문서 공식(`30×N + 15×교체`)은 가산. ② `if(card_ticks>0)--; else trigger` 패턴으로 30이 실제 31틱, 15가 16틱. 이 차이는 발동량·SIGNAL 수급·SIM 기준선을 전부 바꾼다.
+타이머 감소·재장전 경로 (위치는 [90](90_STATUS.md) §3-2): ① 손패 교체 시 `card_ticks=SWAP(15)`가 기본 30틱을 **대체**한다 — 문서 공식(`30×N + 15×교체`)은 가산. ② `if(card_ticks>0)--; else trigger` 패턴으로 30이 실제 31틱, 15가 16틱. 이 차이는 발동량·SIGNAL 수급·SIM 기준선을 전부 바꾼다.
 
 수정 원칙: **다음 발동 시점을 한 함수에서 명시적으로 계산** — `지연 = 교체 지연 + 활성화 지연`. "N틱"이 정확히 N틱이도록 타이머 의미론 고정. V2 규칙 번역은 [10](10_MECHANICS.md) §14-1.
 
@@ -85,10 +79,10 @@ g.px=(float)clampi((int)g.px,7,313);   /* 매 틱 소수부 절삭 */
 
 ### 3-5. GDI 텍스트 (P0/P1)
 
-- **COLORREF 채널 순서** — `echo144.c:1568` `(COLORREF)color` 직접 캐스팅: DIB 상수는 `0x00RRGGBB`, COLORREF는 `0x00BBGGRR` — **GDI 텍스트의 R/B가 뒤집힌다.** 수정: `RGB((c>>16)&0xff,(c>>8)&0xff,c&0xff)` 변환 함수 경유.
-- **비정수 배율** — `echo144.c:1857` 클라이언트 전체 `StretchBlt`: 창 리사이즈 시 픽셀 비율 파괴. 수정: `scale = max(1, min(cw/320, ch/240))` 정수 배율 + 레터박스.
-- `SetBkMode(TRANSPARENT)`는 존재(:1790) — 백버퍼 DC 생성 직후 1회로 이동, `SetTextAlign(TA_LEFT|TA_TOP)` 명시.
-- **시스템 폰트 의존**(GulimChe, :1896): 장기 해법은 §8 내장 비트맵 폰트. W6 영문 클린 PC 게이트 전까지 GDI 유지 가능하나 V2에서는 임베드가 정본.
+- **COLORREF 채널 순서** — DIB 픽셀 상수를 `(COLORREF)`로 직접 캐스팅 ([90](90_STATUS.md) §3-3): DIB 상수는 `0x00RRGGBB`, COLORREF는 `0x00BBGGRR` — **GDI 텍스트의 R/B가 뒤집힌다.** 수정: `RGB((c>>16)&0xff,(c>>8)&0xff,c&0xff)` 변환 함수 경유.
+- **비정수 배율** — 클라이언트 전체 `StretchBlt` ([90](90_STATUS.md) §3-4): 창 리사이즈 시 픽셀 비율 파괴. 수정: `scale = max(1, min(cw/320, ch/240))` 정수 배율 + 레터박스.
+- `SetBkMode(TRANSPARENT)`는 백버퍼 DC 생성 직후 1회로 고정, `SetTextAlign(TA_LEFT|TA_TOP)` 명시.
+- **시스템 폰트 의존**(GulimChe): 장기 해법은 §9 내장 비트맵 폰트. W6 영문 클린 PC 게이트 전까지 GDI 유지 가능하나 V2에서는 임베드가 정본.
 
 ### 3-6. 기타 (P1/P2 표)
 
@@ -196,13 +190,15 @@ uint32_t palette_bgra[16];
 런타임 의존성 없이 Python을 개발 도구로 사용 (기존 `tools/` 관행의 확장):
 
 ```text
-입력: content/cards.json effects.json intents.json waves.json strings.tsv  assets/px/*.px  balance.def
-출력: generated/card_ids.h *.inc content_report.md (+ 20_BALANCE 표 자동 생성)
+입력: content/cards.json effects.json intents.json waves.json strings.tsv content/balance.def
+      art/src/*.aseprite → art/export/*.png + *.json   (assets/px/*.px는 fixture·긴급 수정 전용)
+출력: generated/card_ids.h *.inc balance.h balance_test.inc content_report.md
+      docs/20_BALANCE.generated.md (사람용 수치 표 자동 생성)
 ```
 
 검증(빌드 실패 조건): 카드 ID 중복 / 비용 범위 / 레시피 참조 무결성 / 킹덤 보장 조건([20](20_BALANCE.md) B2-카드) / 아이콘 누락 / ON AIR·OFF AIR 정의 / CUE 순환 가능성 / ARCHIVE 합계 / 문자열 글리프 누락 / 콘텐츠 바이트 예산.
 
-**balance.def — 수치의 단일 원천**: 수치가 코드·문서·테스트에 3중 기재되면 드리프트가 필연이다(V1 실증). X-매크로 한 파일에서 C 상수, 문서 표, 테스트 기대값을 생성한다:
+**`content/balance.def` — 수치의 유일한 기계 정본**: 수치가 코드·문서·테스트에 3중 기재되면 드리프트가 필연이다(V1 실증). 방향은 단방향이다 — `balance.def → generated/balance.h(코드) + balance_test.inc(테스트 기대값) + docs/20_BALANCE.generated.md(사람용 표)`. [20](20_BALANCE.md)은 설계 이유의 서술과 자동 생성 표를 담고, **손으로 수치를 고치는 곳은 balance.def 하나다**:
 
 ```c
 BALANCE(PLAYER_SPEED,      54)
@@ -269,7 +265,7 @@ struct SaveData {
 ## 10. 결정론·성능·테스트
 
 - `QueryPerformanceCounter` 고정 60Hz 유지. RNG 스트림 4분리는 V2 즉시 채택(§5). 고정소수점(24.8 좌표/16.16 속도/256단계 각도)은 확장판(리플레이 공유·온라인 검증)에서 — 지금의 우선순위는 선택 구조와 카드 개성이다. 단 파티클·이펙트는 처음부터 작은 정수/고정소수 단위가 결정론과 속도에 유리하다.
-- 성능 기법의 채택 기준 (실측 최악 충돌 틱 0.162ms — 조기 최적화 금지):
+- 성능 기법의 채택 기준 (조기 최적화 금지 — 실측 근거는 [90](90_STATUS.md) §1):
   - **지금 채택**: 고정 배열 풀 개선(활성 플래그·자유 인덱스 스택·생성 실패 계측·최대 사용량 기록) / 파티클 전용 풀(게임 판정과 분리, 가득 차면 오래된 장식부터 덮어씀 — 풀 크기·화면 동시 상한은 [45](45_UI_UX.md) §5) / **적 분리 벡터**(겹침 반발 — 군중이 흐르는 움직임, 스프라이트 추가 없이 밀도·난이도 상승) / **근접 탐색 캐시**(자동 CARRIER는 현재 타깃이 유효하면 유지, 매 발사 전체 탐색 금지).
   - **조건부**: 공간 해시는 `적 ≥384 / 투사체 ≥512 / 충돌 틱 평균 >1ms / 최악 >3ms` 중 하나가 실측될 때만. ECS·멀티스레드 금지.
 - 테스트 계층: 커밋(셀프테스트+SIM 30시드) / 릴리스(1,000+런) / 사람(5명) — [20](20_BALANCE.md) §SIM. 스크린샷 회귀는 [41](41_PIXEL_ART.md) §5.

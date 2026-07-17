@@ -226,7 +226,7 @@ VIEWERS 0 / CHAT ACTIVE      VIEWERS 144 / UNIQUE 3      VIEWERS -1      VIEWERS
 |---|---|---|
 | 1997 — FILE BOARD | PC통신·자료실 UI. V1/BBS 개정안의 유산이 사는 곳 — 숨겨진 로그에 `MIMEI HOST-09` 호스트명 | 느린 BAUD, DEFRAG 비용 낮음 |
 | 2006 — PERSONAL WEB | 개인 홈페이지·미디어 플레이어 | 팝업·클립 적 증가, CACHE·MACRO 강화, 댓글 벽 |
-| 2026 — RECOMMEND FEED | 추천 피드·라이브 플랫폼 | NØA SPONSOR 강함, TREND 변화 빠름, 가짜 레이드 |
+| 2026 — RECOMMEND FEED | 추천 피드·라이브 플랫폼 | NØA CONTRACT 강함, TREND 변화 빠름, 가짜 레이드 |
 | 2097 — DEAD NET | 사람이 사라진 원점 | 인간 메시지 거의 없음, ARCHIVE 강함, 빈 서버와 NOISE |
 
 폐기된 세계관 요소의 재사용 원칙 (ADR-0004): 폐국 1회선 BBS `MIMEI HOST-09`는 정본이 아니지만 1997 시간층의 챕터 이름·숨겨진 로그·UI 스킨으로 보존한다. "한 명의 수신자" 정서는 시크의 백스토리("정상 시청자로 계산된 적 없는 유일한 관객")로 승계되었다.

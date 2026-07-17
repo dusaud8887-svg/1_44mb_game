@@ -1,6 +1,6 @@
-# 20 — 밸런스 데이터 (V2 수치 정본)
+# 20 — 밸런스 데이터 (V2 설계 정본)
 
-모든 튜닝 수치의 단일 정본. 다른 문서와 코드는 이 표를 따른다. **여기의 값 대부분은 `[시드값]`** — 원문이 수치를 확정하지 않아 본 개정에서 자기일관적으로 설계한 초기값이며, SIM·플레이테스트로 조정한다. 수치 변경은 이 파일 → 코드(`balance.def`, [30](30_TECH.md) §7) → 검산 기준점 순으로 한 커밋. V1 수치 정본은 [archive/v1-last-live/20_BALANCE.md](archive/v1-last-live/20_BALANCE.md)에 동결.
+**수치의 기계적 단일 정본은 이 문서가 아니라 `content/balance.def`다**([30](30_TECH.md) §7 — 아직 미착수, [90](90_STATUS.md) 참조) — 손으로 수치를 고치는 곳은 balance.def 하나뿐이며, `generated/balance.h`·`balance_test.inc`·`docs/20_BALANCE.generated.md`는 거기서 자동 생성된다. 이 문서(`20_BALANCE.md`)는 **그 값들의 설계 의도·이유·상호 관계를 사람이 읽는 정본**이다 — 숫자가 왜 그 값인지, 무엇과 무엇이 서로를 견제하는지를 설명한다. 수치 변경 절차는 §"튜닝 절차" 참조. **여기의 값 대부분은 `[시드값]`** — 원문이 수치를 확정하지 않아 본 개정에서 자기일관적으로 설계한 초기값이며, SIM·플레이테스트로 조정한다. V1 수치 정본은 [archive/v1-last-live/20_BALANCE.md](archive/v1-last-live/20_BALANCE.md)에 동결.
 
 ## B2-턴 · 시간
 
@@ -21,7 +21,8 @@
 | 항목 | 값 |
 |---|---:|
 | HP / 피격 무적 | 5 / 0.8초 |
-| 시작 덱 | 2400.MODEM ×7, CHAT.LOG ×3 |
+| 시작 덱 `[본 개정 구체화 — 정규화 패스]` | `2400.MODEM ×6, CHAT.LOG ×2, FIREWALL.FRAME ×1, MULTI.FORK ×1` (10장) — PROGRAM 2종을 시작부터 쥐어 줘야 1~2턴 튜토리얼이 "카드가 없어서 못 가르치는" 상황을 피한다 |
+| 첫 런 첫 손패 `[본 개정 구체화]` | 셔플 이전 고정 배치: `2400 / 2400 / FIREWALL / CHAT / MULTI` — [10](10_MECHANICS.md) §11 스테이지 플로우 1~2턴 참조. 이후 손패부터는 정상 셔플 |
 | CUE / 턴 | 1 |
 | SEEK / 턴 | 1 (미사용 1장을 덱 아래로 + 1장 드로우) |
 | 덱 최소 / 최대 | 5 / 40장 |
@@ -39,7 +40,7 @@
 | 상승 (+1) | 피격 없는 구절 종료 / 예고 의도 적합 프로그램 / 마킹 연쇄 제거 / 타이밍 창 발동 |
 | 하락 (−1, 피격당 최대 1) | 큰 피해 / CUE 미사용 종료 / MUTE 봉인 / 가짜 메아리 수용 |
 | 회복 | 피격 후 다음 구절 첫 성공 시 즉시 +1 |
-| 효과 | 0 기본 / 1 CARRIER 연출 강화 / 2 프로그램 범위·지속 +10% / 3 구절 종료 시 청록 +1 또는 CUE 환급 25% 확률 |
+| 효과 | 0 기본 / 1 CARRIER 연출 강화 / 2 프로그램 범위·지속 +10% / 3 구절 종료 시 CUE 환급 25% 확률 또는 쿨다운 단축 — **SYNC는 링을 올리지 않는다**([10](10_MECHANICS.md) §3) |
 | 안전장치 | SYNC 0에서 추가 감소 없음, HP·BAUD 직접 감소 없음, 엔딩 조건 무관 |
 
 ## B2-카드 — 기본 공급
@@ -59,52 +60,59 @@ ECHO = OPEN CHANNEL에서 실물 발동 시 점등하는 청록 칸 수. V1의 S
 
 ## B2-카드 — 킹덤 PROGRAM 8종 풀 (세션당 5종)
 
-| 카드 | 가격 | CUE | ON AIR (수동) | OFF AIR (미선택) |
-|---|---:|---:|---|---|
-| MULTI.FORK | 3 | 1 | CUE +1 (다음 PROGRAM 연속 선택) | 다음 프로그램 준비 −25% |
-| CACHE.RAM | 3 | 1 | 1장 보관 + 1장 드로우, 보관 카드 다음 턴 첫 발동 150% | — |
-| MACRO.REC | 4 | 1 | 직전 수동 PROGRAM 형태 전체 70% 재생 (최근접 반올림, 최소 1) | 직전 CARRIER 잔상 재생 |
-| FIREWALL.FRAME | 3 | 1 | 3면 벽 2.5초, 적탄 차단 | — |
-| PREFETCH | 2 | 1 | 덱 위 3장 중 1장 선택. ARCHIVE 선택 시 예고 효과 25% | 다음 카드 공개 가속 |
-| MARKER.TAG | 4 | 1 | 최근접 5체 태그 4초(피해 +50%) + 1장 드로우 | 최근접 1체 태그 |
-| SURGE.NET | 5 | 1 | 태그 적 연결 회선 3초, 초당 8, 최대 4체. 무태그 시 최근접 3체 | 태그 1 소모, 낙뢰 10 |
-| CHECKSUM | 2 | 1 | NOISE 1 비활성 또는 자홍 1→청록. 없으면 다음 2카드 안정화 | — |
+| 카드 | phase | 가격 | CUE | ON AIR (수동) | OFF AIR (미선택) |
+|---|---|---:|---:|---|---|
+| MULTI.FORK `[정규화 패스: phase 정정]` | `EDIT_IMMEDIATE` | 3 | 1(CUE +2 수령, 순증 +1) | 없음 — EDIT 안에서 즉시 해소, 다음 PROGRAM 연속 편성 가능 | 해당 없음 |
+| CACHE.RAM `[정규화 패스]` | `EDIT_IMMEDIATE` | 3 | 1 | 없음 — EDIT 안에서 즉시 해소: 1장 보관 + 1장 드로우, 보관 카드 다음 EDIT 첫 발동 150% | 해당 없음 |
+| MACRO.REC | `ON_AIR_ACTIVE` | 4 | 1 | 직전 수동 PROGRAM 형태 전체 70% 재생 (최근접 반올림, 최소 1) | 직전 CARRIER 잔상 재생 |
+| FIREWALL.FRAME | `ON_AIR_ACTIVE` | 3 | 1 | 3면 벽 2.5초, 적탄 차단 | — |
+| PREFETCH `[정규화 패스]` | `EDIT_IMMEDIATE` | 2 | 1 | 없음 — EDIT 안에서 즉시 해소: 덱 위 3장 중 1장 선택. ARCHIVE 선택 시 예고 효과 25% | 해당 없음 |
+| MARKER.TAG `[정규화 패스: phase 분리]` | `EDIT_IMMEDIATE`(드로우) + `ON_AIR_ACTIVE`(표식) | 4 | 1 | EDIT: CUE 시 즉시 1장 드로우(선택 무관). ON AIR: 최근접 5체 태그 4초(피해 +50%) | 최근접 1체 태그(드로우는 그대로 발생) |
+| SURGE.NET | `ON_AIR_ACTIVE` | 5 | 1 | 태그 적 연결 회선 3초, 초당 8, 최대 4체. 무태그 시 최근접 3체 | 태그 1 소모, 낙뢰 10 |
+| CHECKSUM | `ON_AIR_ACTIVE` | 2 | 1 | NOISE 1 비활성 또는 자홍 1→청록(`origin=REAL` 제약, [10](10_MECHANICS.md) §8). 없으면 다음 2카드 안정화 | — |
 
 킹덤 보장 조건: 페이로드형(MACRO/SURGE/MARKER/FIREWALL) ≥2, 엔진형(MULTI/CACHE/PREFETCH) ≥1, 정화형(CHECKSUM/FIREWALL) ≥1. 유효 마스크는 코드 생성 시 콘텐츠 컴파일러가 검증([30](30_TECH.md) §7).
 
-## B2-카드 — SERVICE · SPONSOR · 시크 거래
+## B2-카드 — SERVICE · CONTRACT · 시크 거래
 
-| 항목 | 비용 | 효과 | 메아리 |
-|---|---:|---|---|
-| DEFRAG (SERVICE) | 구매 1회 소비 | 카드 1장 영구 삭제. ESC 취소 가능(구매 미소비) | NOISE 삭제 시 청록 +1 |
-| NØA BOOST | 0 | 이번 턴 CUE +1 | 자홍 +2 |
-| AUTO CHAT | 1 | 이번 턴 BAUD +2 | 자홍 +1 |
-| RECOMMEND | 1 | 다음 BREAK에 지정 PROGRAM −2 할인 | 그 카드 TREND 등록 |
-| PERFECT CUT | 2 | 화면 적탄 전부 삭제 + 넉백 24 | 자홍 +2, 직전 PROGRAM 복제 목록 등록 |
-| 시크 거래 | 구매 1회 소비 | 카드 1장 영구 보관 (덱 압축, 엔딩 흔적) | 호박 +2 |
+`[본 개정 구체화 — 정규화 패스: 즉시 효과 → 계약 타이밍]` CONTRACT(구 SPONSOR)는 구매 즉시 발동하지 않는다. `BREAK_CONTRACT` phase([10](10_MECHANICS.md) §14) — 구매 시 계약이 확정되고, 명시된 다음 페이즈 1회에 발동한다.
 
-SPONSOR 등장: 5턴부터 BREAK마다 1종 `[시드값]`, TREND 카드와 중복 금지. 시크 거래: 7턴(엘리트) 이후.
+| 항목 | 비용 | 계약(구매 시 확정) | 발동 시점 | 메아리 |
+|---|---:|---|---|---|
+| DEFRAG (SERVICE) | 구매 1회 소비 | 카드 1장 영구 삭제. ESC 취소 가능(구매 미소비) | 구매 즉시(SERVICE는 계약이 아니다) | NOISE 삭제 시 청록 +1 |
+| NØA BOOST | 0 | 다음 EDIT의 CUE +1 | 다음 EDIT 시작 시 1회 | 자홍 +2 |
+| AUTO CHAT | 1 | 다음 턴 지정 CARRIER 1장이 TX+RX 동시 적용 | 다음 턴 EDIT에서 지정 확정 시 1회 | 자홍 +1 |
+| PERFECT CUT | 2 | 화면 적탄 전부 삭제 + 넉백 24 | 다음 ON AIR 시작 시 1회 | 자홍 +2, 직전 PROGRAM 복제 목록 등록 |
+| RECOMMEND | 1 | 지정 PROGRAM −2 할인 | 다음 BREAK 상점에서 적용 | 그 카드 TREND 등록 |
+| 시크 거래 (TRADE) | 구매 1회 소비 | 카드 1장 영구 보관 (덱 압축, 엔딩 흔적) | 구매 즉시(TRADE도 계약이 아니다) | 호박 +2 |
+
+CONTRACT 등장: 5턴부터 BREAK마다 1종 `[시드값]`, TREND 카드와 중복 금지. 시크 거래: 7턴(엘리트) 이후.
 
 ## B2-링 — 64칸 수급과 엔딩 판정
 
-### 일반 방송 (합계 상한 16)
+`[본 개정 구체화 — 정규화 패스]` 각 칸은 `EchoCell{origin, state}`([10](10_MECHANICS.md) §8)다. 아래 표의 "변화"는 신규 점등(빈 칸 채움)과 색 전환(기존 칸의 `state` 덮어씀)을 구분해 표기한다 — 이 구분이 16칸 상한·복구 규칙의 근거다.
 
-| 원인 | 변화 |
-|---|---|
-| NØA SPONSOR 구매·사용 | 자홍 + (카드별 위 표) |
-| 시크 거래 | 호박 +2 |
-| 시크 엘리트: 탈취 방치(격퇴 실패) | 청록/ARCHIVE 1개 → 호박 |
-| 시크 엘리트 격퇴 | 훔친 것 반환 + 청록 +1 |
-| DEFRAG로 NOISE 삭제 | 청록 +1 |
+### 일반 방송 (신규 점등 합계 상한 16)
+
+| 원인 | EchoCell 변화 | 종류 |
+|---|---|---|
+| NØA CONTRACT 발동·사용 | `{SYNTHETIC, MIMICKED}` 신규 점등(자홍 +, 빈 칸에만) | 신규 점등 |
+| 시크 거래 | `{REAL, ARCHIVED}` 신규 점등(호박 +2) | 신규 점등 |
+| 시크 엘리트: 탈취 방치(격퇴 실패) | 기존 청록/ARCHIVE 근거 칸의 `state`를 `ARCHIVED`로(호박 전환) | 색 전환(칸 수 불변) |
+| 시크 엘리트 격퇴 | 훔친 것 반환 + `{REAL, LIVE}` 신규 점등(청록 +1) | 신규 점등 |
+| DEFRAG로 NOISE 삭제 | `origin=REAL`이며 `state≠LIVE`인 칸 1개를 `LIVE`로(청록 +1) — **가려진 실제 흔적만 복구, 새 칸을 만들지 않는다** | 색 전환(칸 수 불변) |
+
+**16칸 상한은 신규 점등에만 적용된다.** 16개가 이미 점등된 뒤 신규 점등 조건이 다시 충족되면 초과분은 소실(오류 아님, 조용히 버림). 색 전환 행(방치·DEFRAG)은 칸 수를 늘리지 않으므로 상한과 무관하게 항상 적용된다.
 
 ### OPEN CHANNEL
 
-| 원인 | 변화 | 제한 |
+| 원인 | EchoCell 변화 | 제한 |
 |---|---|---|
-| ARCHIVE 실물 발동 | 청록 +ECHO | — |
-| 노아 공격 적중 (피격) | 청록 1 → 자홍 | 쿨다운 5초 |
-| 시크 케이블 개입 | 청록 1 → 호박 | 최대 3회/OC |
-| CHECKSUM | 자홍 1 → 청록 | 발동당 1 |
+| ARCHIVE 실물 발동 | `{REAL, LIVE}` 신규 점등(청록 +ECHO) | — |
+| 노아 공격 적중 (피격) | 기존 `{*, LIVE}` 칸의 `state`를 `MIMICKED`로(청록 → 자홍). `origin`은 유지 | 쿨다운 5초 |
+| 시크 케이블 개입 | 기존 `{*, LIVE}` 칸의 `state`를 `ARCHIVED`로(청록 → 호박). `origin`은 유지 | 최대 3회/OC |
+| CHECKSUM | `origin=REAL`이며 `state=MIMICKED`인 칸만 `LIVE`로(자홍 → 청록). `origin=SYNTHETIC`(CONTRACT가 만든 순수 합성 자홍)은 대상 아님 | 발동당 1 |
+| 재송출 PROGRAM(P1+) | `origin=REAL`이며 `state=ARCHIVED`인 칸만 `LIVE`로(호박 → 청록) | 발동당 1 |
 | 색 전환 공통 | — | 틱당 소스별 1회 |
 
 ### 위상 임계 (수치 이득 없음, 위상 연출만 — [10](10_MECHANICS.md) §10)
@@ -115,25 +123,28 @@ SPONSOR 등장: 5턴부터 BREAK마다 1종 `[시드값]`, TREND 카드와 중�
 
 | 순위 | 엔딩 | 조건 |
 |---:|---|---|
-| 1 | UNRESOLVED ECHO | 세 색 각 ≥12 그리고 max−min ≤8, 그리고 런 중 세 경로 카드(ARCHIVE/시크·CACHE/SPONSOR) 각 1회 이상 사용 |
+| 1 | UNRESOLVED ECHO | 세 색 각 ≥12 그리고 max−min ≤8, 그리고 런 중 세 경로 카드(ARCHIVE/시크·CACHE/CONTRACT) 각 1회 이상 사용 |
 | 2 | PERFECT AUDIENCE | 자홍 ≥24 |
 | 3 | LAST ARCHIVE | 호박 ≥24 |
 | 4 | OPEN CHANNEL | 그 외 (청록 우세) |
 
 실패: HP 0 `STREAM LOST` / OFFLINE `CHANNEL CLOSED` + 그 시점 우세 색의 마지막 문장.
 
-## B2-공식 — 메아리 예상 모델
+## B2-공식 — 메아리 예상 모델 `[본 개정 구체화 — 정규화 패스: 컴파일 모델로 재계산]`
 
-HUD `예상 ≥N/64`는 보수 계산으로 표시한다 (MULTI 단축·전환 손실·시크/노아 개입 제외 — 실제는 다를 수 있음을 `≥`로 표기):
+§10(OPEN CHANNEL 컴파일 모델, [10](10_MECHANICS.md) §10)에서 순환하는 것은 **덱 전체가 아니라 CARRIER + ARCHIVE뿐**이다 — PROGRAM은 컴파일 시 패시브 modifier로 등록되고 순환 큐에 남지 않는다. 예전 공식이 "덱 장수"를 그대로 썼던 것은 개별 카드 재선택 모델(폐기됨)의 잔재였다.
+
+HUD `예상 ≥N/64`는 보수 계산으로 표시한다 (전환 손실·시크/노아 개입 제외 — 실제는 다를 수 있음을 `≥`로 표기):
 
 ```text
-OC 순환 시간 = 0.50초 × 덱 장수 + 0.25초 × ceil(덱 장수 / 5)
+순환 카드 수 = CARRIER 장수 + ARCHIVE 장수   (PROGRAM·NOISE는 제외)
+OC 순환 시간 = 0.50초 × 순환 카드 수 + 0.25초 × ceil(순환 카드 수 / 5)
 예상 청록   = 현재 청록 + floor(60 / 순환 시간) × 덱 ECHO 합
 ```
 
-**검산 기준점 (V1에서 승계)**: 시작 덱 10장(ECHO 합 3) → 순환 5.5초 → 10순환 → **30** / 시작 덱 + VOICE 1장(11장, ECHO 합 6) → 순환 6.05초 → 9순환 → **54**. 이 두 값이 깨지면 공식이나 카드 값이 바뀐 것이다 — selftest 단언 대상.
+**검산 기준점 (정규화 패스에서 재계산 — V1 승계값 30/54는 폐기)**: 시작 덱(§"B2-시작") = `2400×6 + CHAT×2 + FIREWALL×1 + MULTI×1`, 순환 대상은 CARRIER 6 + ARCHIVE(CHAT) 2 = **8장**(ECHO 합 2) → 순환 시간 0.50×8 + 0.25×ceil(8/5) = 4.5초 → floor(60/4.5) = 13순환 × ECHO합 2 = **26**. 시작 덱 + VOICE 1장 추가(순환 대상 9장, ECHO 합 5) → 순환 5.0초 → 12순환 × 5 = **60**. 이 두 값이 깨지면 공식이나 카드 값이 바뀐 것이다 — selftest 단언 대상(구 30/54 단언은 제거).
 
-함의: 시작 덱만으로는 30 + 일반 방송 수급(≤16) < 64 — **ARCHIVE 추가 구매 없이는 승리 불가**가 설계 의도. 반대로 ECHO 합 7 이상(예: CHAT 4 + VOICE 1 추가)이면 이론상 60초 내 도달 가능.
+함의: 시작 덱만으로는 26 + 일반 방송 수급(≤16) < 64 — **ARCHIVE 추가 구매 없이는 승리 불가**가 설계 의도 유지. VOICE 1장 추가만으로 60까지 오르므로, 일반 방송 수급과 합쳐 64 도달이 초반부터 사정권에 들어온다 — 후반 ARCHIVE 추가 구매의 체감 이득은 여기서부터 설계한다.
 
 ## B2-적 — P0 4종·시크 계열·P1 (역할 정의는 [10](10_MECHANICS.md) §9)
 
@@ -143,7 +154,7 @@ P0 기본 적 4종 `[시드값 — 이동·비용은 V1 실측치를 시드로 �
 |---|---:|---:|---:|---|
 | BOT.CHAT | 4 | 22 | 1.0 | 군집 접근, 접촉 시 카드 부착 — 부착당 발동 지연 +0.5초(최대 3). 동일 오타 채팅 생성 |
 | POP.AD | 8 | 0(고정)~14 | 1.2 | 경로 차단 창. 직접 닫기(접촉 0.5초) 또는 관통 공격. HUD 마스크 준수 |
-| SPON.GIFT | 10 | 0 | 2.0 | 위험 지대 보상 상자 — 수령: 강한 효과+자홍 / 파괴: 안전+보상 감소. 가짜율은 SPONSOR 사용량 비례 |
+| SPON.GIFT | 10 | 0 | 2.0 | 위험 지대 보상 상자 — 수령: 강한 효과+자홍 / 파괴: 안전+보상 감소. 가짜율은 CONTRACT 사용량 비례 |
 | MOD.MASK | 14 | 10 | 3.0 | 슬롯 1개 봉인 5초, 봉인 카드 실행 시 NOISE 삽입 |
 
 시크 계열: BUF.WRM (HP 4 — 카드 지연, 방치 시 카드를 '보관'해 다음 턴으로) / TAG.LARVA (HP 3 — 파편에 날짜표, 호박 경로 강화). P1: MIRROR.REPLY / CLIPPER / RETENTION / RAID.GATE / GHOST.VIEWER (`[시드값]` 미정 — P1 진입 시 책정). 엘리트 SEEK.WRM (7턴): HP = MOD.MASK ×4, ARCHIVE/청록 1개 보관 — 처치 시 반환+청록1, ON AIR 종료까지 방치 시 호박 전환. NØA(OC 보스): 게이지 없음, TREND MIRROR.
@@ -154,7 +165,7 @@ P0 기본 적 4종 `[시드값 — 이동·비용은 V1 실측치를 시드로 �
 
 의도 덱 12장 구성 `[시드값]` — 절차 생성 문법([10](10_MECHANICS.md) §5: 초반3 단순/중반4 덱 공격/후반3 전략 대응/종결2 NØA)을 따르는 기본 분포: BOT RAID ×3, MUTE ×2, GIFT DROP ×2, COMMENT WALL ×2, MIRROR ×1, CLIP THEFT ×1, TREND ×1. 상황 의도(LATENCY·EMPTY CHAT·SPONSORED RAID)는 시간층·프로토콜이 치환 삽입. SEEK HUNT는 7턴 고정 이벤트(단, ARCHIVE 미보유 시 금지 규칙 우선). 정보량: 입문 전체 공개 / 일반 종류+방향 / 고난도 30% 은닉·10% 거짓 `[시드값]`.
 
-감사 프로토콜 (런당 1종, 정의는 [10](10_MECHANICS.md) §5): RESPONSE RACE(두 BREAK 무수급 시 NOISE +1) / ENGINE AUDIT(구절 내 PROGRAM 3+ 발동 → QUARANTINE 삽입) / BANDWIDTH CAP(BREAK당 BAUD 상한 7) / ARCHIVE HUNT(SEEK.WRM 2회) / PERFECT RETENTION(SPONSOR 2배·자홍 +1).
+감사 프로토콜 (런당 1종, 정의는 [10](10_MECHANICS.md) §5): RESPONSE RACE(두 BREAK 무수급 시 NOISE +1) / ENGINE AUDIT(구절 내 PROGRAM 3+ 발동 → QUARANTINE 삽입) / **BANDWIDTH CAP**(`[본 개정 구체화]` 하드 캡 없음 — BAUD 7 이상 전부 사용 가능하되 다음 의도 덱에 POP.AD 감사 카드 삽입) / **ARCHIVE HUNT**(`[본 개정 구체화]` 기본 SEEK HUNT 1회(7턴) + ARCHIVE 4장 이상 보유 시 SEEK HUNT 의도 카드 1장 추가 삽입) / PERFECT RETENTION(CONTRACT 2배·자홍 +1).
 
 TREND 집계 `[시드값]`: 기본 = **실제 발동 횟수**, 최근 6구절 ×2 가중, 48 메아리에서 1회 갱신, 고난도 = 상위 2개 조합. HUD `NØA is learning:` 5턴부터 상시. 복제 페어링은 [10](10_MECHANICS.md) §9.
 
@@ -203,7 +214,7 @@ LOOP_ENGINE   MULTI·CACHE·PREFETCH·cantrip, 얇은 덱             → 완성
 ECHO_RUSH     초반 ARCHIVE·RX 투자 우선, 조기 OPEN CHANNEL      → 빠르지만 준비 구간 생존 난도 높음
 CLEAN_SIGNAL  FIREWALL·CHECKSUM·DEFRAG·중급 CARRIER             → 느리지만 안정, 자홍 저항
 CACHE_COMBO   MARKER→SURGE, MULTI→MACRO, CACHE→강카드           → 고점 높고 손패 의존 큼
-PERFECT_SHOW  NØA SPONSOR·무료 CUE·즉시 효과, 자홍 수용         → 가장 화려, 빠른 성장, 위험한 엔딩
+PERFECT_SHOW  NØA CONTRACT 우선 구매·자홍 수용                  → 가장 화려, 빠른 성장, 위험한 엔딩
 THREE_WAY     세 색 균형, 진엔딩 목표                           → 가능하되 난도 최고
 TREND_BAIT    약한 PROGRAM 최다 사용으로 복제 조작 (고급)
 LAST_ARCHIVE  CACHE·시크 거래·호박 보관·덱 압축 (고급)          → 장기 안정, 시크 엔딩
@@ -224,6 +235,6 @@ DIRTY_BROADCAST 오염 활용 (확장판 보류)
 
 ## 튜닝 절차
 
-1. 수치 변경은 이 파일 → `balance.def` → selftest 검산 기준점(30/54) 순으로 한 커밋. 수치의 코드·문서·테스트 3중 기재를 금지하는 단일 원천 구조는 [30](30_TECH.md) §7.
+1. 수치 변경은 `content/balance.def`(기계 정본) → 이 문서(설계 의도 갱신, 손으로) → `generated/balance.h`·`balance_test.inc`·`docs/20_BALANCE.generated.md`(빌드 시 자동) 순으로 한 커밋. 수치의 코드·문서·테스트 3중 기재를 금지하는 단일 원천 구조는 [30](30_TECH.md) §7. selftest 검산 기준점은 **26 / 60**(§"B2-공식").
 2. 사람 테스트 전 SIM으로 후보 값을 거른다. 사람은 재미·가독성 판정에만 쓴다.
 3. 지배 전략 발견 시 순서: 가격 → 수치 → 의도·프로토콜 → (최후) 목표 64. **카드·버튼 추가는 레버가 아니다.**
