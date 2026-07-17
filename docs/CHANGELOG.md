@@ -1,5 +1,37 @@
 # 문서 변경 이력
 
+## 2026-07-17 — P1 엔진·최종 방송·TODAY/저장 완결
+
+정본 `00~50`의 다음 배치를 구현했다. CACHE는 PROGRAM 대상을 직접 고르고 다음 EDIT에 150%로 되돌리며, FIREWALL은 마지막 이동 방향을 개방한다. MACRO/MARKER/SURGE OFF AIR, BOT.CHAT 편성 지연, MOD.MASK NOISE, 시크 영구 보관 거래와 OC 최대 3회 케이블, 실제 발동+최근 6구절 TREND를 연결했다. OPEN CHANNEL은 ARCHIVE 형태 3종과 PROGRAM modifier 4종을 컴파일하고 SAFE/REPLAY의 링 복구까지 수행한다. 16/32/48/64 위상, 동일 틱 64 우선, 6초 승리 구간, 4엔딩·실패 원인별 결과를 추가했다. `F2` 오늘의 날짜 시드, 60B 체크섬 저장·손상 시 시크 문구·읽기 전용 실패 무시, DEV 전이별 `playtest.csv`를 구현했다. SIM은 실제 ON AIR와 PROGRAM을 실행하는 무적 처리량 봇으로 교체하고 `build.bat sim1000` 게이트를 추가했다. 실제 Windows에서 타이틀·편성·3쪽 상점·OPEN CHANNEL·64연출·결과를 재검수했다. MSVC `/W4`, 7정책×1,000 seed, 릴리스 빌드 통과(173,056B, SHA-256 `D03FF6FE67CA555F91239219817B381FEED8C1A6F673918389C2E4FB071ECD09`).
+
+## 2026-07-17 — docs 기반 게임 완성도 감사·규칙/입력 보강
+
+정본 `00~50`과 V2 P1 코드를 기능 경로별로 대조하고 [91_COMPLETENESS_AUDIT.md](91_COMPLETENESS_AUDIT.md)에 구현/부분/미구현, 재미 검증 한계, P0~P2 우선순위를 기록했다. M 키 반복 토글과 설정 초기화, F1 저자극 미동작, ESC 즉시 종료, Space 홀드 미지원, 결과 화면 새 시드 부재를 수정했다. 12구절·초반 TX/RX 추천·5구절 이후 NØA 학습·구매 카드 실제 귀환 HUD를 추가했다. SPON.GIFT의 파괴/수령 의미 역전, OC 청록→자홍 5초 제한 누락, DEFRAG 최소 덱·NOISE 실제 흔적 복구를 정본에 맞췄다. 실제 Windows에서 한글 HUD와 일시정지 레이아웃을 재검수했고 MSVC `/W4` selftest, 7정책×30 seed SIM, 릴리스 빌드를 통과했다(165,888B, SHA-256 `59F22397E64EE6F73E5521B43C783768F01442B2FB58D7795FC3DCE6046D8068`). 기존 “SIM 수용 기준 PASS” 표기는 구조 다양성만의 통과였으므로, 복잡 엔진 고점 미달을 STATUS와 감사 문서에 정정했다.
+
+## 2026-07-17 — 캐릭터 아트 2차 정본 대조·표현 확장
+
+`06/40/41/42/45`를 다시 대조해 1차 패스가 놓친 표현 계층을 [43_ART_COMPETITIVE_RESEARCH.md](43_ART_COMPETITIVE_RESEARCH.md) §8에 격차 감사로 기록했다. 에코를 24×24×10과 서로 다른 64×64 표정 8종으로 확장하고 긴 비대칭 머리·한쪽 수신기·CUE 탭을 복원했다. 시크는 인간형 아바타 24×24와 실제 셸 16×16을 분리했으며, NØA는 대리체 24×24와 반개 경청 눈을 추가했다. 메인 키아트는 에코 전경·화면 밖 손·시크의 눈/케이블·댓글 베일 뒤 큰 NØA 얼굴의 사건 구도로 다시 구성했다. 인게임에서도 에코가 선택 카드를 향해 손을 내밀고, 시크 아바타는 보관 흔적이 있는 BREAK에, NØA 대리체는 계약 카드와 OPEN CHANNEL에 등장하며, 타이틀의 진짜 답 한 점이 두 인물 사이를 계속 이동한다. 승리/실패 결과 초상도 별도 표정으로 교체했다. 실제 Windows 타이틀·편성·전투·OPEN CHANNEL·승리 화면 비전 검수와 MSVC `/W4` selftest를 통과했다(163,840B, SHA-256 `A4967EE33297F2081EDCAA0B6892D7217BB2F11D0E22ED6DEAB79124C7E1CC31`).
+
+## 2026-07-17 — 캐릭터 경쟁력 조사·픽셀 아트 폴리시 재제작
+
+2026년 7월 기준 OpenAI 이미지 프롬프트, Pixelorama, PixelLab, ComfyUI 픽셀 정리 노드, 픽셀포지와 한국 커뮤니티 제작·캡슐 피드백을 조사해 [43_ART_COMPETITIVE_RESEARCH.md](43_ART_COMPETITIVE_RESEARCH.md)에 도구 채택표, 기존 자산 감정, 캐릭터별 모에/긴장/서사 여백, 프롬프트 골격, AI-slop 검수표를 기록했다. 24×24 전신 확대에 의존하던 제작기를 전신 24×24·감정 초상 64×64·직접 구성 키아트 192×108의 3단계로 재작성했다. 에코·시크·NØA 고정 앵커와 얼굴/손/케이블 연결을 교정하고 적 5종 외곽선을 재분리했으며, 초상을 결과 화면에 4bpp로 배선했다. indexed PNG·8배 시트·키아트 접촉 시트 비전 검수, 실제 Windows 타이틀/전투 화면 검수, MSVC `/W4` selftest와 7정책×30 seed SIM 및 릴리스 빌드를 통과했다(163,328B, SHA-256 `D22E93476C857728E2F7ACB34738658BAD4A224F8AE3C80C73E328932537803A`).
+
+## 2026-07-17 — 전 화면 한글화·V2 PNG 픽셀 팩
+
+게임 창 제목, 카드·의도, 타이틀, EDIT/ON AIR/BREAK/OPEN CHANNEL/결과 화면의 노출 문구를 한글화하고 사용 음절만 담은 12×12 비트맵 글꼴을 내장했다. V1 `.px`를 재사용하지 않고 에코 6프레임, 시크 4프레임, 노아 3단계, 적 5종, 카드 아이콘 13종을 16색 indexed PNG로 다시 제작했다. 키아트 정본 A~F를 192×108 원본과 3배 PNG로 제작하고 ENSEMBLE을 타이틀에 배선했다. 8배 접촉 시트·실제 320×240 Windows 화면 비전 검수를 거쳐 글리프 윗획, 노아 얼굴, OPEN CHANNEL 상단 마스크를 수정했다. 런타임 자산은 4bpp로 패킹하며 PNG 디코더·시스템 글꼴은 포함하지 않는다.
+
+## 2026-07-17 — W‑V2‑ART 코드 통합 패스
+
+GulimChe/Consolas GDI 텍스트를 내장 5×7 ASCII 픽셀 폰트로 교체. 에코 보행·OPEN CHANNEL 양방향 수신, 시크 케이블, NØA 프로필 환·수직 실루엣, MACRO 잔상·CHECKSUM 스캔·MARKER/SURGE 회선을 추가. waveOut 오디오는 E–G–B 관계 모티프, SYNC 화음층, 카드 발동층으로 확장. Windows에서 타이틀·EDIT·PREFETCH·상점·DEFRAG·32칸 NØA 화면 검수 통과. 최종 Aseprite 모델 시트·초상과 사람 아트 게이트는 미실시.
+
+## 2026-07-17 — W‑V2‑P1 구현
+
+MACRO·PREFETCH·MARKER·SURGE·CHECKSUM, CACHE 150% 귀환, DEFRAG SERVICE, 세션 킹덤 5종, 12턴 의도 덱, COMMENT WALL·BUF.WRM·MOD.MASK, 7턴 시크 ARCHIVE 탈취/반환/호박 전환, CLIP THEFT·TREND 재생, 카드 구매·CUE·발동 계측을 구현. 7정책×30 seed SIM은 7/7 도달률>0, 최고 정책 독점 24.6%, BIG_BAUD 중앙권으로 수용 기준 통과. MSVC `/W4` selftest·Windows P1 UI 검수·릴리스 빌드 통과(133,632B).
+
+## 2026-07-17 — V2 P0 수직 슬라이스 구현
+
+V1 자동 탄창·단일 SIGNAL·FORMAT 경로를 제거하고 문서 50 §3의 V2 P0를 재구현: EDIT→ON AIR→BREAK→CLEANUP, TX/RX, CUE·SEEK, 카드 8종, 의도 4종, `EchoCell[64]`, OPEN CHANNEL 컴파일, NØA TREND MIRROR. Win32/GDI/waveOut 스택은 유지하고 코어·렌더·플랫폼을 변경 이유별 파일로 분리. V2 P0 절차 픽셀 아트와 타입별 카드 UI를 신규 적용. MSVC `/W4` selftest·릴리스 빌드·Windows 화면 검수 통과(128,512B). 사람 GV2와 P1+ 콘텐츠는 미실시.
+
 ## 2026-07-15 — 캐릭터 아트 V2 정합 (FORMAT → 노아)
 
 main의 V2 재설계 정본(문서 전면 재구성, 적대 캐릭터 FORMAT/0→노아)을 브랜치에 병합하고 아트를 V2로 착수.

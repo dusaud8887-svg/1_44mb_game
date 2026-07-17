@@ -21,10 +21,21 @@ if /i "%~1"=="clean" (
 if not exist build mkdir build
 if not exist out mkdir out
 
+where python >nul 2>nul || (echo Python 3 is required to build embedded art. & exit /b 1)
+python tools\build_font.py || exit /b 1
+python tools\build_art.py || exit /b 1
+
 if /i "%~1"=="test" (
-  cl /nologo /std:c11 /W4 /O2 /MT /DSELF_TEST src\echo144.c /Fe:build\selftest.exe /Fo:build\selftest.obj user32.lib gdi32.lib winmm.lib || exit /b 1
+  cl /nologo /utf-8 /std:c11 /W4 /O2 /MT /DSELF_TEST src\echo144.c /Fe:build\selftest.exe /Fo:build\selftest.obj user32.lib gdi32.lib winmm.lib || exit /b 1
   build\selftest.exe || exit /b 1
   echo selftest: PASS
+  exit /b 0
+)
+
+if /i "%~1"=="sim1000" (
+  cl /nologo /utf-8 /std:c11 /W4 /O2 /MT /DSELF_TEST /DSIM_SEEDS=1000 src\echo144.c /Fe:build\selftest1000.exe /Fo:build\selftest1000.obj user32.lib gdi32.lib winmm.lib || exit /b 1
+  build\selftest1000.exe || exit /b 1
+  echo 1000-seed SIM: PASS
   exit /b 0
 )
 
@@ -41,11 +52,11 @@ if /i "%~1"=="dummy" (
   exit /b 0
 )
 
-set "CFLAGS=/nologo /std:c11 /W4 /O1 /GL /Gy /Gw /GS /MT /DNDEBUG /DUNICODE /D_UNICODE"
+set "CFLAGS=/nologo /utf-8 /std:c11 /W4 /O1 /GL /Gy /Gw /GS /MT /DNDEBUG /DUNICODE /D_UNICODE"
 set "LFLAGS=/link /SUBSYSTEM:WINDOWS /LTCG /OPT:REF,ICF /INCREMENTAL:NO /MAP:build\ECHO144.map user32.lib gdi32.lib winmm.lib"
 set "OUTPUT=out\ECHO144.EXE"
 if /i "%~1"=="debug" (
-  set "CFLAGS=/nologo /std:c11 /W4 /Od /Zi /MTd /DDEV_LOG /DUNICODE /D_UNICODE"
+  set "CFLAGS=/nologo /utf-8 /std:c11 /W4 /Od /Zi /MTd /DDEV_LOG /DUNICODE /D_UNICODE"
   set "LFLAGS=/link /SUBSYSTEM:WINDOWS /DEBUG user32.lib gdi32.lib winmm.lib"
   set "OUTPUT=build\ECHO144_DEBUG.EXE"
 )

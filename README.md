@@ -1,6 +1,6 @@
 # 에코/144 (ECHO144.EXE)
 
-Windows 10/11용 1.44MB 덱빌딩 서바이버. **문서는 V2 재설계 정본이고, 현재 코드는 V1을 구현하고 있다** — 상태는 [docs/90_STATUS.md](docs/90_STATUS.md)가 정본, 경로 결정은 [docs/50_PRODUCTION.md](docs/50_PRODUCTION.md)의 go/no-go 게이트.
+Windows 10/11용 1.44MB 덱빌딩 서바이버. 현재 빌드는 문서의 **V2 P1 + 코드 통합 아트 패스**를 구현한다. 상태와 남은 범위는 [docs/90_STATUS.md](docs/90_STATUS.md)가 정본이다.
 
 - [docs/00_VISION.md](docs/00_VISION.md) — 비전·장르·약속·기둥 (문서군 입구)
 - [docs/05_WORLD.md](docs/05_WORLD.md) — 세계관 정본
@@ -13,6 +13,7 @@ Windows 10/11용 1.44MB 덱빌딩 서바이버. **문서는 V2 재설계 정본�
 - [docs/40_ART_AUDIO_TEXT.md](docs/40_ART_AUDIO_TEXT.md) — V2 아트 바이블 (팔레트·캐릭터·사운드·텍스트)
 - [docs/41_PIXEL_ART.md](docs/41_PIXEL_ART.md) — 픽셀 제작 규격·파이프라인·작화 매뉴얼
 - [docs/42_VISUAL_HOOK.md](docs/42_VISUAL_HOOK.md) — 비주얼 후킹·마케팅
+- [docs/43_ART_COMPETITIVE_RESEARCH.md](docs/43_ART_COMPETITIVE_RESEARCH.md) — 2026 도구·커뮤니티 조사, 아트 감정·재설계·AI-slop 검수
 - [docs/45_UI_UX.md](docs/45_UI_UX.md) — UI/UX·화면 연출
 - [docs/50_PRODUCTION.md](docs/50_PRODUCTION.md) — 일정·게이트·리스크
 - [docs/90_STATUS.md](docs/90_STATUS.md) — 구현 상태 (SPEC/STATUS 분리)
@@ -22,18 +23,21 @@ Windows 10/11용 1.44MB 덱빌딩 서바이버. **문서는 V2 재설계 정본�
 
 ## 빌드
 
-Visual Studio Build Tools 2022의 Desktop C++ 워크로드가 필요하다.
+Visual Studio Build Tools 2022의 Desktop C++ 워크로드와 Python 3이 필요하다. 빌드가 [art/](art/)의 PNG·내장 자산을 먼저 재생성한다.
 
 ```bat
 build.bat test
+build.bat sim1000
 build.bat
 ```
 
-릴리스는 `out/ECHO144.EXE` 하나이며, 빌드가 전체 제출 용량·의존 DLL·SHA-256을 출력한다. `build.bat test`는 결정론, 덱·카드 경계값, 전체 런, 승패·재초기화, 최악 충돌 부하, SIM 몬테카를로를 검사한다.
+릴리스는 `out/ECHO144.EXE` 하나이며, 빌드가 전체 제출 용량·의존 DLL·SHA-256을 출력한다. `build.bat test`는 이동·덱·링·턴 경계, P1 카드·의도·시크 개입·최종 방송/엔딩, 7정책×30 seed SIM을 검사한다. `build.bat sim1000`은 같은 결정론 SIM을 1,000시드로 확장한다. 디버그 빌드는 실행 파일 옆 `playtest.csv`, 일반 빌드는 60B `ECHO144.SAV`를 사용하며 쓰기 실패 시에도 플레이를 계속한다.
 
-## 조작 (현행 V1 빌드 기준)
+## 조작 (V2 P1)
 
-- `Enter`: 시작·구매·다음 런 / `WASD`·방향키: 이동·선택 / `Space`: SEEK
-- `F`: 4:30 이후 NODE에서 GO LIVE / `Esc`: 일시정지·패스 / `M`: 음소거 / `F1`: 저자극 / `F2`: TODAY 시드
-
-V2 조작 계획(EDIT 편성, Space 수동 발동)은 [docs/10_MECHANICS.md](docs/10_MECHANICS.md) §2~4.
+- 타이틀: `Enter` 일반 채널, `F2` 오늘의 채널, `Esc` 종료
+- 공통: `WASD`·방향키 이동/선택, `M` 음소거, `F1` 저자극, `Esc` 일시정지
+- 편성: `Enter` 송신/수신 또는 프로그램 편성, `Space` 탐색, `Tab` 송출
+- 송출: `Space` 다음 편성 발동
+- 휴식: `Enter` 구매/정리, `Tab` 넘김, 8턴부터 `O` 열린 채널
+- 열린 채널: `Space` 최종 방송 프로토콜
