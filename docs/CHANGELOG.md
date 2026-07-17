@@ -2,6 +2,37 @@
 
 수치·규칙·일정 변경은 반드시 여기 한 줄을 남긴다. 형식: 날짜 / 무엇을 / 왜.
 
+## 2026-07-17 (5차) — 문서 정규화 패스: 충돌 제거
+
+외부 검토(약 90% 반영 확인, 구현 가능도 6.8/10 평가)가 지적한 규칙 간 충돌·의미 드리프트를 제거하는 단일 패스. **새 아이디어 추가가 아니라 기존 4차까지의 설계를 서로 모순 없이 정리**하는 것이 목적이다.
+
+**1단계 — 규칙 닫기**:
+- **카드 phase enum 8종**(`EDIT_IMMEDIATE/EDIT_QUEUE/ON_AIR_ACTIVE/ON_AIR_PASSIVE/REACTION/BREAK_CONTRACT/OPEN_AUTO/OPEN_ACTIVE`) 신설(10 §14) — 발동 규칙을 카드 이름이 아니라 phase에 귀속시켜 구현 분쟁을 제거. 15_CARDS.md에 개별 카드 phase·TargetMode 배정표 신설(§2).
+- **MULTI.FORK 정정**: `EDIT_IMMEDIATE`, CUE 1 지불·CUE +2 수령(순증 +1) — "ON AIR에서 CUE 획득"은 선택이 끝난 뒤라 Village가 될 수 없어 폐기(10 §3, 15 §2·§4, 20).
+- **시작 덱에 PROGRAM 추가**: `2400×6, CHAT×2, FIREWALL×1, MULTI×1` + 첫 런 첫 손패 고정(`2400/2400/FIREWALL/CHAT/MULTI`) — 1~2턴 튜토리얼이 가르칠 카드가 없던 문제 해결(20).
+- **NØA SPONSOR → CONTRACT**: 구매 즉시 발동이 BREAK 규칙과 충돌해 `BREAK_CONTRACT` phase로 통일 — 구매 시 계약 확정, 다음 EDIT·ON AIR·BREAK 중 명시된 1회에 발동(BOOST=다음 EDIT CUE+1 / AUTO CHAT=다음 턴 지정 CARRIER TX+RX 동시 / PERFECT CUT=다음 ON AIR 시작 시 적탄 삭제 / RECOMMEND=다음 BREAK 할인). 관련 전 문서(06/10/15/20/35/40/45/50) 일괄 개명.
+- **OPEN CHANNEL을 덱 컴파일 모델로 재정의**(10 §10): PROGRAM 개별 재선택 불가 구조에 맞춰 "진입 시 컴파일 → CARRIER 전자동 TX / ARCHIVE 고정 박자 자동 발동 / PROGRAM은 패시브 modifier로만 등록 / Space는 최종 방송 프로토콜만 발동"으로 전환.
+- **TargetMode enum 7종** 신설(15 §2): `SELF/LAST_MOVE_DIRECTION/NEAREST_ENEMY/HIGHEST_THREAT/MARKED_SET/EDIT_CARD_SLOT/FORWARD_RECT`.
+
+**2단계 — 메아리 의미 보호**:
+- **EchoCell{origin, state} 모델** 신설(10 §8) — 색(state)과 "복구 가능한 진짜"(origin)를 분리해, SYNC·CONTRACT가 만든 합성 메아리를 DEFRAG·CHECKSUM이 "진짜"로 되살리는 모순을 제거.
+- **SYNC에서 청록 생성 삭제**(10 §3, 20) — SYNC는 편곡 게이지이지 링 게이지가 아니다.
+- **DEFRAG·CHECKSUM·재송출 PROGRAM 복구 규칙 재정의**: `origin=REAL`인 칸만 복구 대상, `origin=SYNTHETIC`(CONTRACT산 순수 합성)은 대상 아님.
+- **일반 방송 16칸 상한을 "신규 점등"에만 적용**하고 색 전환(칸 수 불변)과 분리 — overflow는 조용히 소실.
+- **3축 문장 통일**: "최종 방송은 3축으로 결정된다 — ARCHIVE 구성이 형태를, PROGRAM 태그가 수정자를, 64칸 링의 색이 소유권·관계·엔딩을" — 00/10/15에서 동일 문장 사용.
+
+**3단계 — 드리프트 제거**:
+- **42_VISUAL_HOOK.md 전면 재작성** — V1 시점(시청자 1·FORMAT 캐릭터 기준) §1~§7을 [archive/v1-last-live/42_VISUAL_HOOK.md](archive/v1-last-live/42_VISUAL_HOOK.md)에 보존하고, V2 전용 8절 구조(후킹 원칙/메인 키아트/캐릭터·장면 세트/로고/Steam·소셜/스크린샷/팬워크 킷/AI 경계)로 재작성. AI 부록에서 모델명·품질 태그 스택·작가 블렌딩 레시피를 삭제하고 **허용/금지 경계 정책만** 남김(도구는 자주 바뀌므로 정본에 고정하지 않는다).
+- **06_CHARACTERS.md**: 표현 레이어 픽셀 크기 숫자 제거(정본은 41 §2 하나), 팬워크 킷을 제출 빌드 완성 후 백로그로 이동.
+- **부제 공식화**: `UNLISTED LIVE`가 00_VISION.md에 공식 부제로 명시.
+- **UI 좌표계 통일**: 상단 상태 바 16px / 전투 320×192 / 하단 큐 32px로 10·20·45 통일.
+- **BANDWIDTH CAP·ARCHIVE HUNT 통일**: 하드 캡 없는 소프트 페널티(BAUD 7+ 전부 사용+POP.AD 감사 카드 삽입), ARCHIVE HUNT는 기본 1회+ARCHIVE 4장 이상 시 의도 카드 추가 삽입으로 10·20 일치.
+- **content/balance.def를 수치의 유일한 기계 정본으로 명시**(30 §7, 20 헤더) — 20_BALANCE.md는 설계 의도 문서, balance.def→20_BALANCE.md(사람이 읽는 갱신)→generated/*(자동)의 방향을 명확히 함. **OC 순환 공식을 컴파일 모델(CARRIER+ARCHIVE만 순환)로 재계산** — 검산 기준점 30/54(V1 승계값) 폐기, **26/60**으로 교체(20 "B2-공식").
+- **아트 경로·archive_v1 상태 미래형 정정**(41), **90_STATUS.md 링 문구를 "64칸 논리 링, P0는 16대구간 표시"로 통일**.
+- **레퍼런스 분석 파일명 정정**: `ECHO144_144MB_REFERENCE_ANALYSIS.md` → `ECHO144_1_44MB_REFERENCE_ANALYSIS.md`(35·adr-0007에서 참조 갱신).
+
+영향 범위: 00/05/06/10/15/20/30/35/41/42/45/50/90 + adr-0007 + archive 파일명. 이 패스 이후로는 이번 정규화에서 다루지 않은 새 아이디어를 추가하는 단계로 넘어간다.
+
 ## 2026-07-16 (4차) — 최종 전수 대조·배포 마무리
 
 세 원문 최종 대조에서 확인된 잔여 미세 누락 8건 반영: `abs()` 헤더 이슈 행(30 §3-6) / 시각 정체성 문장 풀버전 + "PC-98에서 영감을 받은" 명칭 원칙(40 §1 — 2차 재작성 때 유실분 복원) / 에코 얼굴 비대칭 3규칙(40 §4) / BAUD `다운로드 가능 N` 병기(45 §2) / 에코 전장 애니메이션 프레임 표(41 §3) / 시크 전장 모션 문법(06 §2) / 16·32 위상 세부 연출 — 귀 기울임·시대층 겹침·3색 비율 첫 표시·노아 통계 관찰(10 §10). 이로써 원문 3건([archive/](archive/))의 정본 반영 완료 — 이후 차이는 의도된 재구성(시드값·구체화 표기) 또는 아카이브 전용(역사 기록)이다.
@@ -12,7 +43,7 @@
 
 ## 2026-07-16 (2차) — 아트·기술 레퍼런스 개정: TX/RX·SYNC·아트 파이프라인 전환
 
-추가 논의 원문 2건을 동결: [archive/ECHO144_V2_ART_VISUAL_REFACTOR.md](archive/ECHO144_V2_ART_VISUAL_REFACTOR.md)(아트·비주얼·픽셀·UI 전면 리팩터링), [archive/ECHO144_144MB_REFERENCE_ANALYSIS.md](archive/ECHO144_144MB_REFERENCE_ANALYSIS.md)(1.44MB 레퍼런스 심층 분석).
+추가 논의 원문 2건을 동결: [archive/ECHO144_V2_ART_VISUAL_REFACTOR.md](archive/ECHO144_V2_ART_VISUAL_REFACTOR.md)(아트·비주얼·픽셀·UI 전면 리팩터링), [archive/ECHO144_1_44MB_REFERENCE_ANALYSIS.md](archive/ECHO144_1_44MB_REFERENCE_ANALYSIS.md)(1.44MB 레퍼런스 심층 분석).
 
 **게임플레이 신규 채택** — ① **TX/RX 양면 CARRIER**(ADR-0007): 모뎀을 매 턴 공격 또는 구매력 중 하나로 배분 — "지금 싸울 것인가, 다음 카드를 살 것인가"가 새 중심 선택. 개발 선언문 7문장으로 확장, P0 슬라이스·게이트·SIM 지표에 반영. ② **SYNC 0~3**(Cave Story 번안): 숙련이 방송의 질(연출·편곡)로 나타나는 교차 시스템, 악순환 방지 안전장치 포함. ③ 적 의도 덱 절차 생성 문법(초반3/중반4/후반3/종결2 + 제약 5) + 신규 의도(SPONSORED RAID·LATENCY·EMPTY CHAT). ④ TREND 집계 정교화(실제 발동 + 최근 6구절 가중 + 48 갱신 1회). ⑤ 즉시 재시작(<1초)·같은 시드 재접속·규칙 변주 해금 모드. ⑥ 명령 로그 리플레이의 세계관화(이전 방송 고스트, P2).
 

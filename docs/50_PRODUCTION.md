@@ -39,7 +39,7 @@
 
 시간층 단계 계획 `[시드값]`: P0 슬라이스 1종(1997 고정) → V2 제출판 2종(1997 + 2026 — 레트로 훅과 NØA 훅의 양극) → 확장판 4종.
 
-**V2 경로의 삭제 순서** (일정이 밀리면 위에서부터): 시간층 2→1 → 감사 프로토콜 5→2 → 엔딩 4→2(청록·자홍만; 호박·균형은 확장) → SPONSOR 4→2 → 시크 거래 → 모드(TODAY만 유지) → 저장·해금. **삭제 불가**: EDIT 선택+CUE, ON AIR 수동 발동, 적 의도 예고, ARCHIVE 반전, 3색 64칸 링, OPEN CHANNEL, TREND MIRROR 1종 — 이것이 V2의 정체성이다.
+**V2 경로의 삭제 순서** (일정이 밀리면 위에서부터): 시간층 2→1 → 감사 프로토콜 5→2 → 엔딩 4→2(청록·자홍만; 호박·균형은 확장) → CONTRACT(구 SPONSOR) 4→2 → 시크 거래 → 모드(TODAY만 유지) → 저장·해금. **삭제 불가**: EDIT 선택+CUE, ON AIR 수동 발동, 적 의도 예고, ARCHIVE 반전, 3색 64칸 링, OPEN CHANNEL, TREND MIRROR 1종 — 이것이 V2의 정체성이다.
 
 ## 3. W-V2 수직 슬라이스 — P0 범위
 
@@ -49,11 +49,11 @@
 2. **턴 구조**: EDIT → ON AIR → BREAK(매 턴) → CLEANUP. 셔플과 `NEW` 귀환 포함.
 3. **TX/RX + CUE 1**: CARRIER 양면 지정(ADR-0007), 첫 3턴 추천 표시.
 4. **SYNC 0~3**: 안전장치 포함 최소 구현.
-5. **카드 8장**: 2400 / 14K / MULTI / CACHE / FIREWALL / CHAT / VOICE / NOISE (+BREAK에 NØA BOOST 1종).
+5. **카드 8장**: 2400 / 14K / MULTI / CACHE / FIREWALL / CHAT / VOICE / NOISE (+BREAK에 NØA BOOST 1종, `BREAK_CONTRACT` phase — 구매 즉시가 아니라 다음 EDIT 시작 시 1회 발동, [15](15_CARDS.md) §1·§7).
 6. **적 의도 4종**: BOT RAID / MUTE / GIFT DROP / MIRROR. 적은 BOT.CHAT / POP.AD / SPON.GIFT / MOD.MASK.
-7. **16칸 임시 링**: 3색 집계 + 임시 결과 화면 (64칸 완전 UI·엔딩 분기 없음).
+7. **64칸 논리 링 + 16칸 임시 표시**: 링 데이터 모델은 처음부터 64칸 `EchoCell{origin,state}`([10](10_MECHANICS.md) §8)로 구현하되, P0 렌더러는 16대구간 요약만 그린다 — 3색 집계 + 임시 결과 화면 (64칸 완전 UI·엔딩 분기 없음). 데이터가 64인 이유: 나중에 렌더러만 교체하면 되고, 검증 질문의 색 비율 계산이 P0부터 최종 수치와 같은 기반 위에서 돈다.
 8. **TREND MIRROR 1종**: 최다 사용 PROGRAM 하나만 복제.
-9. **OPEN CHANNEL**: CHAT·VOICE 두 종으로 반전 검증.
+9. **OPEN CHANNEL**: 덱 컴파일 모델 검증([10](10_MECHANICS.md) §10) — CHAT·VOICE 두 ARCHIVE만으로도 "진입 시 컴파일 → CARRIER 자동 TX → ARCHIVE 고정 박자 자동 발동 → Space가 최종 프로토콜만 발동"의 전 과정이 실제로 도는지 확인한다. 개별 카드 재선택 UI가 없어도 게임이 성립하는지가 P0의 핵심 리스크다.
 10. **아트 병행 트랙** ([41](41_PIXEL_ART.md) §7 단계 0~3): 팔레트·실루엣·에코 모델 시트·24×24 애니·카드 UI·아이콘 8종 — 코드 슬라이스와 같은 기간에 진행, 16×16 vs 24×24 A/B 데이터 확보.
 
 P0 제외 명시: 시크 정식 보스(케이블·눈 실루엣만 임시) / 64칸 완전 UI / 엔딩 4종 / 시간층(1개 고정) / 저장·해금 / 전체 카드 / 최종 키아트 / 공간 해시 / 자산 압축 / Sokol / 셰이더.
@@ -128,4 +128,4 @@ V1 계획 승계: 모집 7/28까지 5명(GV2용, 대면 우선), G3′용 신규
 
 ## 9. P1+ 백로그 — 제출 빌드 완성 후에만
 
-Shift REACTION / CUE 1 엄격 모드(고난도) / DIRTY BROADCAST(오염 자원화) / ENDLESS ARCHIVE / 엔딩 4종 완전판·반복 해금 전체 / 시간층 4종 / Sokol 프런트엔드·게임패드·다국어·고정소수점·리플레이([30](30_TECH.md) §1) / 팬워크 킷([42](42_VISUAL_HOOK.md) §7-4) / seed 직접 입력 / 추가 캐릭터는 세 캐릭터의 관계가 충분히 완성된 뒤에만.
+Shift REACTION / CUE 1 엄격 모드(고난도) / DIRTY BROADCAST(오염 자원화) / ENDLESS ARCHIVE / 엔딩 4종 완전판·반복 해금 전체 / 시간층 4종 / Sokol 프런트엔드·게임패드·다국어·고정소수점·리플레이([30](30_TECH.md) §1) / 팬워크 킷([42](42_VISUAL_HOOK.md) §7) / seed 직접 입력 / 추가 캐릭터는 세 캐릭터의 관계가 충분히 완성된 뒤에만.

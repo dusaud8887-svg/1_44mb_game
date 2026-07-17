@@ -1,6 +1,6 @@
 # ADR-0007 — CARRIER의 TX/RX 양면 사용
 
-- 상태: 채택 (2026-07-16), P0 슬라이스에서 검증 / 원문: [../archive/ECHO144_144MB_REFERENCE_ANALYSIS.md](../archive/ECHO144_144MB_REFERENCE_ANALYSIS.md) §4
+- 상태: 채택 (2026-07-16), P0 슬라이스에서 검증 / 원문: [../archive/ECHO144_1_44MB_REFERENCE_ANALYSIS.md](../archive/ECHO144_1_44MB_REFERENCE_ANALYSIS.md) §4
 
 ## 결정
 

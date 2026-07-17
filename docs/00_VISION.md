@@ -4,7 +4,7 @@
 
 | 항목 | 확정 |
 |---|---|
-| 작업명 | 에코/144 (`ECHO144.EXE`) — 부제 후보 `UNLISTED LIVE` (V1 부제 `LAST LIVE`는 레거시, 마케팅 검증 후 확정) |
+| 작업명 | 에코/144 (`ECHO144.EXE`) — **공식 부제 `UNLISTED LIVE`** (V1 부제 `LAST LIVE`는 에피소드명·이전 방송 제목으로 강등, [40](40_ART_AUDIO_TEXT.md) §3) |
 | 장르 | **수동 편성형 실시간 솔로 덱빌더 서바이버** — 5장 방송 큐를 편성하고 직접 발동하는 실시간 덱빌더 |
 | 1런 | 일반 방송 12턴(턴당 EDIT 정지 + ON AIR 8초) + OPEN CHANNEL 최대 60초. 8턴 종료부터 조기 개방 가능 |
 | 플랫폼 | Windows 10/11, 키보드, 단일 exe, 무설치. 저장 파일 1개(해금·기록, [30_TECH.md](30_TECH.md) §8) |
@@ -56,7 +56,7 @@ V2 재설계의 원문(대화 통합본·결정 이력 전체)은 [archive/ECHO1
 3. ON AIR에서는 에코를 움직이며 **준비한 프로그램을 원하는 순간 발동한다** (Space).
 4. PROGRAM은 덱 엔진과 전투 방식을, ARCHIVE는 지금의 부담과 마지막 방송의 힘을 만든다.
 5. 노아와 시크는 HP가 아니라 **카드·메아리·플레이 습관을 직접 건드린다**.
-6. 64칸 링의 **색 구성(청록·호박·자홍)이 최종 방송과 결말을 결정한다**.
+6. 최종 방송은 3축으로 결정된다 — **ARCHIVE 구성이 형태를**(CHATSTORM/RESONANCE/FRAMECUT/OPEN ECHO), **PROGRAM 태그가 수정자를**(REPEAT/NETWORK/SAFE/REPLAY), **64칸 링의 색이 소유권·관계·엔딩을**.
 
 ## 3. 핵심 재미 7문장 — 개발 선언문
 
@@ -140,6 +140,6 @@ V1의 "쾌락-기능-게이트 1:1" 원칙을 유지하고 운반 기능을 V2�
 
 ## 8. P0 범위와 명시적 컷
 
-**P0 수직 슬라이스** (상세 [50_PRODUCTION.md](50_PRODUCTION.md) §3): 정확성 결함 수정, EDIT/ON AIR/BREAK/CLEANUP 턴 구조, **TX/RX**, CUE 1, **SYNC 0~3**, 카드 8장, 적 의도 4종, 16칸 임시 링, TREND MIRROR 1종, OPEN CHANNEL(CHAT·VOICE).
+**P0 수직 슬라이스** (상세 [50_PRODUCTION.md](50_PRODUCTION.md) §3): 정확성 결함 수정, EDIT/ON AIR/BREAK/CLEANUP 턴 구조, **TX/RX**, CUE 1, **SYNC 0~3**, 카드 8장, 적 의도 4종, **64칸 논리 링(P0 표시는 16대구간)**, TREND MIRROR 1종, OPEN CHANNEL(CHAT·VOICE).
 
 **컷 (P0에서 하지 않을 것)** — 완성 시간과 이해 비용 때문: 엔딩 4종 전부(P0는 승/패+색 집계만), 시간층, TODAY 외 모드, 해금·저장, REACTION 카드(Shift), 시크 거래 전체, 감사 프로토콜, 오염 자원화(DIRTY BROADCAST), 엔진 교체, 고정소수점 전면화, 추가 캐릭터, 네트워크 랭킹. 폐기·보류 전체 목록은 원문 18부와 [adr/](adr/).
