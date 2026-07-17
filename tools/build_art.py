@@ -182,19 +182,30 @@ def echo_portrait(expression: int = 0) -> Canvas:
         q.px(x0 - 1, y0, B); q.px(x0 + w_, y0, B)
         q.px(x0 - 1, y0 + 1, B); q.px(x0 + w_, y0 + 1, B)
         q.rect(x0 + 1, y0 + lid, w_ - 2, 11 - lid, C)
-        q.rect(x0 + 1, y0 + lid, w_ - 2, 2, CD)
+        # reception-dial iris: concentric cyan/dark rings + pupil (Echo is a receiver).
+        cx, cy = x0 + w_ // 2 - 1 + dx, y0 + (7 if half else 6)
+        for yy in range(y0 + lid, y0 + 11):
+            for xx in range(x0 + 1, x0 + w_ - 1):
+                r = max(abs(xx - cx), abs(yy - cy))
+                if r >= 3:
+                    q.px(xx, yy, C)
+                elif r == 2:
+                    q.px(xx, yy, CD)   # the dark tuning ring
+                elif r == 1:
+                    q.px(xx, yy, C)    # inner glow
+        q.rect(cx - 1, cy - 1, 2, 2, B)      # pupil
+        q.rect(x0 + 1, y0 + lid, w_ - 2, 1, CD)   # top rim shadow
         if half:
             q.rect(x0, y0, w_, 4, B)
             q.rect(x0 + 1, y0 + 4, w_ - 2, 1, CD)
-        px_, py = x0 + w_ // 2 - 1 + dx, y0 + (5 if half else 4)
-        if mode == "wide":
-            q.rect(px_, py, 2, 3, B)
-            q.rect(x0 + 2, y0 + 2, 3, 3, W)
+        if mode == "wide":                    # surprise: pupil shrinks, dial wide open
+            q.px(cx, cy, B); q.px(cx - 1, cy - 1, B)
+            q.rect(x0 + 2, y0 + 2, 3, 3, W); q.px(x0 + 1, y0 + 2, W)
             q.rect(x0 + w_ - 4, y0 + 7, 3, 3, W)
         else:
-            q.rect(px_, py, 3, 4, B)
-            q.rect(x0 + 2 + dx, y0 + 3, 3, 3, W)
-            q.rect(x0 + w_ - 4 + dx, y0 + 8, 2, 2, W)
+            q.rect(x0 + 2 + dx, y0 + 2, 2, 2, W)      # main catch-light
+            q.px(x0 + 1 + dx, y0 + 3, W)              # +1 for a sparkle glint
+            q.px(x0 + w_ - 3 + dx, y0 + 8, W)         # lower sparkle
         q.rect(x0 + 2, y0 + 11, w_ - 4, 1, CD)
 
     emap = {
@@ -232,13 +243,19 @@ def echo_portrait(expression: int = 0) -> Canvas:
     if expression == 7:
         q.rect(19, 39, 3, 1, R); q.rect(42, 39, 3, 1, R)
 
-    # headset over viewer-right side lock
-    q.rect(47, 28, 5, 8, C)
-    q.px(47, 28, B); q.px(51, 28, B); q.px(47, 35, B); q.px(51, 35, B)
-    q.rect(47, 34, 5, 1, CD); q.rect(51, 29, 1, 5, CD)
-    q.rect(48, 29, 2, 2, W)
-    q.rect(52, 31, 1, 1, C)
-    q.px(53, 31, R)  # standby light: still waiting to hear
+    # cool duotone shade on the shadow side (right, away from the ring's key light)
+    for y in range(24, 42):
+        if q.get(45, y) == W:
+            q.px(45, y, D)
+    q.px(44, 40, D); q.px(43, 41, D)   # jaw turn
+    q.px(31, 36, D)                     # under-nose ambient
+
+    # headset over viewer-right side lock — a signal-meter screen (Jigen Tsuushin cue)
+    q.rect(47, 27, 6, 9, B)
+    q.rect(48, 28, 4, 6, CD)           # dark screen
+    q.px(48, 30, C); q.px(49, 31, C); q.px(50, 29, C); q.px(51, 30, C)  # tiny waveform tick
+    q.rect(48, 34, 4, 1, C)            # screen base glow
+    q.px(53, 31, R)                    # standby light: still waiting to hear
 
     # neck + body
     for y, x0, x1 in [(45, 28, 35), (46, 28, 35), (47, 28, 35), (48, 29, 35)]:
@@ -387,12 +404,12 @@ def seek_portrait(expression: int = 0) -> Canvas:
         q.px(ex - 1, ey + 1, B); q.px(ex + 8, ey + 1, B)
         h = 5 if wide else 4
         q.rect(ex, ey + 1, 8, h + 1, W)
-        q.rect(ex + 1, ey + 1, 6, h, A)
-        q.rect(ex + 1, ey + 1, 6, 1, AD)
-        q.rect(ex + 3, ey + 2, 2, 2, B)
-        q.px(ex + 2, ey + 2, W)
+        q.rect(ex + 1, ey + 1, 6, h, A)            # amber iris
+        q.frame(ex + 2, ey + 1, 4, 3, AD)         # dark reception ring (dial)
+        q.rect(ex + 3, ey + 2, 2, 1, B)           # pupil
+        q.px(ex + 2, ey + 1, W)                    # single glint on the ring
         if wide:
-            q.px(ex + 6, ey + 4, C)
+            q.px(ex + 6, ey + 3, C)               # a live cyan reflection
         q.rect(ex + 2, ey + 2 + h, 5, 1, D)
         q.px(ex + 7, ey + 2 + h, B)
 
@@ -485,13 +502,15 @@ def noa_portrait(expression: int = 0) -> Canvas:
         q.rect(x0, y0, 9, 2, B)
         q.px(x0 - 1, y0 + 1, B); q.px(x0 + 9, y0 + 1, B)
         q.rect(x0, y0 + 2, 9, 5, W)
-        q.rect(x0 + 1, y0 + 2, 7, 4, MD)
-        q.rect(x0 + 1, y0 + 5, 7, 1, M)
-        q.rect(x0 + 3, y0 + 3, 3, 3, B)
-        q.px(x0 + 2, y0 + 3, W); q.px(x0 + 6, y0 + 3, W)
+        q.rect(x0 + 1, y0 + 2, 7, 4, MD)          # iris
+        # aperture-lens iris: a perfectly concentric magenta ring (she is the observer).
+        q.frame(x0 + 2, y0 + 2, 5, 4, M)          # exact ring — too precise to be human
+        q.rect(x0 + 3, y0 + 3, 3, 2, B)           # pupil
+        q.px(x0 + 4, y0 + 3, MD)                   # aperture center
+        q.px(x0 + 2, y0 + 2, W); q.px(x0 + 6, y0 + 2, W)   # profile dots on the ring
         q.px(x0 + 2, y0 + 5, W); q.px(x0 + 6, y0 + 5, W)
-        if expression == 2:
-            q.px(x0 + 4, y0 + 3, W); q.px(x0 + 4, y0 + 5, W)
+        if expression == 2:                        # anomaly: two more viewers appear
+            q.px(x0 + 4, y0 + 2, W); q.px(x0 + 4, y0 + 5, W)
         q.rect(x0 + 3, y0 + 7, 4, 1, MD)
     eye(21); eye(34)
     if expression == 1:
@@ -583,8 +602,15 @@ def echo_frame(pose: int) -> Canvas:
         x = 11 + round(math.cos(math.radians(a)) * 11)
         y = 10 - bob - round(math.sin(math.radians(a)) * 10)
         q.rect(x, y, 2, 2, C if a == 210 else CD)
+    # rim light on the hair crown so the dark silhouette lifts off the VOID arena
+    for x in (4, 5, 6, 17, 18):
+        yy = 5 - bob if x < 8 else 4 - bob
+        if q.get(x, yy) == T:
+            q.px(x, yy, S)
     q.blit(base, 0, -bob if bob else 0)
     q.px(5, 17 - bob, W)
+    # eye catch-lights: tiny reception dots keep her cute and alive at 1x (Jigen chibi cue)
+    q.px(6, 10 - bob, W); q.px(13, 10 - bob, W)
     if pose == 2:
         q.px(2, 18, C); q.px(1, 19, CD)
     if pose == 3:
@@ -939,6 +965,37 @@ def era_edges(q, left=True, right=True):
             q.px(178, 18 + i * 14, D)
 
 
+def antenna_tower(q, cx, top, bottom, c=U):
+    """Lattice broadcast tower (Jigen Tsuushin cue). Network towers read SIGNAL BLUE."""
+    h = max(1, bottom - top)
+    topw, botw = 2, 7
+    def w(i):
+        return topw + (botw - topw) * (i / h)
+    for i in range(h + 1):
+        y = top + i
+        lx, rx = round(cx - w(i)), round(cx + w(i))
+        q.px(lx, y, c); q.px(rx, y, c)
+    step = 8
+    for b in range(top, bottom - step, step):
+        l0, r0 = round(cx - w(b - top)), round(cx + w(b - top))
+        l1, r1 = round(cx - w(b + step - top)), round(cx + w(b + step - top))
+        q.line(l0, b, r1, b + step, c); q.line(r0, b, l1, b + step, c)
+    q.line(cx, top - 5, cx, top, c)   # mast
+    q.px(cx, top - 6, R)              # aircraft beacon: one red blink
+
+
+def tally_marks(q, x, y, count, c=C):
+    """正-style count strokes: how many of the 64 have answered."""
+    gx = x
+    for _ in range(count // 5):
+        for k in range(4):
+            q.line(gx + k * 2, y, gx + k * 2, y + 6, c)
+        q.line(gx - 1, y + 6, gx + 7, y, c)
+        gx += 12
+    for k in range(count % 5):
+        q.line(gx + k * 2, y, gx + k * 2, y + 6, c)
+
+
 def echo_hand(q, x, y):
     for i, (x0, x1) in enumerate(((0, 8), (1, 10), (2, 12), (4, 13), (6, 14))):
         runs(q, y + i, [(x + x0, x + x1, C)])
@@ -958,6 +1015,7 @@ def keyart(kind: int) -> Canvas:
 
     if kind == 0:  # ENSEMBLE: Echo reaches out; Seek pulls; NOA has already answered.
         era_edges(q)
+        antenna_tower(q, 122, 20, 96, U)   # a lone broadcast tower behind the incident
         q.blit(noa_portrait(0), 142, 8)
         for x in (140, 148, 158, 168, 178, 186):
             q.line(x, 4, x, 103, MD if x % 16 else M)
@@ -977,6 +1035,7 @@ def keyart(kind: int) -> Canvas:
         q.rect(107, 76, 3, 3, AD)
         q.rect(10, 99, 8, 5, W); q.frame(10, 99, 8, 5, AD); q.rect(12, 101, 4, 1, B)
         big_ring(q, 62, 50, 44, 40, CD, lit={34, 35, 40, 46, 52}, gap=(10, 70), lit_c=C)
+        tally_marks(q, 12, 30, 12, C)     # how many of the 64 have answered so far
         q.blit(echo_portrait(0), 30, 16)
         echo_hand(q, 92, 68)
         q.rect(118, 70, 4, 4, C); q.rect(119, 71, 2, 2, W)
@@ -984,10 +1043,12 @@ def keyart(kind: int) -> Canvas:
         q.rect(132, 56, 4, 4, M); q.rect(133, 57, 2, 2, MD)
     elif kind == 1:  # ECHO WAITING: the audience that is not there.
         for y in range(20, 96, 9):
-            for x in range(8, 78, 11):
+            for x in range(20, 78, 11):
                 q.frame(x, y, 7, 5, S)
-        q.rect(30, 8, 34, 1, S)
+        antenna_tower(q, 12, 16, 98, U)   # she broadcasts from a tower into the empty seats
+        q.rect(34, 8, 30, 1, S)
         big_ring(q, 128, 52, 46, 42, CD, lit={38}, gap=(10, 70), lit_c=C)
+        tally_marks(q, 150, 84, 3, C)     # almost nobody has answered yet
         q.blit(echo_portrait(0), 96, 18)
         q.rect(88, 70, 3, 3, C)
         for i, x in enumerate((80, 71, 61, 50)):
