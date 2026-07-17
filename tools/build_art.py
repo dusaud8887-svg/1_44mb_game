@@ -133,68 +133,77 @@ def echo_portrait(expression: int = 0) -> Canvas:
     # ahoge: one clean antenna strand curving right
     q.px(32, 3, B); q.px(33, 2, B); q.px(34, 1, B); q.px(35, 1, B); q.px(36, 2, B)
 
+    # Sharp modern face: full cheeks, then a straight-edged V jaw to a pointed chin.
     face = [
         (16, 22, 41), (17, 21, 43), (18, 20, 44), (19, 19, 45),
-        (20, 19, 45), (21, 18, 46), (22, 18, 46), (23, 18, 46),
-        (24, 17, 46), (25, 17, 46), (26, 17, 46), (27, 17, 46),
-        (28, 17, 46), (29, 17, 46), (30, 17, 46), (31, 17, 46),
-        (32, 17, 46), (33, 17, 46), (34, 17, 46), (35, 18, 46),
-        (36, 18, 45), (37, 18, 45), (38, 19, 45), (39, 19, 44),
-        (40, 20, 44), (41, 21, 43), (42, 22, 42), (43, 24, 40),
-        (44, 26, 38), (45, 28, 35),
+        (20, 18, 46), (21, 18, 46), (22, 17, 47), (23, 17, 47),
+        (24, 17, 47), (25, 17, 47), (26, 17, 47), (27, 17, 47),
+        (28, 17, 47), (29, 17, 47), (30, 17, 47), (31, 17, 47),
+        (32, 17, 47), (33, 17, 47), (34, 18, 47), (35, 18, 46),
+        (36, 18, 46), (37, 19, 45), (38, 20, 45), (39, 21, 44),
+        (40, 22, 43), (41, 24, 42), (42, 25, 41), (43, 27, 39),
+        (44, 29, 38), (45, 31, 36), (46, 32, 35),
     ]
     for y, x0, x1 in face:
         runs(q, y, [(x0, x1, W)])
+    # jaw-corner accent: a 1px shadow where cheek turns into the angular jaw
+    q.px(18, 36, D); q.px(46, 36, D)
 
+    # Sharp layered fringe: a spiky lower edge above the eyes + a center strand
+    # between them + pointed side locks. This kills the smooth-helmet read.
     bang_rows = [
         (13, [(13, 51, B)]), (14, [(12, 52, B)]), (15, [(12, 52, B)]),
         (16, [(11, 52, B)]), (17, [(11, 52, B)]), (18, [(11, 51, B)]),
-        (19, [(10, 51, B)]), (20, [(10, 50, B)]), (21, [(10, 49, B)]),
-        (22, [(10, 25, B), (27, 36, B), (38, 49, B)]),
-        (23, [(10, 24, B), (29, 34, B), (40, 48, B)]),
-        (24, [(10, 23, B), (30, 32, B), (42, 48, B)]),
-        (25, [(10, 21, B), (44, 48, B)]),
-        (26, [(10, 20, B), (45, 48, B)]),
-        (27, [(10, 19, B), (45, 48, B)]), (28, [(10, 19, B), (45, 48, B)]),
-        (29, [(10, 18, B), (45, 48, B)]), (30, [(10, 18, B), (45, 47, B)]),
-        (31, [(10, 18, B), (45, 47, B)]), (32, [(10, 17, B), (45, 47, B)]),
+        (19, [(10, 51, B)]), (20, [(10, 50, B)]), (21, [(10, 50, B)]),
+        (22, [(10, 50, B)]), (23, [(10, 50, B)]), (24, [(10, 50, B)]),
+        # forehead stays covered; only a sharp center strand + side locks drop between the eyes
+        (25, [(10, 18, B), (31, 34, B), (45, 48, B)]),
+        (26, [(10, 17, B), (31, 33, B), (45, 48, B)]),
+        (27, [(10, 18, B), (45, 48, B)]), (28, [(10, 18, B), (45, 48, B)]),
+        (29, [(10, 18, B), (45, 47, B)]), (30, [(10, 18, B), (45, 47, B)]),
+        (31, [(10, 17, B), (45, 47, B)]), (32, [(10, 17, B), (45, 47, B)]),
         (33, [(10, 17, B), (45, 47, B)]), (34, [(10, 17, B), (45, 47, B)]),
         (35, [(10, 16, B), (45, 47, B)]), (36, [(10, 16, B), (46, 47, B)]),
-        (37, [(11, 16, B), (46, 47, B)]), (38, [(11, 16, B), (46, 46, B)]),
-        (39, [(11, 15, B), (46, 46, B)]), (40, [(12, 15, B)]),
-        (41, [(12, 14, B)]), (42, [(13, 14, B)]),
+        (37, [(11, 16, B), (46, 47, B)]), (38, [(11, 15, B), (46, 46, B)]),
+        (39, [(11, 15, B), (46, 46, B)]), (40, [(11, 14, B)]),
+        (41, [(12, 14, B)]), (42, [(12, 13, B)]),
     ]
     for y, spans in bang_rows:
         runs(q, y, spans)
-    for y, x0, x1 in [(8, 22, 34), (9, 19, 38), (10, 17, 30), (11, 16, 26), (12, 15, 22)]:
+    # sharp cowlick spikes on the crown (modern anime silhouette, not a dome)
+    q.px(19, 5, B); q.px(20, 4, B); q.px(21, 3, B); q.px(22, 4, B)
+    q.px(43, 5, B); q.px(44, 4, B); q.px(45, 5, B)
+    # angular streaked sheen instead of a smooth highlight band
+    for y, x0, x1 in [(8, 24, 33), (9, 21, 30), (10, 18, 26), (11, 16, 22)]:
         runs(q, y, [(x0, x1, S)])
-    q.rect(36, 10, 8, 1, S); q.rect(40, 11, 6, 1, S)
+    q.line(34, 10, 43, 12, S); q.line(37, 9, 44, 10, S)
 
-    def eye(x0, y0, w_, mode="open", dx=0):
+    def eye(x0, y0, w_, mode="open", dx=0, side="L"):
+        outer = x0 - 1 if side == "L" else x0 + w_          # corner away from nose
         if mode == "closed":
             q.rect(x0, y0 + 4, 2, 1, B); q.rect(x0 + 1, y0 + 3, 2, 1, B)
             q.rect(x0 + 3, y0 + 2, w_ - 6, 1, B)
             q.rect(x0 + w_ - 3, y0 + 3, 2, 1, B); q.rect(x0 + w_ - 2, y0 + 4, 2, 1, B)
+            q.px(outer, y0 + 1, B)                          # tiny upturned outer flick
             return
         lid = 1 if mode == "wide" else 2
         half = mode == "half"
         q.rect(x0, y0, w_, lid, B)
         q.px(x0 - 1, y0, B); q.px(x0 + w_, y0, B)
         q.px(x0 - 1, y0 + 1, B); q.px(x0 + w_, y0 + 1, B)
+        # upturned outer corner flick — the single biggest "sharp/modern" eye cue
+        q.px(outer + (-1 if side == "L" else 1), y0 - 1, B)
+        q.px(outer, y0 - 1, B)
         q.rect(x0 + 1, y0 + lid, w_ - 2, 11 - lid, C)
-        # reception-dial iris: concentric cyan/dark rings + pupil (Echo is a receiver).
+        # compact reception-dial iris: soft limbal shading + a tight pupil ring
+        # (not a big square frame — that read as goggles).
         cx, cy = x0 + w_ // 2 - 1 + dx, y0 + (7 if half else 6)
-        for yy in range(y0 + lid, y0 + 11):
-            for xx in range(x0 + 1, x0 + w_ - 1):
-                r = max(abs(xx - cx), abs(yy - cy))
-                if r >= 3:
-                    q.px(xx, yy, C)
-                elif r == 2:
-                    q.px(xx, yy, CD)   # the dark tuning ring
-                elif r == 1:
-                    q.px(xx, yy, C)    # inner glow
-        q.rect(cx - 1, cy - 1, 2, 2, B)      # pupil
-        q.rect(x0 + 1, y0 + lid, w_ - 2, 1, CD)   # top rim shadow
+        q.rect(x0 + 1, y0 + lid, w_ - 2, 2, CD)        # top limbal shadow
+        q.rect(x0 + 2, y0 + 10, w_ - 4, 1, CD)         # bottom limbal
+        q.px(x0 + 1, cy, CD); q.px(x0 + w_ - 2, cy, CD)  # side limbal ticks
+        q.rect(cx - 1, cy - 1, 3, 3, CD)               # tight dial ring
+        q.rect(cx - 1, cy - 1, 2, 2, B)                # pupil, offset to hold a glint
+        q.px(cx + 1, cy + 1, C)                         # inner reception glow
         if half:
             q.rect(x0, y0, w_, 4, B)
             q.rect(x0 + 1, y0 + 4, w_ - 2, 1, CD)
@@ -207,14 +216,23 @@ def echo_portrait(expression: int = 0) -> Canvas:
             q.px(x0 + 1 + dx, y0 + 3, W)              # +1 for a sparkle glint
             q.px(x0 + w_ - 3 + dx, y0 + 8, W)         # lower sparkle
         q.rect(x0 + 2, y0 + 11, w_ - 4, 1, CD)
+        # almond taper: clip the inner-nose corner into skin so it isn't a box
+        inner_top = (x0 + w_ - 2, y0 + lid) if side == "L" else (x0 + 1, y0 + lid)
+        q.px(*inner_top, W)
+        inr = x0 + w_ - 2 if side == "L" else x0 + 1
+        q.px(inr, y0 + 10, W)                     # clip inner-bottom too
+        q.px(x0 + 1 if side == "L" else x0 + w_ - 2, y0 + 10, W)  # soften outer-bottom
 
     emap = {
         0: ("open", 0), 1: ("wide", 0), 2: ("closed", 0), 3: ("open", 0),
         4: ("open", 2), 5: ("half", 0), 6: ("open", 0), 7: ("wide", 0),
     }
     mode, dx = emap[expression]
-    eye(20, 25, 10, mode, dx)
-    eye(35, 25, 10, mode, dx)
+    eye(20, 25, 10, mode, dx, "L")
+    eye(35, 25, 10, mode, dx, "R")
+    # sharp angular brows, viewer-left 1px higher (canon asymmetry)
+    q.line(21, 23, 27, 22, B); q.px(20, 24, B)
+    q.line(38, 23, 44, 24, B); q.px(45, 25, B)
 
     q.px(32, 37, D)
     if expression == 1:      # surprised o
@@ -364,12 +382,13 @@ def seek_portrait(expression: int = 0) -> Canvas:
         (24, 17, 47), (25, 17, 47), (26, 17, 47), (27, 17, 47),
         (28, 17, 47), (29, 17, 47), (30, 17, 47), (31, 17, 47),
         (32, 17, 47), (33, 17, 47), (34, 17, 47), (35, 18, 47),
-        (36, 18, 46), (37, 18, 46), (38, 19, 46), (39, 19, 45),
-        (40, 20, 45), (41, 21, 44), (42, 22, 43), (43, 24, 41),
-        (44, 26, 39), (45, 28, 36),
+        (36, 18, 46), (37, 19, 46), (38, 20, 45), (39, 21, 45),
+        (40, 22, 44), (41, 24, 43), (42, 25, 42), (43, 27, 40),
+        (44, 29, 38), (45, 31, 37), (46, 33, 36),
     ]
     for y, x0, x1 in face:
         runs(q, y, [(x0, x1, W)])
+    q.px(18, 36, D); q.px(46, 36, D)   # jaw-corner accents
 
     fr = [
         (13, 15, 50), (14, 14, 51), (15, 14, 51), (16, 14, 50),
@@ -479,12 +498,13 @@ def noa_portrait(expression: int = 0) -> Canvas:
         (24, 20, 43), (25, 20, 43), (26, 20, 43), (27, 20, 43),
         (28, 20, 43), (29, 20, 43), (30, 20, 43), (31, 20, 43),
         (32, 20, 43), (33, 20, 43), (34, 20, 43), (35, 20, 43),
-        (36, 20, 43), (37, 21, 42), (38, 21, 42), (39, 22, 41),
-        (40, 23, 40), (41, 24, 39), (42, 25, 38), (43, 27, 36),
-        (44, 29, 34), (45, 30, 33),
+        (36, 20, 43), (37, 21, 42), (38, 22, 42), (39, 23, 41),
+        (40, 24, 40), (41, 25, 39), (42, 26, 38), (43, 28, 37),
+        (44, 29, 35), (45, 31, 34), (46, 32, 33),
     ]
     for y, x0, x1 in face:
         runs(q, y, [(x0, x1, W)])
+    q.px(19, 36, D); q.px(44, 36, D)   # sharp jaw-corner accents
 
     for y, x0, x1 in [(10, 17, 46), (11, 16, 47), (12, 16, 47), (13, 15, 48),
                       (14, 15, 48), (15, 15, 48), (16, 15, 48), (17, 15, 48),
@@ -515,7 +535,8 @@ def noa_portrait(expression: int = 0) -> Canvas:
     eye(21); eye(34)
     if expression == 1:
         q.rect(21, 30, 9, 1, B); q.rect(34, 30, 9, 1, B)
-    runs(q, 25, [(22, 28, S), (35, 41, S)])
+    # sharp angled brows — cold, precise, mirrored exactly (unlike Echo's asymmetry)
+    q.line(22, 24, 28, 25, S); q.line(35, 25, 41, 24, S)
 
     q.px(31, 38, D)
     if expression == 1:
