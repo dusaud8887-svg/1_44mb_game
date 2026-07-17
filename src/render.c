@@ -67,7 +67,7 @@ static void draw_noa(int x,int y){
 static void draw_seek_cable(void){art_blit(2,121,ART_SEEK_SHELL,64,((g.anim_ticks/16)&1)*16,0,16,16);line(16,134,47,120,COL_AMBER);}
 
 static void draw_enemy(const Enemy *e){int x=(int)e->x,y=(int)e->y;
-    art_blit(x-8,y-8,ART_ENEMY,80,e->type*16,0,16,16);
+    int pose=(g.anim_ticks/14+((int)e->x>>4))&1;art_blit(x-8,y-8,ART_ENEMY,160,e->type*32+pose*16,0,16,16);
 }
 
 static void draw_icon(int x,int y,CardId id,uint32_t c){
@@ -76,20 +76,20 @@ static void draw_icon(int x,int y,CardId id,uint32_t c){
 
 static void draw_card(int x,int y,int w,int h,CardId id,bool focus,int slot){
     const CardDef *c=&CARD_DEF[id];uint32_t ac=c->type==CARRIER?COL_CYAN:c->type==ARCHIVE?COL_DIM:c->type==NOISE?COL_RED:COL_INK;
-    rect(x,y,w,h,COL_PANEL);
-    if(c->type==CARRIER){frame(x,y,w,h,focus?COL_INK:ac);rect(x+w/2-4,y+h-1,8,1,COL_BG);}
-    else if(c->type==PROGRAM){frame(x,y,w,h,focus?COL_INK:ac);rect(x-1,y+8,3,8,focus?COL_INK:COL_DIM);}
-    else if(c->type==ARCHIVE){frame(x,y,w,h,focus?COL_INK:ac);rect(x+w-13,y-2,10,3,COL_DIM);}
-    else {frame(x,y,w,h,COL_RED);rect(x+2,y+2,2,2,COL_BG);rect(x+w-4,y+h-4,2,2,COL_BG);}
-    draw_icon(x+w/2-8,y+5,id,ac);
-    text_at(x+3,y+25,focus?COL_INK:COL_DIM,c->short_name);
-    if(c->type==CARRIER){bool rx=g.carrier_rx[slot]!=0;text_at(x+3,y+h-13,rx?COL_BLUE:COL_CYAN,rx?L"수신v":L"송신^");}
-    else if(g.selected[slot])text_at(x+3,y+h-13,g.selected[slot]==2?COL_AMBER:g.selected[slot]==3?COL_MAGENTA:COL_CYAN,g.selected[slot]==2?L"저장":g.selected[slot]==3?L"봉인":L"편성");
+    if(focus)rect(x+3,y+3,w-1,h,COL_BLACK);rect(x,y,w,h,COL_PANEL);frame(x,y,w,h,focus?COL_INK:ac);
+    rect(x+4,y+2,w-8,2,ac);rect(x,y,2,2,COL_BG);rect(x+w-2,y,2,2,COL_BG);rect(x,y+h-2,2,2,COL_BG);rect(x+w-2,y+h-2,2,2,COL_BG);
+    if(focus)frame(x+2,y+2,w-4,h-4,ac);if(c->type==PROGRAM)rect(x-1,y+9,3,9,focus?COL_INK:COL_DIM);else if(c->type==ARCHIVE)rect(x+w-13,y-2,10,3,COL_DIM);
+    draw_icon(x+w/2-8,y+6,id,ac);rect(x+3,y+24,w-6,1,focus?ac:COL_DIM);text_at(x+4,y+29,focus?COL_INK:COL_DIM,c->short_name);
+    rect(x+2,y+h-17,w-4,15,COL_BG);
+    if(c->type==CARRIER){bool rx=g.carrier_rx[slot]!=0;text_at(x+4,y+h-13,rx?COL_BLUE:COL_CYAN,rx?L"수신v":L"송신^");int px=x+w-9,py=y+h-10;if(rx){line(px-3,py-3,px,py, COL_BLUE);line(px+3,py-3,px,py,COL_BLUE);rect(px-1,py+1,3,2,COL_BLUE);}else{line(px-3,py+2,px,py-1,COL_CYAN);line(px+3,py+2,px,py-1,COL_CYAN);rect(px-1,py-4,3,2,COL_CYAN);}}
+    else if(g.selected[slot])text_at(x+4,y+h-13,g.selected[slot]==2?COL_AMBER:g.selected[slot]==3?COL_MAGENTA:COL_CYAN,g.selected[slot]==2?L"저장":g.selected[slot]==3?L"봉인":L"편성");
+    else text_at(x+4,y+h-13,COL_DIM,c->type==ARCHIVE?L"기록":c->type==NOISE?L"잡음":L"기능");
 }
 
 static void draw_header(void){
     rect(0,0,SCREEN_W,16,COL_PANEL);number_at(4,2,COL_INK,L"체력%d",g.hp);number_at(54,2,COL_CYAN,L"동조%d",g.sync);
     number_at(118,2,COL_INK,L"메아리%d/64",g.echo_total);number_at(250,2,COL_DIM,L"구절%d/12",g.turn>12?12:g.turn);
+    rect(0,15,50,1,g.hp<3?COL_RED:COL_INK);rect(54,15,54,1,COL_CYAN);rect(118,15,122,1,g.echo_mimicked?COL_MAGENTA:COL_DIM);rect(250,15,70,1,COL_DIM);
 }
 
 static void draw_background(void){clear(COL_BG);for(int y=24;y<ARENA_BOTTOM;y+=16)for(int x=(y&16)?8:0;x<SCREEN_W;x+=16)rect(x,y,1,1,COL_DIM);frame(2,18,316,188,COL_PANEL);}
@@ -112,7 +112,7 @@ static void draw_edit(void){
     else if(g.turn>=5){text_at(4,34,COL_DIM,L"노아가 학습 중:");text_at(126,34,COL_MAGENTA,CARD_DEF[g.trend_card].short_name);}
     if(g.new_ticks&&g.new_card){text_at(4,50,COL_CYAN,L"구매 카드 귀환:");text_at(126,50,COL_INK,CARD_DEF[g.new_card-1].short_name);}
     else if(g.message_ticks)text_at(4,50,COL_AMBER,L"버린 더미를 섞었습니다.");
-    number_at(266,18,COL_CYAN,L"편성%d",g.cue);text_at(4,145,COL_DIM,L"확인:배정  공백:탐색  탭:송출");
+    number_at(266,18,COL_CYAN,L"편성%d",g.cue);if(g.contract_applied){rect(260,34,56,15,COL_PANEL);frame(260,34,56,15,COL_MAGENTA);rect(263,37,3,9,COL_MAGENTA);text_at(269,36,COL_INK,L"계약+1");}number_at(4,132,COL_DIM,L"덱%d",g.deck.draw_n+g.deck.discard_n+g.deck.hand_n+(g.cached_card!=0));number_at(62,132,COL_DIM,L"뽑기%d",g.deck.draw_n);number_at(132,132,COL_DIM,L"버림%d",g.deck.discard_n);text_at(4,145,COL_DIM,L"확인:배정  공백:탐색  탭:송출");
     for(int i=0;i<g.deck.hand_n;i++)draw_card(4+i*63,164-(i==g.cursor?2:0),59,72,g.deck.hand[i],i==g.cursor,i);
     if(g.cache_mode){rect(63,55,194,68,COL_PANEL);frame(63,55,194,68,COL_AMBER);text_at(77,63,COL_INK,L"다음 구절에 보관할 카드");draw_icon(111,87,g.deck.hand[g.cursor],COL_AMBER);text_at(137,89,COL_INK,CARD_DEF[g.deck.hand[g.cursor]].short_name);}
     if(g.prefetch_mode){rect(63,55,194,68,COL_PANEL);frame(63,55,194,68,COL_CYAN);text_at(72,61,COL_INK,L"미리 읽기 / 하나 선택");for(int i=0;i<g.prefetch_n;i++){int x=77+i*58;frame(x,79,50,34,i==g.prefetch_cursor?COL_INK:COL_DIM);draw_icon(x+4,86,g.prefetch_cards[i],COL_CYAN);text_at(x+22,87,COL_INK,CARD_DEF[g.prefetch_cards[i]].short_name);}}
@@ -121,39 +121,42 @@ static void draw_edit(void){
 static void draw_air(void){
     draw_background();draw_world();draw_header();
     rect(0,208,SCREEN_W,32,COL_PANEL);text_at(4,211,COL_DIM,L"공백:송출");
-    for(int i=0;i<g.queue_n;i++){uint32_t c=i<g.queue_at?COL_DIM:i==g.queue_at?COL_INK:COL_CYAN;frame(88+i*29,211,24,24,c);draw_icon(92+i*29,215,g.queue[i],c);}
+    for(int i=0;i<g.queue_n;i++){int x=58+i*48;uint32_t c=i<g.queue_at?COL_DIM:i==g.queue_at?COL_INK:COL_CYAN;if(i)line(x-22,223,x-2,223,c);frame(x,211,38,24,c);number_at(x+2,216,c,L"%d",i+1);draw_icon(x+19,215,g.queue[i],c);if(i==g.queue_at)rect(x+2,212,34,2,COL_INK);}
     number_at(274,211,COL_INK,L"%d",(g.phase_ticks+59)/60);
 }
 
 static void draw_break(void){
     draw_background();draw_world();rect(0,16,SCREEN_W,224,0x00171322);draw_header();number_at(4,19,COL_BLUE,L"휴식  전송량%d",g.baud);
-    if(g.echo_archived)art_blit(292,35,ART_SEEK_AVATAR,96,0,0,24,24);
+    if(g.echo_archived)art_blit(292,35,ART_SEEK_AVATAR,192,((g.anim_ticks/24)&1)*24,0,24,24);
     if(g.defrag_mode||g.trade_mode){text_at(4,42,g.trade_mode?COL_AMBER:COL_INK,g.trade_mode?L"시크 보관 / 호박+2":L"정리 / 카드 한 장 제거");frame(64,72,192,70,COL_INK);draw_icon(78,91,(CardId)g.shop_cursor,COL_AMBER);text_at(108,88,COL_INK,CARD_DEF[g.shop_cursor].name);number_at(108,108,COL_DIM,L"보유%d",deck_count(g.shop_cursor));text_at(52,166,COL_DIM,L"좌우:선택  확인:결정  취소:닫기");return;}
     text_at(4,36,COL_DIM,L"구매 카드는 섞은 뒤 돌아옵니다.");
     if(g.turn>=5){text_at(174,36,COL_DIM,L"노아 학습:");text_at(252,36,COL_MAGENTA,CARD_DEF[g.trend_card].short_name);}
     int page=(g.shop_cursor/5)*5;
     for(int i=0;i<5;i++){int slot=page+i,x=4+i*63;if(slot>10)continue;CardId id=slot<8?shop_card(slot):CARD_CHECKSUM;
-        uint32_t ac=slot==10?(g.turn>=7?COL_AMBER:COL_DIM):slot==9?(g.turn>=5?COL_MAGENTA:COL_DIM):slot==8?COL_AMBER:(CARD_DEF[id].cost<=g.baud?COL_INK:COL_DIM);rect(x,63,59,86,COL_PANEL);frame(x,63,59,86,slot==g.shop_cursor?COL_INK:ac);
-        if(slot<8)draw_icon(x+21,70,id,ac);else if(slot==9)art_blit(x+18,66,ART_NOA_PROXY,72,0,0,24,24);else if(slot==10)art_blit(x+18,66,ART_SEEK_AVATAR,96,0,0,24,24);text_at(x+3,92,ac,slot==10?L"시크":slot==9?L"노아+":slot==8?L"정리":CARD_DEF[id].short_name);if(slot<8)number_at(x+3,111,ac,L"값%d",CARD_DEF[id].cost);
+        uint32_t ac=slot==10?(g.turn>=7?COL_AMBER:COL_DIM):slot==9?(g.turn>=5?COL_MAGENTA:COL_DIM):slot==8?COL_AMBER:(CARD_DEF[id].cost<=g.baud?COL_INK:COL_DIM);if(slot==g.shop_cursor)rect(x+3,66,59,86,COL_BLACK);rect(x,63,59,86,COL_PANEL);frame(x,63,59,86,slot==g.shop_cursor?COL_INK:ac);rect(x+4,65,51,2,ac);rect(x,63,2,2,COL_BG);rect(x+57,63,2,2,COL_BG);if(slot==g.shop_cursor)frame(x+2,65,55,82,ac);
+        if(slot==9){frame(x+4,68,51,75,COL_MAGENTA);rect(x+9,71,41,1,COL_MAGENTA);}else if(slot==10){line(x+2,141,x+56,69,COL_AMBER);rect(x+5,137,16,4,COL_AMBER);}
+        if(slot<8)draw_icon(x+21,70,id,ac);else if(slot==9)art_blit(x+18,66,ART_NOA_PROXY,144,((g.anim_ticks/24)&1)*24,0,24,24);else if(slot==10)art_blit(x+18,66,ART_SEEK_AVATAR,192,((g.anim_ticks/24)&1)*24,0,24,24);text_at(x+3,92,ac,slot==10?L"시크":slot==9?L"노아+":slot==8?L"정리":CARD_DEF[id].short_name);if(slot<8)number_at(x+3,111,ac,L"값%d",CARD_DEF[id].cost);
         if(slot==10)text_at(x+3,126,ac,L"보관+2");if(slot==9)text_at(x+3,126,ac,L"편성+1");if(slot==8)text_at(x+3,126,ac,L"제거");
     }
-    number_at(274,42,COL_DIM,L"%d/3쪽",page/5+1);text_at(4,158,COL_DIM,L"좌우:선택  확인:구매  탭:넘김");if(g.turn>=8)text_at(4,175,COL_CYAN,L"O키:지금 열린 채널");
+    number_at(274,42,COL_DIM,L"%d/3쪽",page/5+1);CardId focus=g.shop_cursor<8?shop_card(g.shop_cursor):CARD_CHECKSUM;frame(4,153,312,38,g.shop_cursor==9?COL_MAGENTA:g.shop_cursor==10?COL_AMBER:COL_DIM);text_at(10,158,COL_INK,g.shop_cursor==10?L"시크의 수제 보관 계약":g.shop_cursor==9?L"노아의 대칭 계약":g.shop_cursor==8?L"덱에서 카드 한 장 제거":CARD_DEF[focus].name);if(g.shop_cursor<8){number_at(220,155,COL_DIM,L"비용%d",CARD_DEF[focus].cost);if(CARD_DEF[focus].type==PROGRAM){uint8_t tag=program_modifier(focus);text_at(220,169,COL_MAGENTA,final_modifier_name(tag));number_at(276,169,COL_MAGENTA,L"→%d",program_modifier_count(tag)+1);}else number_at(220,169,COL_DIM,CARD_DEF[focus].type==CARRIER?L"전송%d":L"응답%d",CARD_DEF[focus].type==CARRIER?CARD_DEF[focus].baud:CARD_DEF[focus].echo);}text_at(10,175,COL_DIM,L"좌우:선택  확인:구매  탭:넘김");if(g.turn>=8)text_at(228,175,COL_CYAN,L"O:열린 채널");
     number_at(4,198,COL_CYAN,L"실제%d",g.echo_live);number_at(76,198,COL_AMBER,L"보관%d",g.echo_archived);number_at(177,198,COL_MAGENTA,L"모방%d",g.echo_mimicked);
 }
 
 static void draw_open(void){
     draw_background();draw_world();draw_header();draw_ring(160,112,88,true);rect(0,16,SCREEN_W,40,COL_PANEL);
-    if(g.echo_total>=32)draw_noa(286,72);else art_blit(284,43,ART_NOA_PROXY,72,((g.anim_ticks/30)&1)*24,0,24,24);
+    if(g.echo_total>=32)draw_noa(286,72);else art_blit(284,43,ART_NOA_PROXY,144,((g.anim_ticks/30)&1)*24,0,24,24);
     text_at(4,19,COL_MAGENTA,L"열린 채널 / 노아 유행 복제");text_at(4,31,COL_DIM,L"노아가 학습 중:");text_at(126,31,COL_MAGENTA,CARD_DEF[g.trend_card].short_name);
-    text_at(4,43,COL_DIM,L"최종 방송:");text_at(82,43,COL_CYAN,final_form_name(g.final_form));text_at(174,43,COL_INK,final_modifier_name(g.final_modifier));
+    text_at(4,43,COL_DIM,L"최종 방송:");text_at(82,43,COL_CYAN,final_form_name(g.final_form));text_at(174,43,COL_INK,final_modifier_name(g.final_modifier));number_at(246,43,COL_MAGENTA,L"강도%d",g.final_power);
     number_at(270,19,COL_RED,L"%d초",(g.open_ticks+59)/60);rect(0,208,SCREEN_W,32,COL_PANEL);
-    text_at(4,212,g.protocol_ticks?COL_DIM:COL_INK,L"공백:최종 방송");int w=(180*(PROTOCOL_TICKS-g.protocol_ticks))/PROTOCOL_TICKS;rect(4,229,w,3,g.protocol_ticks?COL_DIM:COL_CYAN);
+    text_at(48,212,g.protocol_ticks?COL_DIM:COL_INK,L"공백:최종 방송");static const int8_t gx[16]={0,4,7,9,10,9,7,4,0,-4,-7,-9,-10,-9,-7,-4},gy[16]={-10,-9,-7,-4,0,4,7,9,10,9,7,4,0,-4,-7,-9};int cooldown=final_protocol_cooldown(),ready=16*(cooldown-g.protocol_ticks)/cooldown;for(int i=0;i<16;i++)rect(24+gx[i],223+gy[i],2,2,i<ready?COL_CYAN:COL_DIM);if(g.final_form==FORM_CHATSTORM){line(20,223,28,223,COL_INK);rect(23,220,3,7,COL_INK);}else if(g.final_form==FORM_RESONANCE){frame(21,220,7,7,COL_INK);rect(23,222,3,3,COL_CYAN);}else{line(20,226,28,220,COL_INK);line(20,220,28,226,COL_INK);}
 }
 
 static void draw_title(void){
     clear(COL_BG);art_blit(64,63,ART_KEYART,192,0,0,192,108);rect(158,13,3,3,COL_RED);text_at(110,22,COL_DIM,L"목록 밖 생방송");
     int answer_x=121+(g.anim_ticks/2)%67;rect(answer_x,136,2,2,COL_CYAN);if((g.anim_ticks/24)&1)rect(241,151,2,2,COL_MAGENTA);
-    text_scaled(83,37,COL_INK,L"에코/144",3);text_at(76,184,COL_CYAN,L"64번만 대답해 주세요.");text_at(76,211,COL_INK,L"확인:접속  F2:오늘의 채널");if(g.save_corrupt)text_at(45,226,COL_AMBER,L"손상된 기록은 제가 보관 중입니다.");
+    text_scaled(83,37,COL_INK,L"에코/144",3);text_at(76,184,COL_CYAN,L"64번만 대답해 주세요.");
+    rect(66,203,102,24,COL_PANEL);frame(66,203,102,24,COL_INK);rect(70,205,94,2,COL_CYAN);text_at(77,210,COL_INK,L"확인  접속");
+    rect(174,203,108,24,COL_PANEL);frame(174,203,108,24,COL_DIM);rect(178,205,100,2,COL_MAGENTA);text_at(184,210,COL_DIM,L"F2  오늘 채널");if(g.save_corrupt)text_at(45,229,COL_AMBER,L"손상된 기록은 제가 보관 중입니다.");
 }
 
 static void draw_result(void){

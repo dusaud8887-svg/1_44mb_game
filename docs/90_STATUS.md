@@ -17,10 +17,10 @@ verified_by: MSVC /W4 selftest + release build + Windows 실실행 화면 검수
 | 문서가 기술하는 게임 | **V2** (수동 편성·노아·3색 링) — 00~50 전체 |
 | V2 구현 | **W‑V2‑P1 기능 완결 + 코드 통합 아트 패스 플레이 가능.** 정본 P1 자동 게이트와 실제 Windows 화면 검수 완료. 사람 대상 GV2/G3′와 최종 Aseprite 원본 게이트는 미실시 |
 | 소스 | `echo144.c` unity 진입점 + `game.h/game.c/render.c/win32.c` 변경 이유별 분리 |
-| 릴리스 exe | 173,056B (2026-07-17, 상한의 11.7%, SHA-256 `D03FF6FE67CA555F91239219817B381FEED8C1A6F673918389C2E4FB071ECD09`) |
+| 릴리스 exe | 179,200B (2026-07-17, 상한의 12.2%, SHA-256 `B4D7963BA401A899406BCAAC321D0B17B17AF86857D18D34918DB766043F323E`) |
 | 카드 수 | 13종: P0 8종 + MACRO / PREFETCH / MARKER / SURGE / CHECKSUM + NØA BOOST 계약 + DEFRAG SERVICE |
-| selftest | MSVC `/W4` PASS: P0 회귀 + P1 카드·킹덤·의도·시크·입력/접근성·링 전환·OC 컴파일/4엔딩 + 7정책×30 및 별도 1,000 seed SIM. 6/7 정책이 1,000시드에서 승리했으나 복잡 엔진 고점 목표는 여전히 FAIL([91](91_COMPLETENESS_AUDIT.md) §4) |
-| 자산 | V2 수작업 PNG: 에코 24×24×10·표정 8종, 시크 아바타 24×24×4·셸 16×16×4, 노아 대리체 24×24×3·보스 48×64×3, 초상 64×64×3, 적 5종, 카드 아이콘 13종, 직접 구성한 192×108 키아트 A~F. 런타임은 4bpp 패킹 |
+| selftest | MSVC `/W4` PASS: P0 회귀 + P1 카드·킹덤·의도·시크·입력/접근성·링 전환·OC 컴파일 강도/4엔딩 + 7정책×30 및 별도 1,000 seed SIM. 복잡 엔진 처리량이 BIG_BAUD를 넘는 자동 목표 PASS, 실제 생존·조작 고점은 사람 검증 필요([91](91_COMPLETENESS_AUDIT.md) §4) |
+| 자산 | V2 수작업 PNG: 에코 24×24×10·표정 8종, 시크 아바타 24×24×8·표정 4종·셸 16×16×4, 노아 대리체 24×24×6·보스 48×64×3, 초상 64×64×3, 적 5종×2프레임, 카드 아이콘 13종, 직접 구성한 192×108 키아트 A~F. 로고 2종과 120×45·184×69·300×168·462×174·920×430·1232×706·748×896 수동 구도 마케팅 PNG를 함께 생성한다. 런타임은 4bpp 패킹 |
 
 V1의 초기 정적 평가(콘셉트 9/10, 런타임 정확성 신뢰도 4.5/10, 기능 완성도 ≈80%·제출 준비도 ≈55~65% — 이동·스케줄러·GDI 수정 전 기준)는 [archive/ECHO144_complete_design_history.md](archive/ECHO144_complete_design_history.md) 부록 A에 동결. V1 자산의 검수 상태 분리 표기 원칙(단품 검수 PASS / Windows 실빌드 검수 PENDING / 외부 테스터 검수 PENDING)은 아래 §2에 반영되어 있다.
 
@@ -48,13 +48,13 @@ V2 재작성으로 구 라인 위치는 폐기됐다. 이동 좌표는 상태에
 | TREND MIRROR 1종 | [10](10_MECHANICS.md) §9 | P0 완료 |
 | P1 카드 5종 + DEFRAG | [15](15_CARDS.md) §4 | P1 완료 |
 | 의도 덱·BUF.WRM·COMMENT WALL·시크 탈취 | [10](10_MECHANICS.md) §5·§9 | P1 완료 |
-| 전략 봇·SIM 확장 | [20](20_BALANCE.md) §SIM | 실제 ON AIR 전투·PROGRAM 발동·정책별 TX/RX를 실행하는 무적 처리량 봇으로 교체. 7정책×30 + 1,000 seed PASS / 복잡 엔진 고점과 실제 생존 모델은 미달 |
+| 전략 봇·SIM 확장 | [20](20_BALANCE.md) §SIM | 실제 ON AIR 전투·PROGRAM 발동·정책별 TX/RX와 CUE 우선순위를 실행하는 무적 처리량 봇. 7정책×30 + 1,000 seed PASS, LOOP 899/1000·CACHE 892/1000로 복잡 엔진 고점 회복 / 실제 생존 모델은 미달 |
 | balance.def·콘텐츠 컴파일러·이벤트·구조 분리 | [30](30_TECH.md) §4~7 | P0 balance.def·파일 구조 완료 / 생성기·이벤트 미착수 |
 | 내장 비트맵 폰트 | [30](30_TECH.md) §9 | ASCII + 게임 노출 한글 subset 완료, 전 화면 한글화 |
-| 접근성·재시작 | [45](45_UI_UX.md) §6 | M 음소거·F1 저자극·ESC 일시정지·Space 홀드·같은/새 시드 재시작 완료 / 자동 TX/RX 옵션 미착수 |
+| 접근성·재시작 | [45](45_UI_UX.md) §6 | M 음소거·F1 저자극·ESC 일시정지·Space 홀드·10초 무입력 PROGRAM 추천·결과 0.5초 입력 보호·같은/새 시드 재시작 완료 / 자동 TX/RX 옵션 미착수 |
 | P1 규칙 완결 | [10](10_MECHANICS.md) §8~11, [15](15_CARDS.md) §9 | CACHE 대상 선택, FIREWALL 개구부, OFF AIR 3종, BOT/MOD 덱 공격, 시크 거래·OC 케이블, 최근 6구절 TREND, 4 modifier·4엔딩·실패 원인 완료 |
 | TODAY·저장·계측 | [10](10_MECHANICS.md) §1·§13, [30](30_TECH.md) §8 | F2 로컬 날짜 시드, 60B 체크섬 저장, 손상 시 시크 문구, 읽기/쓰기 실패 무시, DEV 전이별 CSV 완료 |
-| V2 자산 재설계 (DNA 계승) | [41](41_PIXEL_ART.md) §1~§2·§7, [43](43_ART_COMPETITIVE_RESEARCH.md) | 전장 표현 분리·에코 표정 8종·사건형 키아트·편성/계약/보관/결과 행동 연동·4bpp 런타임·AI-slop 검수 완료 / 타인 재현·사람 대상 선호도 게이트 미실시 |
+| V2 자산 재설계 (DNA 계승) | [41](41_PIXEL_ART.md) §1~§2·§7, [43](43_ART_COMPETITIVE_RESEARCH.md) | 전장 표현 분리·3인 표정/동작 확장·적 5종 2프레임·사건형 키아트·편성/계약/보관/결과 행동·원형 최종 프로토콜·스토어 캡슐 7규격·4bpp 런타임·AI-slop 검수 완료 / 타인 재현·사람 대상 선호도·레이어드 Aseprite 원본 게이트 미실시 |
 
 ## 5. 문서-코드 동기화 규칙
 

@@ -56,8 +56,8 @@ typedef struct {
     uint8_t turn, hp, sync, cursor, cue, queue_n, queue_at, shop_cursor;
     uint8_t carrier_rx[HAND_SIZE], selected[HAND_SIZE], queue[QUEUE_SIZE], queue_scale[QUEUE_SIZE];
     uint8_t program_uses[CARD_COUNT], trend_card, intent, intent_deck[12], kingdom[5];
-    uint8_t contract_boost, new_card, new_ticks, cached_card, cached_ready_slot, cache_slot, open_sequence_at, last_program, stolen_card, stolen_program, effect_card;
-    uint8_t final_form, final_modifier, ending, result_reason, ring_threshold, threshold_seen, firewall_open_dir, seek_interventions;
+    uint8_t contract_boost, contract_applied, new_card, new_ticks, cached_card, cached_ready_slot, cache_slot, open_sequence_at, last_program, stolen_card, stolen_program, effect_card;
+    uint8_t final_form, final_modifier, final_power, ending, result_reason, ring_threshold, threshold_seen, firewall_open_dir, seek_interventions;
     uint8_t prefetch_cards[3], prefetch_n, prefetch_cursor, prefetch_slot;
     uint8_t cards_bought[CARD_COUNT], cards_fired[CARD_COUNT], cards_cued[CARD_COUNT];
     uint8_t program_recent[6][CARD_COUNT];
@@ -82,5 +82,8 @@ const wchar_t *intent_name(uint8_t intent);
 const wchar_t *ending_name(uint8_t ending);
 const wchar_t *final_form_name(uint8_t form);
 const wchar_t *final_modifier_name(uint8_t modifier);
+uint8_t program_modifier(CardId id);
+int program_modifier_count(uint8_t modifier);
+int final_protocol_cooldown(void);
 
 #endif

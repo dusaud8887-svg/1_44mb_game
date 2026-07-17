@@ -252,7 +252,7 @@ CLIP 다수  → FRAMECUT      FIREWALL/CHECKSUM→ SAFE    (방어 공간·정�
 - `FRAMECUT + REPLAY` — 화면 절단이 같은 위치에 한 번 더 재생된다.
 - `OPEN ECHO + REPEAT` — 세 ARCHIVE 형태가 5장 구절 단위로 순환·반복된다.
 
-modifier는 덱에서 해당 태그 PROGRAM이 가장 많은 것 하나 `[시드값]`. **실제 구현은 핵심 효과 3~4개 × 수정자 4개지만, 플레이어에게는 여러 최종 빌드가 보인다.** 구현은 기존 이펙트 파라미터 변형으로 — 전용 이펙트 신작 최소화([30](30_TECH.md) §6).
+modifier는 덱에서 해당 태그 PROGRAM이 가장 많은 것 하나다. 그 태그의 장수가 `컴파일 강도`이며 OPEN CHANNEL HUD에 직접 표시한다. 강도 1은 기존 기본값, 2부터 엔진 보상이 발생한다: REPEAT는 ARCHIVE의 ECHO를 추가 재생하고, NETWORK는 자동 ARCHIVE 순환 간격을 단축한다. SAFE·REPLAY를 포함한 모든 modifier는 강도가 높을수록 Space 최종 프로토콜 쿨다운이 짧아진다. **같은 계열 PROGRAM을 여러 장 사는 덱 구축이 최종 승리 처리량으로 상환되어야 하며, 단순 ARCHIVE 러시보다 준비가 느린 대신 고점이 높다.**
 
 ## 10. 아이콘 — 16×16 재설계
 
