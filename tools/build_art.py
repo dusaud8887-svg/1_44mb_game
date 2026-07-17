@@ -1,6 +1,14 @@
-"""Hand-authored V2 pixel assets: indexed PNG previews plus embedded C data."""
+"""Hand-authored V2 pixel assets: indexed PNG previews plus embedded C data.
+
+V3 art pass (2026-07): characters are no longer assembled from polygon
+primitives. Faces, hair and bodies are designed as explicit pixel rows/grids
+(the same discipline as docs/41 section 4: silhouette -> value mass -> face
+anchors -> cluster shading), then reviewed at 1x/4x/8x. Per-character eye
+grammar is canon: Echo round+open, Seek sanpaku slant, NOA half-lidded
+symmetric with profile-dot highlights."""
 from __future__ import annotations
 
+import math
 import struct
 import zlib
 from pathlib import Path
@@ -13,6 +21,11 @@ PAL = [
     (230, 91, 91), (106, 170, 232), (184, 166, 217), (0, 0, 0),
 ]
 V, B, P, S, W, D, CD, C, AD, A, MD, M, R, U, L, T = range(16)
+CH = {
+    'V': V, 'B': B, 'P': P, 'S': S, 'W': W, 'D': D,
+    'c': CD, 'C': C, 'a': AD, 'A': A, 'm': MD, 'M': M,
+    'R': R, 'U': U, 'L': L, '.': T,
+}
 
 
 class Canvas:
@@ -22,6 +35,9 @@ class Canvas:
     def px(self, x: int, y: int, c: int) -> None:
         if 0 <= x < self.w and 0 <= y < self.h:
             self.p[y * self.w + x] = c
+
+    def get(self, x: int, y: int) -> int:
+        return self.p[y * self.w + x] if (0 <= x < self.w and 0 <= y < self.h) else T
 
     def rect(self, x: int, y: int, w: int, h: int, c: int) -> None:
         for yy in range(max(0, y), min(self.h, y + h)):
@@ -42,30 +58,25 @@ class Canvas:
             if e2 >= dy: err += dy; x0 += sx
             if e2 <= dx: err += dx; y0 += sy
 
-    def ellipse(self, x: int, y: int, w: int, h: int, c: int) -> None:
-        # Pixel-cluster ellipse. Integer coverage keeps every edge hard.
-        rx, ry = w / 2, h / 2
-        for yy in range(y, y + h):
-            for xx in range(x, x + w):
-                dx, dy = (xx + .5 - x) / rx - 1, (yy + .5 - y) / ry - 1
-                if dx * dx + dy * dy <= 1: self.px(xx, yy, c)
-
-    def poly(self, points: list[tuple[int, int]], c: int) -> None:
-        ymin, ymax = min(y for _, y in points), max(y for _, y in points)
-        for y in range(ymin, ymax + 1):
-            hits = []
-            for i, (x0, y0) in enumerate(points):
-                x1, y1 = points[(i + 1) % len(points)]
-                if y0 == y1 or not (min(y0, y1) <= y < max(y0, y1)): continue
-                hits.append(round(x0 + (y - y0) * (x1 - x0) / (y1 - y0)))
-            hits.sort()
-            for i in range(0, len(hits) - 1, 2): self.rect(hits[i], y, hits[i + 1] - hits[i] + 1, 1, c)
-
     def blit(self, other: "Canvas", x: int, y: int, scale: int = 1) -> None:
         for yy in range(other.h):
             for xx in range(other.w):
                 c = other.p[yy * other.w + xx]
                 if c != T: self.rect(x + xx * scale, y + yy * scale, scale, scale, c)
+
+
+def grid(text: str) -> Canvas:
+    rows = text.strip("\n").split("\n")
+    cv = Canvas(max(len(r) for r in rows), len(rows))
+    for y, r in enumerate(rows):
+        for x, ch in enumerate(r):
+            cv.px(x, y, CH[ch])
+    return cv
+
+
+def runs(cv: Canvas, y: int, spans) -> None:
+    for x0, x1, c in spans:
+        cv.rect(x0, y, x1 - x0 + 1, 1, c)
 
 
 def resized(src: Canvas, w: int, h: int) -> Canvas:
@@ -76,329 +87,978 @@ def resized(src: Canvas, w: int, h: int) -> Canvas:
     return out
 
 
-def ring(cv: Canvas, cx: int, cy: int, rx: int, ry: int, c: int, gap=(5, 8), blocks=32) -> None:
-    # Deliberately clustered ellipse: every sample is a 2px segment, never antialiased.
-    import math
-    for i in range(blocks):
-        if gap[0] <= i <= gap[1]: continue
-        a = i * 2 * math.pi / blocks
-        x, y = cx + round(math.cos(a) * rx), cy + round(math.sin(a) * ry)
+def ring_arc(cv: Canvas, cx: int, cy: int, r: int, c: int, gap_from: int, gap_to: int) -> None:
+    """Clustered 2px ring; gap angles in degrees (0=east, CCW)."""
+    for i in range(64):
+        deg = i * 360 / 64
+        if gap_from <= deg <= gap_to:
+            continue
+        x = cx + round(math.cos(math.radians(deg)) * r)
+        y = cy - round(math.sin(math.radians(deg)) * r)
         cv.rect(x, y, 2, 2, c)
 
 
-def echo_frame(pose: int) -> Canvas:
-    q = Canvas(24, 24)
-    bob = pose & 1
-    # Large head, tiny tailored body, one huge sleeve: cute at 1x without becoming a mascot blob.
-    q.rect(2, 5-bob, 2, 7, CD); q.rect(3, 3-bob, 5, 2, C); q.rect(18, 4-bob, 3, 2, C)
-    q.poly([(6,5-bob),(9,2-bob),(16,2-bob),(20,6-bob),(19,15-bob),(15,17-bob),(7,14-bob),(5,9-bob)],B)
-    q.rect(17, 9-bob, 3, 9, B); q.px(20, 16-bob, B)
-    q.poly([(8,6-bob),(12,4-bob),(17,6-bob),(18,11-bob),(15,15-bob),(10,15-bob),(7,11-bob)],W)
-    q.poly([(7,6-bob),(12,3-bob),(11,8-bob),(14,6-bob),(16,8-bob),(19,6-bob),(18,4-bob),(9,3-bob)],B)
-    q.rect(8, 9-bob, 4, 3, B); q.rect(14, 9-bob, 4, 3, B)
-    for x in (8, 11, 14, 17): q.px(x, 9-bob, W); q.px(x, 11-bob, W)
-    q.rect(9, 10-bob, 2, 1, W); q.rect(15, 10-bob, 2, 1, W); q.px(10, 10-bob, C); q.px(15, 10-bob, C)
-    q.line(12, 13-bob, 15, 13-bob, B); q.px(13, 14-bob, W)  # bright, cocky tooth-smile.
-    q.poly([(8,15-bob),(16,15-bob),(17,18-bob),(15,21-bob),(9,21-bob),(7,18-bob)],P)
-    q.poly([(10,16-bob),(13,18-bob),(15,16-bob),(14,20-bob),(11,20-bob)],W); q.px(13, 18-bob, R)
-    q.poly([(7,16-bob),(10,16-bob),(9,22),(2,21)],C); q.rect(3, 17-bob, 6, 3, CD); q.px(4, 18-bob, W)
-    q.poly([(16,16-bob),(19,17-bob),(19,20-bob),(16,21-bob)],S); q.rect(16, 16-bob, 2, 2, R)
-    q.poly([(8,20-bob),(12,20-bob),(11,24),(6,24)],P); q.poly([(13,20-bob),(17,20-bob),(19,24),(15,24)],S)
-    q.rect(6, 23, 5, 1, B); q.rect(16, 23-bob, 4, 1+bob, B)
-    if pose == 2: q.line(5, 17, 1, 12, C); q.rect(0, 10, 3, 4, W); q.px(0, 10, B)
-    if pose == 3: q.line(18, 17, 22, 11, W); q.rect(20, 8, 4, 5, C); q.px(22, 9, W)
-    if pose == 4: q.rect(15, 10, 4, 4, W); q.rect(17, 10, 2, 2, R); q.rect(2, 5, 2, 7, R)
-    if pose == 5: q.line(18, 16, 21, 6, C); q.rect(19, 3, 4, 5, C); q.px(21, 4, W)
-    if pose == 6: q.line(5, 18, 1, 14, C); q.rect(0, 11, 3, 3, C); q.px(1, 12, W)
-    if pose == 7: q.line(5, 18, 1, 20, C); q.line(18, 17, 23, 18, W); q.rect(22, 16, 2, 4, C)
-    if pose == 8: q.rect(14, 11, 5, 4, W); q.rect(16, 11, 3, 2, R); q.line(4, 4, 2, 9, R)
-    if pose == 9: q.rect(20, 4, 3, 5, U); q.px(21, 5, W); q.line(18, 16, 21, 9, W)
-    return q
-
-
-def seek_frame(pose: int) -> Canvas:
-    q = Canvas(24, 24)
-    bob = pose & 1
-    # The only cable visibly begins at the rear socket.
-    q.line(1, 20, 7, 18, A); q.line(1, 20, 0, 17+bob, A); q.rect(0, 16+bob, 2, 2, AD)
-    q.poly([(6,10-bob),(9,7-bob),(17,7-bob),(21,12-bob),(20,19),(7,19)],AD)
-    q.poly([(8,11-bob),(11,9-bob),(17,10-bob),(19,14-bob),(17,18),(8,17)],A)
-    q.rect(10, 11-bob, 7, 5, B); q.px(12, 13-bob, W); q.px(15, 13-bob, W); q.px(16, 15-bob, W)
-    q.rect(7, 12-bob, 2, 3, B); q.rect(18, 14-bob, 3, 2, A); q.px(21, 15-bob, AD)
-    q.frame(5, 5-bob, 7, 7, A); q.rect(5, 8-bob, 2, 2, T); q.px(8, 8-bob, A)
-    q.rect(8, 19, 3, 2, AD); q.rect(16, 18, 3, 3, AD); q.px(12, 18, W)  # date label.
-    if pose == 2: q.line(19, 14, 23, 9, A); q.ellipse(21, 7, 3, 4, A); q.px(22, 8, C)
-    if pose == 3: q.rect(9, 14, 9, 4, AD); q.line(2, 20, 8, 22, A)
-    return q
-
-
-def seek_shell_frame(pose: int) -> Canvas:
-    q = Canvas(16, 16)
-    bob = pose & 1
-    q.line(0, 14, 4, 12, A); q.rect(0, 13, 2, 2, AD)  # cable leads.
-    q.poly([(3,8-bob),(6,5-bob),(12,6-bob),(15,10),(13,14),(4,14)],AD)
-    q.poly([(5,8-bob),(8,7-bob),(13,9-bob),(12,12),(5,12)],A)
-    q.rect(7, 8-bob, 4, 3, B); q.px(8, 9-bob, W); q.px(10, 10-bob, W)
-    q.frame(2, 3-bob, 6, 6, A); q.rect(2, 5-bob, 2, 2, T)
-    if pose == 2: q.line(13, 10, 15, 6, A); q.px(15, 5, C)
-    if pose == 3: q.rect(5, 11, 8, 3, AD); q.line(0, 14, 5, 15, A)
-    return q
-
-
-def seek_avatar_frame(pose: int) -> Canvas:
-    q = Canvas(24, 24)
-    q.poly([(4,9),(7,3),(10,6),(16,3),(21,9),(20,22),(4,22)],AD)
-    q.poly([(6,10),(10,5),(17,6),(20,12),(17,20),(6,19)],A)
-    q.poly([(9,8),(15,7),(19,11),(18,16),(14,19),(9,16)],W)
-    q.poly([(6,8),(13,4),(13,18),(7,18)],B)  # one eye stays under the hood.
-    q.line(14, 10, 18, 10, AD); q.rect(15, 11, 3, 2, B); q.px(16, 11, A)
-    q.line(13, 15, 18, 14, AD); q.px(17, 15, W)  # small fang breaks the sleepy face.
-    q.poly([(6,18),(17,18),(18,20),(16,21),(7,21),(5,20)],B)
-    q.poly([(11,18),(14,18),(15,21),(10,21)],AD); q.px(13, 19, A); q.rect(17, 18, 3, 4, AD)
-    q.poly([(7,20),(12,20),(11,24),(5,24)],B); q.poly([(13,20),(17,20),(20,24),(15,24)],AD)
-    q.line(5, 19, 1, 22, A); q.rect(0, 21, 3, 2, AD)
-    if pose & 1: q.px(17, 11, W); q.line(14, 15, 18, 15, AD)
-    if pose == 2: q.line(18, 19, 23, 13, A); q.rect(21, 11, 3, 3, A)
-    if pose == 3: q.frame(17, 17, 6, 5, A); q.rect(19, 19, 3, 1, W)
-    if pose == 4: q.line(14, 10, 18, 12, AD); q.rect(15, 12, 3, 2, B); q.px(16, 12, W)
-    if pose == 5: q.line(18, 19, 23, 17, A); q.rect(21, 15, 3, 4, AD); q.px(22, 16, W)
-    if pose == 6: q.frame(1, 1, 7, 6, A); q.rect(3, 3, 3, 2, W); q.line(7, 5, 12, 9, A)
-    if pose == 7: q.line(4, 18, 1, 14, A); q.rect(0, 12, 3, 3, AD); q.px(1, 13, C)
-    return q
-
-
-def noa_frame(stage: int) -> Canvas:
-    q = Canvas(48, 64)
-    # Profile ring and vertical comment veil are separate, mechanically exact layers.
-    count = (6, 14, 24)[stage]
-    for i in range(count):
-        x = 3 + (i * 7) % 42; y = 4 + (i * 11) % 54
-        q.frame(x, y, 3, 3, M if i % 3 else MD)
-    for x in range(5 + stage, 47, 7): q.line(x, 2, x, 61, MD if x % 2 else M)
-    q.poly([(13,12),(18,5),(29,5),(36,11),(35,29),(30,33),(18,32),(13,25)],B)
-    q.poly([(18,13),(23,9),(31,12),(33,20),(29,28),(23,30),(18,24)],W)
-    q.rect(14,8,21,8,B); q.rect(14,13,4,17,B); q.rect(32,12,4,18,B)
-    q.line(19,17,23,17,MD); q.line(27,17,31,17,MD); q.rect(20,18,4,3,MD); q.rect(27,18,4,3,MD)
-    q.rect(21,18,2,1,W); q.rect(28,18,2,1,W); q.px(22,19,M); q.px(29,19,M)
-    q.line(23,24,29,23,MD); q.px(29,24,MD)
-    q.poly([(14,31),(34,31),(38,40),(33,45),(36,58),(27,58),(24,47),(21,58),(11,58),(15,44),(10,39)],B)
-    q.poly([(18,31),(24,38),(30,31),(29,50),(20,50)],P); q.line(24,38,24,56,M); q.rect(11,35,5,18,B); q.rect(33,34,5,17,B)
-    q.line(36, 47, 39, 31, W); q.ellipse(36, 27, 6, 7, W); q.px(39, 28, S)  # connected white glove.
-    if stage: q.frame(10, 5, 28, 55, M)
-    if stage == 2:
-        for y in range(45, 63, 4):
-            for x in range(2, 46, 5): q.rect(x, y, 3, 2, MD)
-    return q
-
-
-def noa_proxy_frame(pose: int) -> Canvas:
-    q = Canvas(24, 24)
-    for x in (2, 21): q.line(x, 2, x, 22, M)
-    q.poly([(7,5),(10,2),(16,3),(19,6),(18,15),(15,17),(9,15),(6,11)],B)
-    q.poly([(9,7),(12,5),(17,7),(17,12),(14,15),(10,14),(8,11)],W); q.rect(7, 4, 12, 5, B)
-    q.line(9, 10, 12, 10, MD); q.line(14, 10, 17, 10, MD); q.px(11, 11, M); q.px(15, 11, M)
-    q.line(12, 14, 16, 14, MD); q.px(16, 13, MD)
-    q.poly([(7,16),(17,16),(18,19),(16,21),(8,21),(6,19)],B)
-    q.poly([(10,16),(15,16),(15,20),(13,21),(10,20)],P); q.line(12, 17, 12, 20, M); q.px(14, 18, W)
-    q.poly([(8,20),(12,20),(11,24),(6,24)],P); q.poly([(13,20),(17,20),(19,24),(15,24)],B)
-    q.line(18, 22, 19, 15, W); q.rect(17, 13, 4, 4, W); q.px(19, 13, M)
-    if pose == 1: q.line(18, 15, 22, 11, W); q.px(22, 10, M)
-    if pose == 2: q.frame(3, 1, 18, 22, M)
-    if pose == 3: q.line(9, 10, 12, 11, MD); q.line(14, 11, 17, 10, MD); q.px(16, 14, W)
-    if pose == 4: q.line(18, 15, 23, 7, W); q.rect(21, 5, 3, 4, M); q.px(22, 5, W)
-    if pose == 5:
-        for y in range(2, 23, 4): q.rect(1, y, 3, 2, MD); q.rect(20, y + 1, 3, 2, M)
-    return q
-
+# ---------------------------------------------------------------- portraits
 
 def echo_portrait(expression: int = 0) -> Canvas:
     q = Canvas(64, 64)
-    ring(q, 31, 31, 28, 27, CD, (4, 9), 40)
-    # Broad upper mass and a single long tail give Echo an instant, asymmetrical silhouette.
-    q.poly([(10,22),(14,9),(25,3),(41,6),(53,17),(51,45),(59,64),(42,62),(37,48),(17,51),(8,41)],B)
-    q.poly([(13,29),(20,42),(18,62),(8,57)],B); q.line(14, 22, 20, 9, P); q.line(47, 18, 54, 53, P)
-    q.poly([(18,22),(23,13),(37,11),(47,19),(47,34),(41,45),(29,49),(19,41)],W)
-    q.poly([(16,19),(25,8),(39,9),(49,17),(44,25),(38,20),(34,27),(28,19),(20,27)],B)
-    q.rect(16, 21, 3, 13, C); q.rect(46, 21, 4, 13, CD); q.rect(48, 24, 2, 7, C)
-    # Wide irises, hard brows and tiny highlights keep the face readable at game scale.
-    q.line(22, 26-(expression==3), 29, 28-(expression==3), B); q.line(36, 28 if expression==5 else 28, 43, 26, B)
-    if expression in (1, 7):
-        q.ellipse(22, 29, 10, 10, B); q.ellipse(35, 29, 10, 10, B); q.ellipse(23, 30, 8, 8, W); q.ellipse(36, 30, 8, 8, W)
-        q.ellipse(25, 30, 5, 7, C); q.ellipse(38, 30, 5, 7, C); q.rect(27, 33, 2, 3, B); q.rect(40, 33, 2, 3, B); q.px(27, 31, W); q.px(40, 31, W)
-    elif expression == 4:
-        q.line(23, 33, 30, 34, B); q.line(36, 34, 43, 33, B)
+    ring_arc(q, 31, 30, 29, CD, 20, 75)
+    for a in (100, 140, 180, 220, 260, 300, 340):
+        x = 31 + round(math.cos(math.radians(a)) * 29)
+        y = 30 - round(math.sin(math.radians(a)) * 29)
+        q.rect(x, y, 2, 2, C)
+
+    hair_back = [
+        (5, 24, 40), (6, 21, 43), (7, 19, 45), (8, 17, 47), (9, 16, 48),
+        (10, 15, 49), (11, 14, 50), (12, 13, 51), (13, 13, 51), (14, 12, 52),
+        (15, 12, 52), (16, 11, 52), (17, 11, 52), (18, 11, 52), (19, 10, 52),
+        (20, 10, 52), (21, 10, 52), (22, 10, 52), (23, 10, 52), (24, 10, 52),
+        (25, 10, 52), (26, 10, 51), (27, 10, 51), (28, 10, 51), (29, 10, 51),
+        (30, 10, 51), (31, 10, 51), (32, 10, 51), (33, 10, 51), (34, 10, 51),
+        (35, 10, 50), (36, 10, 50), (37, 11, 50), (38, 11, 50), (39, 11, 49),
+        (40, 11, 49), (41, 11, 48), (42, 12, 47), (43, 12, 46), (44, 12, 45),
+        (45, 12, 44),
+    ]
+    for y, x0, x1 in hair_back:
+        runs(q, y, [(x0, x1, B)])
+    lock = [(46, 11, 19), (47, 11, 19), (48, 10, 18), (49, 10, 18), (50, 10, 17),
+            (51, 9, 17), (52, 9, 16), (53, 9, 16), (54, 9, 15), (55, 8, 15),
+            (56, 8, 14), (57, 8, 14), (58, 8, 13), (59, 9, 13), (60, 9, 12),
+            (61, 10, 12), (62, 10, 12), (63, 11, 12)]
+    for y, x0, x1 in lock:
+        runs(q, y, [(x0, x1, B)])
+    for y, x0, x1 in [(46, 44, 48), (47, 45, 49), (48, 46, 49), (49, 46, 50), (50, 47, 50), (51, 47, 49), (52, 48, 49)]:
+        runs(q, y, [(x0, x1, B)])
+
+    # ahoge: one clean antenna strand curving right
+    q.px(32, 3, B); q.px(33, 2, B); q.px(34, 1, B); q.px(35, 1, B); q.px(36, 2, B)
+
+    face = [
+        (16, 22, 41), (17, 21, 43), (18, 20, 44), (19, 19, 45),
+        (20, 19, 45), (21, 18, 46), (22, 18, 46), (23, 18, 46),
+        (24, 17, 46), (25, 17, 46), (26, 17, 46), (27, 17, 46),
+        (28, 17, 46), (29, 17, 46), (30, 17, 46), (31, 17, 46),
+        (32, 17, 46), (33, 17, 46), (34, 17, 46), (35, 18, 46),
+        (36, 18, 45), (37, 18, 45), (38, 19, 45), (39, 19, 44),
+        (40, 20, 44), (41, 21, 43), (42, 22, 42), (43, 24, 40),
+        (44, 26, 38), (45, 28, 35),
+    ]
+    for y, x0, x1 in face:
+        runs(q, y, [(x0, x1, W)])
+
+    bang_rows = [
+        (13, [(13, 51, B)]), (14, [(12, 52, B)]), (15, [(12, 52, B)]),
+        (16, [(11, 52, B)]), (17, [(11, 52, B)]), (18, [(11, 51, B)]),
+        (19, [(10, 51, B)]), (20, [(10, 50, B)]), (21, [(10, 49, B)]),
+        (22, [(10, 25, B), (27, 36, B), (38, 49, B)]),
+        (23, [(10, 24, B), (29, 34, B), (40, 48, B)]),
+        (24, [(10, 23, B), (30, 32, B), (42, 48, B)]),
+        (25, [(10, 21, B), (44, 48, B)]),
+        (26, [(10, 20, B), (45, 48, B)]),
+        (27, [(10, 19, B), (45, 48, B)]), (28, [(10, 19, B), (45, 48, B)]),
+        (29, [(10, 18, B), (45, 48, B)]), (30, [(10, 18, B), (45, 47, B)]),
+        (31, [(10, 18, B), (45, 47, B)]), (32, [(10, 17, B), (45, 47, B)]),
+        (33, [(10, 17, B), (45, 47, B)]), (34, [(10, 17, B), (45, 47, B)]),
+        (35, [(10, 16, B), (45, 47, B)]), (36, [(10, 16, B), (46, 47, B)]),
+        (37, [(11, 16, B), (46, 47, B)]), (38, [(11, 16, B), (46, 46, B)]),
+        (39, [(11, 15, B), (46, 46, B)]), (40, [(12, 15, B)]),
+        (41, [(12, 14, B)]), (42, [(13, 14, B)]),
+    ]
+    for y, spans in bang_rows:
+        runs(q, y, spans)
+    for y, x0, x1 in [(8, 22, 34), (9, 19, 38), (10, 17, 30), (11, 16, 26), (12, 15, 22)]:
+        runs(q, y, [(x0, x1, S)])
+    q.rect(36, 10, 8, 1, S); q.rect(40, 11, 6, 1, S)
+
+    def eye(x0, y0, w_, mode="open", dx=0):
+        if mode == "closed":
+            q.rect(x0, y0 + 4, 2, 1, B); q.rect(x0 + 1, y0 + 3, 2, 1, B)
+            q.rect(x0 + 3, y0 + 2, w_ - 6, 1, B)
+            q.rect(x0 + w_ - 3, y0 + 3, 2, 1, B); q.rect(x0 + w_ - 2, y0 + 4, 2, 1, B)
+            return
+        lid = 1 if mode == "wide" else 2
+        half = mode == "half"
+        q.rect(x0, y0, w_, lid, B)
+        q.px(x0 - 1, y0, B); q.px(x0 + w_, y0, B)
+        q.px(x0 - 1, y0 + 1, B); q.px(x0 + w_, y0 + 1, B)
+        q.rect(x0 + 1, y0 + lid, w_ - 2, 11 - lid, C)
+        q.rect(x0 + 1, y0 + lid, w_ - 2, 2, CD)
+        if half:
+            q.rect(x0, y0, w_, 4, B)
+            q.rect(x0 + 1, y0 + 4, w_ - 2, 1, CD)
+        px_, py = x0 + w_ // 2 - 1 + dx, y0 + (5 if half else 4)
+        if mode == "wide":
+            q.rect(px_, py, 2, 3, B)
+            q.rect(x0 + 2, y0 + 2, 3, 3, W)
+            q.rect(x0 + w_ - 4, y0 + 7, 3, 3, W)
+        else:
+            q.rect(px_, py, 3, 4, B)
+            q.rect(x0 + 2 + dx, y0 + 3, 3, 3, W)
+            q.rect(x0 + w_ - 4 + dx, y0 + 8, 2, 2, W)
+        q.rect(x0 + 2, y0 + 11, w_ - 4, 1, CD)
+
+    emap = {
+        0: ("open", 0), 1: ("wide", 0), 2: ("closed", 0), 3: ("open", 0),
+        4: ("open", 2), 5: ("half", 0), 6: ("open", 0), 7: ("wide", 0),
+    }
+    mode, dx = emap[expression]
+    eye(20, 25, 10, mode, dx)
+    eye(35, 25, 10, mode, dx)
+
+    q.px(32, 37, D)
+    if expression == 1:      # surprised o
+        q.frame(31, 40, 4, 3, B)
+    elif expression == 2:    # broadcast laugh
+        q.rect(30, 40, 6, 1, B); q.rect(29, 41, 8, 1, B)
+        q.rect(30, 42, 6, 1, B); q.rect(31, 43, 4, 1, B)
+        q.rect(30, 41, 6, 1, W)
+    elif expression == 3:    # connection anxiety
+        q.px(29, 41, B); q.rect(30, 42, 2, 1, B); q.rect(32, 41, 2, 1, B)
+        q.rect(34, 42, 2, 1, B)
+        q.px(48, 22, U); q.px(49, 24, U)
+    elif expression == 4:    # guarded
+        q.rect(30, 41, 6, 1, B)
+    elif expression == 5:    # frustrated pout
+        q.rect(29, 42, 4, 1, B); q.px(33, 41, B)
+    elif expression == 6:    # resolve
+        q.line(29, 41, 32, 42, B); q.line(32, 42, 35, 41, B)
+    elif expression == 7:    # first real voice
+        q.frame(30, 40, 5, 4, B); q.rect(31, 41, 3, 2, R)
+        q.px(46, 34, U)
     else:
-        q.ellipse(22, 29, 10, 9, B); q.ellipse(35, 29, 10, 9, B); q.ellipse(23, 30, 8, 7, W); q.ellipse(36, 30, 8, 7, W)
-        q.ellipse(25, 30, 5, 7, C); q.ellipse(38, 30, 5, 7, C); q.rect(27, 33, 2, 3, B); q.rect(40, 33, 2, 3, B); q.px(27, 31, W); q.px(40, 31, W)
-    q.rect(18, 39, 3, 2, M); q.rect(45, 39, 2, 2, M)
-    if expression == 7: q.rect(20, 40, 3, 2, M); q.rect(43, 40, 3, 2, M)
-    if expression in (1, 7): q.ellipse(29, 39, 11, 8, CD); q.rect(31, 40, 7, 3, W); q.rect(33, 45, 4, 1, R)
-    elif expression == 2: q.line(29, 44, 39, 40, CD); q.px(29, 43, CD)
-    elif expression == 5: q.line(30, 42, 39, 42, CD); q.px(39, 41, CD)
-    elif expression in (3, 4, 6): q.line(29, 44, 39, 44, CD); q.px(29, 43, CD)
-    else: q.line(29, 40, 34, 43, CD); q.line(34, 43, 40, 39, CD); q.rect(34, 41, 3, 2, W)
-    # Sharp lapels, pinched waist and oversized sleeve: tailored rather than blocky.
-    q.poly([(13,57),(22,47),(43,47),(55,55),(59,64),(43,64),(39,57),(27,57),(23,64),(6,64)],P)
-    q.poly([(24,48),(33,55),(42,48),(39,64),(27,64)],B); q.poly([(27,48),(33,54),(38,48),(36,57),(30,57)],W)
-    q.rect(32, 51, 3, 7, R); q.poly([(8,61),(17,49),(28,53),(22,64),(2,64)],C); q.rect(12, 56, 12, 5, CD)
-    q.poly([(42,49),(52,52),(60,64),(41,64)],S); q.rect(45, 50, 5, 5, R)
-    q.ellipse(50, 42, 8, 9, W); q.line(53, 47, 58, 35, W); q.rect(56, 31, 5, 7, C); q.px(59, 32, W)
+        q.line(30, 41, 33, 42, B)
+        q.line(33, 42, 36, 40, B)
+    q.rect(19, 38, 2, 1, R); q.rect(43, 38, 2, 1, R)
+    if expression == 7:
+        q.rect(19, 39, 3, 1, R); q.rect(42, 39, 3, 1, R)
+
+    # headset over viewer-right side lock
+    q.rect(47, 28, 5, 8, C)
+    q.px(47, 28, B); q.px(51, 28, B); q.px(47, 35, B); q.px(51, 35, B)
+    q.rect(47, 34, 5, 1, CD); q.rect(51, 29, 1, 5, CD)
+    q.rect(48, 29, 2, 2, W)
+    q.rect(52, 31, 1, 1, C)
+    q.px(53, 31, R)  # standby light: still waiting to hear
+
+    # neck + body
+    for y, x0, x1 in [(45, 28, 35), (46, 28, 35), (47, 28, 35), (48, 29, 35)]:
+        runs(q, y, [(x0, x1, W)])
+    runs(q, 45, [(28, 35, D)])
+    body = [
+        (49, 22, 42, P), (50, 18, 46, P), (51, 15, 49, P), (52, 13, 51, P),
+        (53, 12, 52, P), (54, 12, 53, P), (55, 11, 54, P), (56, 11, 55, P),
+        (57, 10, 56, P), (58, 10, 56, P), (59, 10, 57, P), (60, 10, 57, P),
+        (61, 10, 57, P), (62, 10, 57, P), (63, 10, 57, P),
+    ]
+    for y, x0, x1, c in body:
+        runs(q, y, [(x0, x1, c)])
+    for y, x0, x1 in [(50, 18, 25), (51, 15, 26), (52, 13, 26), (53, 12, 27),
+                      (54, 12, 27), (55, 11, 27), (56, 11, 27), (57, 10, 27),
+                      (58, 10, 27), (59, 10, 27), (60, 10, 27), (61, 10, 27),
+                      (62, 10, 27), (63, 10, 27)]:
+        runs(q, y, [(x0, x1, W)])
+    for y, x0, x1 in [(50, 39, 46), (51, 38, 49), (52, 38, 51), (53, 37, 52),
+                      (54, 37, 53), (55, 37, 54), (56, 36, 55), (57, 36, 56),
+                      (58, 36, 56), (59, 36, 57), (60, 36, 57), (61, 36, 57),
+                      (62, 36, 57), (63, 36, 57)]:
+        runs(q, y, [(x0, x1, W)])
+    for y, x0, x1 in [(49, 29, 35), (50, 28, 36), (51, 28, 36), (52, 28, 36),
+                      (53, 28, 36), (54, 28, 36), (55, 28, 36), (56, 28, 35),
+                      (57, 28, 35), (58, 28, 35), (59, 28, 35), (60, 28, 35),
+                      (61, 28, 35), (62, 28, 35), (63, 28, 35)]:
+        runs(q, y, [(x0, x1, B)])
+    q.line(27, 50, 27, 63, S)
+    for y, x in [(51, 38), (53, 39), (55, 40), (58, 40), (60, 41), (62, 41)]:
+        q.px(x, y, S)
+    for y, x0, x1 in [(52, 47, 51), (53, 46, 52), (54, 46, 53), (55, 46, 54),
+                      (56, 45, 55), (57, 45, 56), (58, 45, 56), (59, 45, 57),
+                      (60, 45, 57), (61, 45, 57), (62, 45, 57), (63, 45, 57)]:
+        runs(q, y, [(x0, x1, C)])
+    q.line(45, 55, 45, 63, CD)
+    for y, x0, x1 in [(60, 50, 57), (61, 48, 57), (62, 47, 57), (63, 46, 57)]:
+        runs(q, y, [(x0, x1, CD)])
+    # LIVE pin (single red focus)
+    q.frame(20, 50, 5, 5, B)
+    q.rect(21, 51, 3, 3, R); q.px(21, 51, W)
+
+    # rim light: ring glow catches the outer hair edge
+    for y in range(1, 50):
+        for x in range(64):
+            if q.get(x, y) == B and q.get(x - 1, y) == T:
+                q.px(x, y, S)
+                break
+    for x in range(10, 54):
+        for y in range(64):
+            c = q.get(x, y)
+            if c == T:
+                continue
+            if c == B:
+                q.px(x, y, S)
+            break
+    for x, y in ((20, 8), (21, 8), (16, 12), (15, 16), (13, 22)):
+        if q.get(x, y) == S:
+            q.px(x, y, CD)
     return q
 
 
 def seek_portrait(expression: int = 0) -> Canvas:
     q = Canvas(64, 64)
-    # Connector-tipped hood corners echo animal ears without becoming literal ears.
-    q.poly([(9,23),(16,4),(27,19)],AD); q.rect(15, 2, 5, 6, A); q.rect(17, 3, 2, 2, W)
-    q.poly([(37,18),(49,4),(55,25)],AD); q.rect(47, 2, 6, 6, A); q.rect(49, 3, 2, 2, W)
-    q.poly([(6,27),(14,13),(31,8),(49,15),(58,29),(54,59),(8,59)],AD)
-    q.poly([(11,27),(20,17),(38,14),(53,25),(49,53),(16,55)],A)
-    q.poly([(21,25),(35,20),(48,27),(47,40),(39,51),(25,48),(18,39)],W)
-    q.poly([(12,24),(33,13),(31,52),(13,53)],B)  # only one expressive eye is volunteered.
-    q.line(33, 29-(expression==2), 43, 28, AD)
-    if expression == 3: q.line(35, 34, 44, 33, B)
-    else: q.ellipse(35, 31, 9, 8, B); q.rect(38, 32, 4, 4, A); q.rect(40, 32, 2, 2, W)
-    if expression == 1: q.line(34, 43, 45, 43, AD); q.px(43, 44, W)
-    elif expression == 2: q.line(34, 44, 45, 40, AD); q.poly([(41,41),(46,40),(43,47)],W)
-    elif expression == 3: q.line(35, 43, 44, 43, AD)
-    else: q.line(34, 43, 45, 41, AD); q.poly([(41,42),(46,41),(43,48)],W); q.px(46, 42, A)
-    q.poly([(8,55),(23,48),(47,49),(57,56),(61,64),(43,64),(39,57),(27,57),(23,64),(3,64)],B)
-    q.poly([(24,49),(33,55),(42,49),(40,64),(27,64)],AD); q.poly([(28,49),(33,54),(37,49)],W)
-    q.poly([(43,51),(56,52),(61,64),(43,64)],AD)
-    q.frame(47, 51, 12, 8, A); q.rect(50, 54, 6, 2, W)
-    q.line(9, 52, 1, 62, A); q.rect(0, 59, 5, 4, AD)
+    ring_arc(q, 32, 30, 29, AD, 190, 250)
+    for a in (20, 60, 320):
+        x = 32 + round(math.cos(math.radians(a)) * 29)
+        y = 30 - round(math.sin(math.radians(a)) * 29)
+        q.rect(x, y, 2, 2, A)
+
+    hood = [
+        (6, 27, 38), (7, 23, 42), (8, 20, 45), (9, 18, 47),
+        (10, 16, 49), (11, 15, 50), (12, 14, 51), (13, 13, 52),
+        (14, 12, 53), (15, 12, 53), (16, 11, 54), (17, 11, 54),
+        (18, 10, 55), (19, 10, 55), (20, 9, 55), (21, 9, 56),
+        (22, 9, 56), (23, 9, 56), (24, 8, 56), (25, 8, 56),
+        (26, 8, 56), (27, 8, 56), (28, 8, 56), (29, 8, 56),
+        (30, 8, 56), (31, 8, 56), (32, 8, 56), (33, 8, 56),
+        (34, 8, 56), (35, 9, 56), (36, 9, 56), (37, 9, 55),
+        (38, 9, 55), (39, 10, 55), (40, 10, 54), (41, 11, 54),
+        (42, 11, 53), (43, 12, 53), (44, 12, 52), (45, 13, 52),
+        (46, 13, 51), (47, 14, 51), (48, 14, 50), (49, 15, 50),
+    ]
+    for y, x0, x1 in hood:
+        runs(q, y, [(x0, x1, AD)])
+    # connector tabs on hood corners (the almost-ears)
+    q.rect(20, 3, 4, 6, AD); q.rect(21, 4, 2, 2, A)
+    q.rect(40, 3, 4, 6, AD); q.rect(41, 4, 2, 2, A)
+
+    shadow = [
+        (13, 18, 47), (14, 17, 48), (15, 16, 49), (16, 16, 49),
+        (17, 15, 50), (18, 15, 50), (19, 14, 50), (20, 14, 50),
+        (21, 14, 50), (22, 14, 50), (23, 14, 50), (24, 14, 50),
+        (25, 14, 50), (26, 14, 50), (27, 14, 50), (28, 14, 50),
+        (29, 14, 50), (30, 14, 50), (31, 14, 50), (32, 14, 50),
+        (33, 14, 50), (34, 14, 50), (35, 14, 50), (36, 15, 50),
+        (37, 15, 49), (38, 15, 49), (39, 16, 49), (40, 16, 48),
+        (41, 17, 48), (42, 18, 47), (43, 20, 46), (44, 22, 44),
+        (45, 25, 41),
+    ]
+    for y, x0, x1 in shadow:
+        runs(q, y, [(x0, x1, B)])
+    face = [
+        (16, 22, 42), (17, 21, 44), (18, 20, 45), (19, 19, 46),
+        (20, 19, 46), (21, 18, 47), (22, 18, 47), (23, 18, 47),
+        (24, 17, 47), (25, 17, 47), (26, 17, 47), (27, 17, 47),
+        (28, 17, 47), (29, 17, 47), (30, 17, 47), (31, 17, 47),
+        (32, 17, 47), (33, 17, 47), (34, 17, 47), (35, 18, 47),
+        (36, 18, 46), (37, 18, 46), (38, 19, 46), (39, 19, 45),
+        (40, 20, 45), (41, 21, 44), (42, 22, 43), (43, 24, 41),
+        (44, 26, 39), (45, 28, 36),
+    ]
+    for y, x0, x1 in face:
+        runs(q, y, [(x0, x1, W)])
+
+    fr = [
+        (13, 15, 50), (14, 14, 51), (15, 14, 51), (16, 14, 50),
+        (17, 14, 50), (18, 14, 49), (19, 14, 47),
+        (20, 14, 33), (21, 14, 32), (22, 14, 32), (23, 14, 31),
+        (24, 14, 31), (25, 15, 31), (26, 15, 31), (27, 15, 30),
+        (28, 15, 30), (29, 16, 30), (30, 16, 30), (31, 16, 29),
+        (32, 16, 29), (33, 17, 28), (34, 17, 27), (35, 17, 26),
+        (36, 18, 24), (37, 18, 22), (38, 19, 20),
+    ]
+    for y, x0, x1 in fr:
+        runs(q, y, [(x0, x1, A)])
+    for y, x0, x1 in [(20, 36, 44), (21, 38, 42), (22, 39, 40), (20, 46, 47), (21, 47, 47)]:
+        runs(q, y, [(x0, x1, A)])
+    for y, x0, x1 in [(33, 17, 28), (34, 17, 27), (35, 17, 26), (36, 18, 24), (37, 18, 22), (38, 19, 20)]:
+        runs(q, y, [(x0, x1, AD)])
+    for y, x in [(29, 30), (30, 30), (31, 29), (32, 29)]:
+        q.px(x, y, AD)
+    runs(q, 12, [(15, 50, A)])
+    runs(q, 11, [(16, 49, AD)])
+
+    ex, ey = 36, 27
+    if expression == 2:                    # archive mode: slit
+        q.rect(ex - 1, ey + 1, 10, 2, B)
+        q.rect(ex + 2, ey + 3, 5, 1, A)
+        q.rect(ex + 2, ey + 4, 5, 1, D)
+    else:
+        wide = expression == 1
+        q.rect(ex, ey, 8, 1, B)
+        if not wide:
+            q.rect(ex + 6, ey - 1, 3, 1, B)
+        q.px(ex - 1, ey + 1, B); q.px(ex + 8, ey + 1, B)
+        h = 5 if wide else 4
+        q.rect(ex, ey + 1, 8, h + 1, W)
+        q.rect(ex + 1, ey + 1, 6, h, A)
+        q.rect(ex + 1, ey + 1, 6, 1, AD)
+        q.rect(ex + 3, ey + 2, 2, 2, B)
+        q.px(ex + 2, ey + 2, W)
+        if wide:
+            q.px(ex + 6, ey + 4, C)
+        q.rect(ex + 2, ey + 2 + h, 5, 1, D)
+        q.px(ex + 7, ey + 2 + h, B)
+
+    if expression == 1:
+        q.rect(29, 40, 8, 1, B); q.rect(30, 41, 6, 2, B)
+        q.rect(31, 41, 4, 1, R)
+        q.px(34, 41, W); q.px(34, 42, W)
+    elif expression == 3:
+        q.rect(30, 41, 6, 1, B)
+    else:
+        q.line(29, 40, 33, 41, B)
+        q.line(33, 41, 36, 40, B)
+        q.px(35, 41, W); q.px(35, 42, W)
+    runs(q, 45, [(30, 35, D)])
+
+    body = [
+        (50, 16, 49, P), (51, 14, 51, P), (52, 13, 52, P), (53, 12, 53, P),
+        (54, 11, 54, P), (55, 11, 55, P), (56, 10, 55, P), (57, 10, 56, P),
+        (58, 9, 56, P), (59, 9, 57, P), (60, 9, 57, P), (61, 9, 57, P),
+        (62, 9, 57, P), (63, 9, 57, P),
+    ]
+    for y, x0, x1, c in body:
+        runs(q, y, [(x0, x1, c)])
+    for y, x0, x1 in [(46, 27, 38), (47, 27, 38), (48, 27, 38), (49, 27, 38)]:
+        runs(q, y, [(x0, x1, B)])
+    q.line(28, 50, 27, 57, A); q.line(37, 50, 38, 57, A)
+    q.px(27, 58, AD); q.px(38, 58, AD)
+    for y, x0, x1 in [(50, 16, 22), (50, 43, 49), (51, 14, 20), (51, 45, 51)]:
+        runs(q, y, [(x0, x1, S)])
+    cable = [(52, 50), (53, 52), (54, 53), (55, 54), (56, 55), (57, 55), (58, 56),
+             (59, 56), (60, 55), (61, 54), (62, 53)]
+    for y, x in cable:
+        q.rect(x, y, 2, 1, A)
+    q.rect(49, 51, 3, 2, AD)
+    q.rect(45, 56, 9, 6, W); q.frame(45, 56, 9, 6, AD)
+    q.rect(47, 58, 5, 1, B); q.rect(47, 60, 3, 1, B)
+    q.px(54, 55, A)
+
+    for y in range(2, 50):
+        for x in range(64):
+            if q.get(x, y) == AD and q.get(x - 1, y) == T:
+                if y % 5 == 0:
+                    q.px(x, y, A)
+                break
     return q
 
 
 def noa_portrait(expression: int = 0) -> Canvas:
     q = Canvas(64, 64)
-    for x in (5, 12, 51, 58): q.line(x, 2+(x&1), x, 61, M if x & 1 else MD)
-    # Narrow chin, blunt hime-cut and long side locks: a calm human face, not a mask.
-    q.poly([(12,17),(18,6),(34,3),(49,9),(54,21),(51,57),(14,57)],B)
-    q.poly([(20,19),(27,12),(41,13),(48,21),(46,38),(39,48),(28,49),(20,40)],W)
-    q.rect(14, 9, 38, 13, B); q.rect(14, 18, 7, 38, B); q.rect(47, 18, 7, 39, B)
-    q.poly([(17,9),(29,5),(26,23),(19,28)],B); q.poly([(31,5),(49,10),(47,24),(40,18),(35,24)],B)
-    q.line(16, 15, 19, 41, M); q.line(49, 15, 47, 43, MD)
-    q.line(21, 27, 29, 26, MD); q.line(37, 26, 45, 27, MD)
+    for x, c in ((2, MD), (6, M), (57, M), (61, MD)):
+        q.line(x, 1, x, 62, c)
+    for x, ys in ((1, (6, 22, 40)), (56, (12, 30, 48))):
+        for y in ys:
+            q.rect(x, y, 4, 3, MD); q.px(x + 1, y + 1, M)
+    for x, y in ((12, 8), (32, 3), (52, 8), (10, 30), (54, 30), (12, 47), (52, 44)):
+        q.frame(x, y, 4, 4, M); q.px(x + 1, y + 1, W)
+
+    for y in range(6, 62):
+        w0 = 14 if y > 12 else 14 + (12 - y)
+        runs(q, y, [(w0, 63 - w0, B)])
+    for y in range(16, 56, 2):
+        q.px(16, y, MD); q.px(47, y, MD)
+
+    face = [
+        (16, 24, 39), (17, 23, 40), (18, 22, 41), (19, 21, 42),
+        (20, 21, 42), (21, 20, 43), (22, 20, 43), (23, 20, 43),
+        (24, 20, 43), (25, 20, 43), (26, 20, 43), (27, 20, 43),
+        (28, 20, 43), (29, 20, 43), (30, 20, 43), (31, 20, 43),
+        (32, 20, 43), (33, 20, 43), (34, 20, 43), (35, 20, 43),
+        (36, 20, 43), (37, 21, 42), (38, 21, 42), (39, 22, 41),
+        (40, 23, 40), (41, 24, 39), (42, 25, 38), (43, 27, 36),
+        (44, 29, 34), (45, 30, 33),
+    ]
+    for y, x0, x1 in face:
+        runs(q, y, [(x0, x1, W)])
+
+    for y, x0, x1 in [(10, 17, 46), (11, 16, 47), (12, 16, 47), (13, 15, 48),
+                      (14, 15, 48), (15, 15, 48), (16, 15, 48), (17, 15, 48),
+                      (18, 15, 48), (19, 15, 48), (20, 15, 48), (21, 15, 48),
+                      (22, 15, 48), (23, 15, 48), (24, 15, 48)]:
+        runs(q, y, [(x0, x1, B)])
+    for y in range(23, 46):
+        runs(q, y, [(15, 18, B), (45, 48, B)])
+    for y in range(46, 50):
+        runs(q, y, [(15, 17, B), (46, 48, B)])
+    runs(q, 12, [(18, 30, S), (33, 45, S)])
+
+    def eye(x0):
+        y0 = 28
+        q.rect(x0, y0, 9, 2, B)
+        q.px(x0 - 1, y0 + 1, B); q.px(x0 + 9, y0 + 1, B)
+        q.rect(x0, y0 + 2, 9, 5, W)
+        q.rect(x0 + 1, y0 + 2, 7, 4, MD)
+        q.rect(x0 + 1, y0 + 5, 7, 1, M)
+        q.rect(x0 + 3, y0 + 3, 3, 3, B)
+        q.px(x0 + 2, y0 + 3, W); q.px(x0 + 6, y0 + 3, W)
+        q.px(x0 + 2, y0 + 5, W); q.px(x0 + 6, y0 + 5, W)
+        if expression == 2:
+            q.px(x0 + 4, y0 + 3, W); q.px(x0 + 4, y0 + 5, W)
+        q.rect(x0 + 3, y0 + 7, 4, 1, MD)
+    eye(21); eye(34)
     if expression == 1:
-        q.line(22, 32, 29, 33, MD); q.line(37, 33, 44, 32, MD)
+        q.rect(21, 30, 9, 1, B); q.rect(34, 30, 9, 1, B)
+    runs(q, 25, [(22, 28, S), (35, 41, S)])
+
+    q.px(31, 38, D)
+    if expression == 1:
+        runs(q, 41, [(28, 35, MD)])
+        q.px(27, 40, MD); q.px(36, 40, MD)
+        q.px(28, 42, MD); q.px(35, 42, MD)
+    elif expression == 2:
+        q.rect(29, 40, 6, 1, MD)
+        q.rect(29, 42, 4, 1, MD)
     else:
-        q.line(22, 31, 29, 31, MD); q.line(37, 31, 44, 31, MD)
-        q.rect(24, 32, 4, 3, MD); q.rect(39, 32, 4, 3, MD); q.px(26, 32, W); q.px(41, 32, W)
-    q.px(23, 31, M); q.px(28, 31, M); q.px(38, 31, M); q.px(43, 31, M)
-    q.px(19, 36, L)
-    if expression == 2: q.line(29, 42, 41, 42, MD)
-    else: q.line(30, 42, 40, 40, MD); q.px(40, 41, MD)
-    q.poly([(11,57),(22,47),(45,47),(55,55),(60,64),(44,64),(40,57),(27,57),(23,64),(6,64)],B)
-    q.poly([(23,48),(33,55),(43,48),(41,64),(25,64)],P); q.line(33, 54, 33, 63, M); q.poly([(27,48),(33,54),(39,48)],W)
-    q.rect(29, 57, 2, 2, M); q.rect(36, 57, 2, 2, M)
-    # A precise white-gloved signal cuts across the otherwise controlled portrait.
-    q.line(52, 62, 48, 46, W); q.ellipse(44, 39, 9, 10, W); q.rect(48, 34, 3, 9, W); q.px(50, 35, S)
-    q.frame(3, 9, 56, 51, M)
+        runs(q, 41, [(29, 34, MD)])
+        q.px(28, 40, MD); q.px(35, 40, MD)
+
+    body = [
+        (50, 20, 43, P), (51, 17, 46, P), (52, 15, 48, P), (53, 14, 49, P),
+        (54, 13, 50, P), (55, 12, 51, P), (56, 12, 51, P), (57, 11, 52, P),
+        (58, 11, 52, P), (59, 11, 52, P), (60, 11, 52, P), (61, 11, 52, P),
+        (62, 11, 52, P), (63, 11, 52, P),
+    ]
+    for y, x0, x1, c in body:
+        runs(q, y, [(x0, x1, c)])
+    for y, x0, x1 in [(46, 29, 34), (47, 29, 34), (48, 29, 34)]:
+        runs(q, y, [(x0, x1, W)])
+    runs(q, 46, [(29, 34, D)])
+    for y, x0, x1 in [(49, 27, 36), (50, 26, 37), (51, 26, 37), (52, 26, 37)]:
+        runs(q, y, [(x0, x1, B)])
+    for y, x0, x1 in [(53, 14, 24), (54, 13, 24), (55, 12, 24), (56, 12, 24),
+                      (57, 11, 24), (58, 11, 24), (59, 11, 24), (60, 11, 24),
+                      (61, 11, 24), (62, 11, 24), (63, 11, 24)]:
+        runs(q, y, [(x0, x1, B)])
+    for y, x0, x1 in [(53, 39, 49), (54, 39, 50), (55, 39, 51), (56, 39, 51),
+                      (57, 39, 52), (58, 39, 52), (59, 39, 52), (60, 39, 52),
+                      (61, 39, 52), (62, 39, 52), (63, 39, 52)]:
+        runs(q, y, [(x0, x1, B)])
+    q.line(31, 53, 31, 63, M); q.line(32, 53, 32, 63, MD)
+    q.rect(30, 53, 4, 2, M); q.px(31, 53, W)
+    q.line(24, 53, 24, 63, S); q.line(39, 53, 39, 63, S)
+
+    for y, x0, x1 in [(54, 42, 47), (55, 41, 49), (56, 41, 50), (57, 41, 51),
+                      (58, 42, 51), (59, 43, 51), (60, 44, 51)]:
+        runs(q, y, [(x0, x1, W)])
+    q.line(45, 56, 45, 59, D); q.line(48, 56, 48, 59, D)
+    q.px(42, 56, D)
+    q.rect(41, 61, 11, 2, B)
+    q.rect(41, 61, 11, 1, M)
     return q
+
+
+# ---------------------------------------------------------------- battlefield
+
+ECHO_BASE = """
+............S...........
+...........SB..........
+........BBBBBBBB........
+......BBBBBBBBBBBB......
+.....BBBBBBBBBBBBBB.....
+....BSSBBBBBBBBBBBB.....
+....BSBBBBBBBBBBBBB.....
+...BBBWWWWWWWWBBBBB.....
+...BBWWWWWWWWWWWWBBB....
+...BBWccWWWWWccWWBCC....
+...BBWCWWWWWWCWWWBCC....
+...BBWCCWWWWWCCWWBCC....
+...BBWCCWWWWWCCWWBB.....
+...BBWWWWWccWWWWWBB.....
+....BWWWWWWWWWWWWB......
+....BWWWWBBBBBBWWWCC....
+...BWWWWWBBBBBBWWWCCC...
+...BWRRWWBBBBBBWWWCCC...
+...BWRRWWBBBBBBWWWCCC...
+...BWWWWWBBBBBBWWWCC....
+....BWWWWBBBBBBWWWCC....
+.....BPPPBBBBBPPPBB.....
+.....BPPB.....BPPB......
+.....BBB.......BBB......
+"""
+
+
+def echo_frame(pose: int) -> Canvas:
+    q = Canvas(24, 24)
+    bob = pose & 1
+    base = grid(ECHO_BASE)
+    for a in (130, 170, 210, 250, 290):
+        x = 11 + round(math.cos(math.radians(a)) * 11)
+        y = 10 - bob - round(math.sin(math.radians(a)) * 10)
+        q.rect(x, y, 2, 2, C if a == 210 else CD)
+    q.blit(base, 0, -bob if bob else 0)
+    q.px(5, 17 - bob, W)
+    if pose == 2:
+        q.px(2, 18, C); q.px(1, 19, CD)
+    if pose == 3:
+        q.rect(19, 12 - bob, 2, 2, W); q.px(22, 9 - bob, C); q.px(22, 8 - bob, C)
+    if pose == 4:
+        q.rect(19, 14 - bob, 3, 2, W); q.rect(22, 12 - bob, 2, 4, C); q.px(23, 11 - bob, W)
+    if pose == 5:
+        q.rect(19, 13 - bob, 2, 3, W); q.rect(21, 12 - bob, 3, 4, C)
+        q.px(22, 13 - bob, W); q.px(23, 16 - bob, CD)
+    if pose == 6:
+        q.rect(5, 15, 3, 3, W); q.px(4, 18, R); q.px(0, 10, R); q.px(23, 13, R)
+    if pose == 7:
+        q.rect(5, 15, 3, 3, W); q.rect(0, 8, 2, 2, R)
+        q.px(3, 22, R); q.px(20, 4, R); q.px(23, 20, R)
+    if pose == 8:
+        q.rect(2, 9, 2, 3, C); q.px(1, 10, W)
+        q.rect(19, 12, 2, 2, W); q.rect(21, 8, 2, 6, C); q.px(22, 9, W)
+    if pose == 9:
+        q.rect(2, 9, 2, 3, C); q.px(1, 10, U); q.px(0, 8, U)
+        q.px(21, 6, C); q.px(23, 10, C)
+    return q
+
+
+SEEK_SHELL_BASE = """
+....aaaaaaaaa...
+...aAAAAAAAAaa..
+..aAAAAAAAAAAa..
+.aAAABBBBBBAAa..
+.aAABBBBBBBBAa..
+.aAABAABBBBBAa..
+.aAABAABBWBBAa..
+.aAABBBBBBBBAa..
+.aAAABBBBBBAAa..
+.aAAAAAAAAAAAa..
+..aAAAAAAAAAa...
+..aaAAAAAAAaa...
+....aWWaaWWa....
+....aWBaaWBa....
+"""
+
+
+def seek_shell_frame(pose: int) -> Canvas:
+    q = Canvas(16, 16)
+    bob = pose & 1
+    q.blit(grid(SEEK_SHELL_BASE), 0, 1 - bob)
+    q.line(0, 14, 3, 12 - bob, A); q.rect(0, 13, 2, 2, AD)
+    if pose == 2:
+        q.line(12, 9 - bob, 15, 5 - bob, A); q.px(15, 4 - bob, C)
+    if pose == 3:
+        q.rect(4, 12, 8, 3, AD); q.rect(6, 13, 4, 1, A); q.px(11, 13, W)
+    return q
+
+
+SEEK_AVATAR_BASE = """
+........aaaaaaa.........
+......aaaAAAAAaa........
+.....aaAAAAAAAAaa.......
+....aaAAAAAAAAAAa.......
+....aAAAAAAAAAAAAa......
+...aaAAAABBBBBAAAa......
+...aAAAABWWWWWWBAa......
+...aAAAABAAWWWWWBa......
+...aAAAABAAWWWWWBa......
+...aAAAABAABBBWWBa......
+...aAAAABAAaBaWWBa......
+...aAAAABAAWWWWWBa......
+...aAAAAABWBWBWBAa......
+....aAAAABWWBWBAa.......
+....aAAAABBBBBAAa.......
+.....aABBBBBBBBAa.......
+....BBBBBBBBBBBBBB......
+...BBPPPPBBBPPPPBB......
+...BPPPPPBBBPPPPPBB.....
+...BPPPPaBBBaPPPPPB.....
+...BPPPPaBBBaPPPPPB.....
+...BPPPPPBBBPPPPPPB.....
+....BPPPPPBPPPPPPB......
+.....BBPPPPPPPPBB.......
+"""
+
+
+def seek_avatar_frame(pose: int) -> Canvas:
+    q = Canvas(24, 24)
+    q.blit(grid(SEEK_AVATAR_BASE), 0, 0)
+    q.px(11, 10, W)
+    q.line(18, 20, 22, 22, A); q.rect(21, 21, 2, 2, AD)
+    if pose & 1:
+        q.rect(11, 9, 3, 1, B); q.rect(11, 10, 3, 1, W)
+    if pose == 2:
+        q.line(18, 17, 23, 12, A); q.rect(21, 10, 3, 3, A); q.px(22, 11, C)
+    if pose == 3:
+        q.frame(17, 16, 6, 5, A); q.rect(19, 18, 3, 1, W)
+    if pose == 4:
+        q.rect(11, 9, 6, 2, B); q.rect(12, 11, 4, 1, A)
+    if pose == 5:
+        q.line(17, 19, 22, 17, A); q.rect(20, 14, 4, 4, AD); q.rect(21, 15, 2, 1, W)
+    if pose == 6:
+        q.frame(0, 0, 8, 7, A); q.rect(2, 2, 4, 3, AD); q.px(3, 3, W)
+    if pose == 7:
+        q.line(4, 18, 0, 14, A); q.rect(0, 12, 2, 2, AD); q.px(1, 13, C)
+    return q
+
+
+NOA_PROXY_BASE = """
+.........BBBBB..........
+.......BBBBBBBBB........
+......BBBBBBBBBBB.......
+......BBBBBBBBBBB.......
+......BBBBBBBBBBB.......
+......BWWWWWWWWWB.......
+......BWWWWWWWWWB.......
+......BWBBBWBBBWB.......
+......BWBmmWBmmWB.......
+......BWWWWWWWWWB.......
+......BWWWmmWWWWB.......
+......BWWWWWWWWWB.......
+.......BWWWWWWWB........
+......BBBBBBBBBBB.......
+.....BBBPPmmPPBBB.......
+.....BBPPPmmPPPBB.......
+.....BBPPPmmPPPWW.......
+.....BBPPPmmPPWWWW......
+.....BBPPPmmPPPWW.......
+......BPPPmmPPPBB.......
+......BPPPmmPPPB........
+......BPPPmmPPPB........
+......BPPPmmPPPB........
+.......BPPmmPPB.........
+"""
+
+
+def noa_proxy_frame(pose: int) -> Canvas:
+    q = Canvas(24, 24)
+    for x in (2, 21):
+        q.line(x, 2, x, 22, MD if pose != 5 else M)
+    q.blit(grid(NOA_PROXY_BASE), 0, 0)
+    q.px(8, 8, W); q.px(13, 8, W)
+    if pose == 1:
+        q.rect(17, 10, 3, 3, W); q.px(18, 9, W); q.line(17, 13, 18, 16, W)
+    if pose == 2:
+        q.frame(4, 1, 17, 22, M)
+    if pose == 3:
+        q.rect(10, 10, 4, 1, MD)
+    if pose == 4:
+        q.line(17, 15, 22, 9, W); q.rect(21, 6, 3, 3, M); q.px(22, 7, W)
+    if pose == 5:
+        for y in range(2, 23, 5):
+            q.rect(0, y, 3, 2, MD); q.rect(21, y + 2, 3, 2, M)
+    return q
+
+
+def noa_frame(stage: int) -> Canvas:
+    q = Canvas(48, 64)
+    step = (9, 7, 5)[stage]
+    for x in range(4, 46, step):
+        q.line(x, 2, x, 61, MD if x % 2 else M)
+    count = (6, 14, 24)[stage]
+    for i in range(count):
+        x = 2 + (i * 11) % 42
+        y = 3 + (i * 17) % 56
+        q.frame(x, y, 4, 4, M if i % 3 else MD)
+        q.px(x + 1, y + 1, W if i % 4 else MD)
+    for y in range(6, 58):
+        w0 = 13 if y > 10 else 13 + (10 - y)
+        runs(q, y, [(w0, 45 - w0, B)])
+    face = [(12, 19, 28), (13, 18, 29), (14, 18, 29), (15, 18, 29), (16, 18, 29),
+            (17, 18, 29), (18, 18, 29), (19, 18, 29), (20, 19, 28), (21, 20, 27),
+            (22, 21, 26)]
+    for y, x0, x1 in face:
+        runs(q, y, [(x0, x1, W)])
+    for y, x0, x1 in [(8, 16, 31), (9, 15, 32), (10, 15, 32), (11, 15, 32)]:
+        runs(q, y, [(x0, x1, B)])
+    runs(q, 12, [(15, 17, B), (30, 32, B)])
+    for y in range(12, 24):
+        runs(q, y, [(14, 16, B), (31, 33, B)])
+    for x0 in (18, 25):
+        q.rect(x0, 14, 4, 1, B)
+        q.rect(x0, 15, 4, 2, MD)
+        q.px(x0 + 1, 15, W); q.px(x0 + 2, 16, W)
+    q.rect(22, 19, 3, 1, MD)
+    for y in range(24, 58):
+        runs(q, y, [(16, 31, B)])
+    for y in range(26, 58):
+        runs(q, y, [(23, 24, M)])
+    q.rect(21, 25, 6, 2, M); q.px(23, 25, W)
+    for y, x0, x1 in [(26, 13, 34), (27, 12, 35), (28, 11, 36), (29, 11, 36), (30, 11, 36)]:
+        runs(q, y, [(x0, x1, B)])
+    for y, x0, x1 in [(34, 29, 33), (35, 28, 34), (36, 28, 35), (37, 28, 35), (38, 29, 35), (39, 30, 34)]:
+        runs(q, y, [(x0, x1, W)])
+    q.px(30, 36, D); q.px(32, 36, D)
+    q.rect(28, 40, 8, 1, M)
+    if stage >= 1:
+        q.frame(8, 3, 32, 58, M)
+    if stage == 2:
+        for y in range(46, 63, 4):
+            for x in range(1, 46, 5):
+                q.rect(x, y, 3, 2, MD)
+        for x0 in (18, 25):
+            q.px(x0 + 2, 15, W); q.px(x0 + 2, 16, W)
+    return q
+
+
+ENEMY_CHAT = """
+.R..R......R..R.
+R.RR.R....R.RR.R
+.RRRRR....RRRRR.
+.RRWWWWWWWWWWRR.
+.RWWWWWWWWWWWWR.
+RRWWBBWWWWBBWWRR
+.RWWBBWWWWBBWWR.
+.RWWWWWWWWWWWWR.
+.RWWWWWWWWWWWWR.
+.RRWWWBBBBWWWRR.
+..RWWWWBBWWWWR..
+..RRWWWWWWWWRR..
+...RRRRRRRRRR...
+....R......R....
+"""
+
+ENEMY_AD = """
+RRRRRRRRRRRRRRRR
+RPPPPPPPPPPPPWWR
+RPPPPPPPPPPPPWWR
+RRRRRRRRRRRRRRRR
+RWWWWWWWWWWWWWWR
+RWWBBWWWWWWBBWWR
+RWWBBWWWWWWBBWWR
+RWWWWWWWWWWWWWWR
+RWWWWRRRRRRWWWWR
+RWWWWWWWWWWWWWWR
+RRRRRRRRRRRRRRRR
+.....RR..RR.....
+....RR....RR....
+"""
+
+ENEMY_GIFT = """
+....MM....MM....
+...MMMM..MMMM...
+...MMMMMMMMMM...
+....MMMMMMMM....
+.....PPRRPP.....
+....PPPRRPPP....
+...PPPPRRPPPP...
+...RRRRRRRRRR...
+...PPPPRRPPPP...
+...PWWPRRPWWP...
+...PWBPRRPBWP...
+...PPPPRRPPPP...
+...PPPPRRPPPP...
+....PPPPPPPP....
+"""
+
+ENEMY_MOD = """
+...MMMMMMMMMM...
+..MMMMMMMMMMMM..
+..MMBBBBBBBBMM..
+..MBBWWWWWWBBM..
+..MBWWWWWWWWBM..
+..MBWVVVVVVWBM..
+..MBWVVVVVVWBM..
+..MBWWWWWWWWBM..
+..MBWWmmmmWWBM..
+..MBBWWWWWWBBM..
+..MMBBBBBBBBMM..
+...MMMMMMMMMM...
+.....M....M.....
+"""
+
+ENEMY_WORM = """
+....aa....aa....
+...aWa....aWa...
+...aaaaaaaaaa...
+..aaAAAAAAAAaa..
+..aAAAAAAAAAAa..
+..aABBAAAABBAa..
+..aABWAAAABWAa..
+..aAAAAAAAAAAa..
+..aAAAaaaaAAAa..
+..aaAAAAAAAAaa..
+...aaAAAAAAaa...
+....aaaaaaaa....
+..aa...WWa......
+.aa....WBa......
+"""
 
 
 def enemy(kind: int, pose: int = 0) -> Canvas:
     q = Canvas(16, 16)
     bob = pose & 1
-    if kind == 0:  # CHAT: twin-tail comment imp; the missing hairpin is a tiny question mark.
-        q.poly([(1,6-bob),(2,2-bob),(5,4-bob),(8,1-bob),(11,4-bob),(14,2-bob),(15,7-bob),(13,14),(3,14)],R)
-        q.poly([(4,5-bob),(8,3-bob),(12,5-bob),(12,10),(8,13),(4,10)],W)
-        q.rect(4,6-bob,3,3,B); q.rect(9,6-bob,3,3,B); q.px(5,7-bob,W); q.px(10,7-bob,W)
-        q.line(6,11,11,10,B); q.px(10,11,W); q.px(14,1-bob,C)
-    elif kind == 1:  # AD: too-polite sales clerk trapped inside a closing pop-up.
-        q.frame(1,1-bob,14,14,R); q.rect(2,2-bob,12,2,P); q.px(12,2-bob,W)
-        q.poly([(4,5-bob),(8,3-bob),(12,6-bob),(11,12),(5,12),(3,9-bob)],W); q.rect(4,4-bob,8,3,B)
-        q.rect(5,7-bob,2,2,B); q.rect(9,7-bob,2,2,B); q.px(6,7-bob,W); q.line(6,10,10,10,R)
-        q.rect(3 if pose else 11,13,2,2,R)
-    elif kind == 2:  # GIFT: ribbon idol; the box smiles only while somebody is watching.
-        q.ellipse(0,3-bob,6,7,M); q.ellipse(10,3-bob,6,7,M); q.line(4,7-bob,8,2-bob,W); q.line(12,7-bob,8,2-bob,W)
-        q.rect(6,6-bob,5,7,P); q.rect(7,5-bob,3,9,R); q.rect(5,8-bob,7,2,R)
-        q.rect(6,9-bob,2,2,W); q.rect(10,9-bob,2,2,W); q.px(7,10-bob,B); q.px(10,10-bob,B); q.px(8,12-bob,W)
-    elif kind == 3:  # MOD: hime-cut moderator; one eye is hidden by her own censor strip.
-        q.poly([(3,2-bob),(7,0-bob),(12,2-bob),(14,6-bob),(13,15),(3,15),(1,11),(2,4-bob)],M)
-        q.poly([(4,5-bob),(8,3-bob),(12,5-bob),(12,11),(8,14),(4,10)],W); q.rect(3,2-bob,10,4,B); q.rect(3,4-bob,3,9,B); q.rect(11,4-bob,3,10,B)
-        q.rect(4,7-bob,8,2,V); q.px(9,7-bob,M); q.line(6,11,10,11,MD); q.px(12,13,L)
-    else:  # WORM: archive scavenger; connector ears and a date tag hint at Seek's discarded kin.
-        q.line(0,14,5,12,A); q.poly([(3,7-bob),(5,2-bob),(8,5-bob),(12,2-bob),(15,8-bob),(14,15),(4,15)],AD)
-        q.poly([(5,7-bob),(9,5-bob),(13,8-bob),(12,12),(7,13),(4,10-bob)],A); q.rect(6,6-bob,6,3,B)
-        q.rect(7,8-bob,2,2,W); q.rect(10,8-bob,2,2,W); q.px(8,9-bob,B); q.px(10,9-bob,B); q.rect(10,12,3,2,W)
+    src = (ENEMY_CHAT, ENEMY_AD, ENEMY_GIFT, ENEMY_MOD, ENEMY_WORM)[kind]
+    q.blit(grid(src), 0, 1 - bob)
+    if kind == 4:
+        q.line(0, 14, 3, 13 - bob, A)
     return q
 
 
 def icon(kind: int) -> Canvas:
     q = Canvas(16, 16); c = (C, U, C, A, C, W, C, C, U, C, D, A, R)[kind]
-    base = AD if kind in (3,11) else MD if kind == 10 else P
-    q.poly([(4,1),(12,1),(15,4),(15,12),(12,15),(4,15),(1,12),(1,4)],base); q.rect(4,2,8,1,S); q.px(13,4,W)
-    if kind == 0: q.frame(3,6,10,6,c); q.rect(1,8,3,2,c); q.rect(12,8,3,2,c); q.rect(6,8,4,2,W)
-    elif kind == 1: q.rect(3,9,2,3,c); q.rect(7,6,2,6,c); q.rect(11,3,2,9,c); q.px(12,3,W)
-    elif kind == 2: q.frame(3,4,7,8,c); q.frame(7,6,6,7,c); q.px(5,6,W)
-    elif kind == 3: q.rect(3,9,10,4,c); q.rect(4,5,8,4,A); q.line(5,4,11,4,W); q.rect(6,10,4,1,W)
-    elif kind == 4: q.poly([(8,3),(13,5),(12,11),(8,14),(4,11),(3,5)],c); q.line(6,8,8,10,W); q.line(8,10,11,6,W)
-    elif kind == 5: q.line(4,5,11,5,c); q.line(11,5,13,8,c); q.line(13,8,10,11,c); q.line(10,11,5,11,c); q.px(4,10,W); q.px(11,4,W)
-    elif kind == 6: q.frame(3,7,6,6,c); q.frame(6,5,6,6,c); q.frame(9,3,4,6,c); q.px(11,4,W)
-    elif kind == 7: q.ellipse(4,3,8,8,c); q.ellipse(6,5,4,4,B); q.px(8,6,W); q.line(8,10,8,14,c)
-    elif kind == 8: q.poly([(8,2),(4,9),(7,9),(5,14),(12,7),(9,7),(12,2)],c); q.px(9,3,W)
-    elif kind == 9: q.frame(3,3,10,10,c); q.line(4,9,7,12,W); q.line(7,12,12,6,W); q.px(5,4,W)
-    elif kind == 10: q.poly([(3,4),(13,4),(13,11),(8,11),(5,14),(5,11),(3,10)],c); q.rect(5,6,2,2,W); q.rect(10,6,2,2,W)
-    elif kind == 11: q.rect(6,3,4,8,c); q.ellipse(5,8,6,5,c); q.line(3,12,13,12,A); q.px(8,4,W)
-    else: q.line(3,3,12,12,c); q.line(12,3,3,12,c); q.rect(7,2,2,12,W); q.rect(2,7,12,2,R)
+    base = AD if kind in (3, 11) else MD if kind == 10 else P
+    q.rect(3, 1, 10, 14, base)
+    q.rect(1, 3, 14, 10, base)
+    q.rect(2, 2, 2, 2, base); q.rect(12, 2, 2, 2, base)
+    q.rect(2, 12, 2, 2, base); q.rect(12, 12, 2, 2, base)
+    q.rect(4, 2, 8, 1, S); q.px(13, 4, W)
+    if kind == 0: q.frame(3, 6, 10, 6, c); q.rect(1, 8, 3, 2, c); q.rect(12, 8, 3, 2, c); q.rect(6, 8, 4, 2, W)
+    elif kind == 1: q.rect(3, 9, 2, 3, c); q.rect(7, 6, 2, 6, c); q.rect(11, 3, 2, 9, c); q.px(12, 3, W)
+    elif kind == 2: q.frame(3, 4, 7, 8, c); q.frame(7, 6, 6, 7, c); q.px(5, 6, W)
+    elif kind == 3: q.rect(3, 9, 10, 4, c); q.rect(4, 5, 8, 4, A); q.line(5, 4, 11, 4, W); q.rect(6, 10, 4, 1, W)
+    elif kind == 4:
+        q.rect(5, 3, 6, 11, c); q.rect(3, 5, 10, 7, c)
+        q.line(6, 8, 8, 10, W); q.line(8, 10, 11, 6, W)
+    elif kind == 5: q.line(4, 5, 11, 5, c); q.line(11, 5, 13, 8, c); q.line(13, 8, 10, 11, c); q.line(10, 11, 5, 11, c); q.px(4, 10, W); q.px(11, 4, W)
+    elif kind == 6: q.frame(3, 7, 6, 6, c); q.frame(6, 5, 6, 6, c); q.frame(9, 3, 4, 6, c); q.px(11, 4, W)
+    elif kind == 7:
+        q.rect(5, 3, 6, 8, c); q.rect(4, 4, 8, 6, c)
+        q.rect(6, 5, 4, 4, B); q.px(8, 6, W); q.line(8, 10, 8, 14, c)
+    elif kind == 8:
+        q.line(8, 2, 4, 9, c); q.rect(4, 9, 4, 1, c)
+        q.line(7, 9, 5, 14, c); q.line(5, 14, 12, 7, c)
+        q.rect(9, 7, 3, 1, c); q.line(12, 7, 12, 2, c); q.px(9, 3, W)
+    elif kind == 9: q.frame(3, 3, 10, 10, c); q.line(4, 9, 7, 12, W); q.line(7, 12, 12, 6, W); q.px(5, 4, W)
+    elif kind == 10:
+        q.rect(3, 4, 11, 7, c); q.rect(5, 11, 3, 3, c)
+        q.rect(5, 6, 2, 2, W); q.rect(10, 6, 2, 2, W)
+    elif kind == 11: q.rect(6, 3, 4, 8, c); q.rect(5, 8, 6, 4, c); q.line(3, 12, 13, 12, A); q.px(8, 4, W)
+    else: q.line(3, 3, 12, 12, c); q.line(12, 3, 3, 12, c); q.rect(7, 2, 2, 12, W); q.rect(2, 7, 12, 2, R)
     return q
+
+
+# ---------------------------------------------------------------- keyart
+
+def big_ring(cv, cx, cy, rx, ry, c_dark, lit=(), gap=(15, 80), n=64, lit_c=None):
+    for i in range(n):
+        a = i * 360 / n
+        if gap[0] <= a <= gap[1]:
+            continue
+        x = cx + round(math.cos(math.radians(a)) * rx)
+        y = cy - round(math.sin(math.radians(a)) * ry)
+        cv.rect(x, y, 2, 2, (lit_c or c_dark) if i in lit else c_dark)
+
+
+def era_edges(q, left=True, right=True):
+    if left:
+        for i, w in enumerate((16, 11, 14, 8)):
+            q.rect(3, 8 + i * 6, w, 1, S)
+            q.px(2, 8 + i * 6, D)
+        q.frame(3, 38, 14, 10, S); q.rect(5, 41, 8, 1, D); q.rect(5, 44, 6, 1, S)
+    if right:
+        for i in range(3):
+            q.frame(176, 10 + i * 14, 12, 10, S)
+            q.rect(178, 12 + i * 14, 8, 4, P)
+            q.px(178, 18 + i * 14, D)
+
+
+def echo_hand(q, x, y):
+    for i, (x0, x1) in enumerate(((0, 8), (1, 10), (2, 12), (4, 13), (6, 14))):
+        runs(q, y + i, [(x + x0, x + x1, C)])
+    q.rect(x + 2, y + 4, 3, 1, CD)
+    for i, (x0, x1) in enumerate(((10, 16), (9, 18), (9, 19), (10, 18), (11, 16))):
+        runs(q, y + i, [(x + x0, x + x1, W)])
+    runs(q, y - 1, [(x + 13, x + 16, W)])
+    runs(q, y + 1, [(x + 19, x + 21, W)])
+    runs(q, y + 2, [(x + 19, x + 22, W)])
+    runs(q, y + 5, [(x + 12, x + 15, W)])
+    q.px(x + 11, y - 1, D)
 
 
 def keyart(kind: int) -> Canvas:
     q = Canvas(192, 108, V)
-    q.rect(5, 7, 182, 94, B); q.frame(5, 7, 182, 94, P)
-    # Interface fragments frame the incident instead of filling the focal area.
-    for y, w in ((15,24),(22,14),(84,20),(91,32)): q.rect(10, y, w, 1, S)
-    for x in (168, 176, 183): q.line(x, 11, x, 96, MD)
+    q.rect(0, 0, 192, 3, B); q.rect(0, 105, 192, 3, B)
 
-    if kind == 0:  # canonical ensemble: Echo leads, Noa observes, Seek tugs at the unanswered gap.
-        q.poly([(7,9),(127,9),(113,99),(7,99)],P); q.poly([(129,9),(185,9),(185,99),(119,99)],B)
-        q.frame(10, 12, 108, 83, CD); q.frame(128, 16, 54, 70, M)
-        ring(q, 66, 49, 50, 40, C, (4, 9), 44)
-        q.blit(echo_portrait(), 34, 14)
-        # Foreshortened sleeve and open palm break the frame toward the viewer.
-        q.poly([(40,65),(61,59),(82,75),(66,99),(25,99),(19,88)],C); q.poly([(53,67),(68,63),(81,74),(69,88),(49,83)],W)
-        q.rect(60,64,5,13,W); q.rect(66,62,4,14,W); q.rect(72,65,4,12,W); q.px(77,73,C)
-        q.blit(resized(noa_portrait(), 48, 48), 133, 22)
-        for x in (136,148,160,172): q.line(x,18,x,91,MD if x&8 else M)
-        # Seek is only an eye, date-tag and cable: enough kinship to invite speculation.
-        q.poly([(10,82),(18,73),(36,73),(46,81),(38,92),(18,93)],AD)
-        q.ellipse(21,77,13,10,B); q.ellipse(25,79,5,6,A); q.px(28,79,W); q.rect(11,88,9,4,W)
-        q.line(35,89,58,101,A); q.line(58,101,110,101,A); q.line(110,101,115,57,A)
-        q.rect(113,52,4,8,V); q.px(115,55,L)  # one unexplained answer remains outside both owners.
-    elif kind == 1:  # waiting: the missing audience occupies the dark left half.
-        q.rect(12, 26, 48, 55, V); q.frame(19, 36, 25, 31, S)
-        q.blit(echo_portrait(), 78, 20); ring(q, 110, 51, 43, 39, C, (4, 10), 44)
-        q.line(85, 69, 56, 60, W); q.ellipse(51, 56, 7, 7, W); q.line(49, 60, 37, 70, C)
-        q.px(34, 72, C)  # the answer never reaches a drawn listener.
-    elif kind == 2:  # first live: Seek discovers a cyan reflection inside an amber archive.
-        q.blit(seek_portrait(), 74, 18); q.frame(29, 28, 35, 45, A); q.frame(35, 35, 23, 27, AD)
-        q.ellipse(40, 42, 12, 12, C); q.px(45, 46, W)
-        q.line(31, 75, 72, 68, A); q.line(31, 75, 15, 91, A); q.rect(13, 89, 5, 4, AD)
-        for x, y in ((141,30),(151,43),(144,58),(157,70)): q.frame(x, y, 18, 8, A)
-    elif kind == 3:  # audience: Noa keeps smiling while profiles multiply below.
-        q.blit(noa_portrait(), 91, 17); q.frame(83, 13, 80, 80, M)
-        for y in range(72, 98, 7):
-            for x in range(15, 82, 9): q.rect(x, y, 5, 3, MD if (x+y)&1 else M)
-        q.line(138, 64, 82, 76, W); q.ellipse(78, 73, 7, 7, W)
-        q.rect(29, 37, 32, 2, M); q.rect(29, 43, 20, 2, M)
-    elif kind == 4:  # open channel: intimacy in front, administrative gaze behind.
-        ring(q, 95, 55, 75, 48, A, (12, 15), 64); ring(q, 95, 55, 62, 40, M, (23, 26), 64)
-        q.blit(echo_portrait(), 30, 25); q.blit(noa_portrait(), 112, 22)
-        q.line(91, 58, 118, 54, C); q.rect(91, 56, 3, 3, R)
-        q.rect(102, 19, 1, 70, MD)
-    else:  # no carrier: an abandoned microphone leaves room for the absent speaker.
-        q.rect(17, 22, 57, 1, C); q.rect(17, 28, 34, 1, CD)
-        q.ellipse(76, 34, 23, 29, P); q.ellipse(81, 39, 13, 18, V); q.rect(86, 60, 3, 17, W)
-        q.line(87, 76, 68, 91, W); q.line(87, 76, 109, 91, W)
-        q.line(87, 49, 129, 58, C); q.px(132, 59, C)
-        for y in (28,43,58,73): q.frame(145, y, 10, 8, M)
-        q.frame(139, 22, 24, 68, MD); q.rect(95, 88, 2, 2, L)
-    if kind not in (0, 1, 4): q.rect(95, 9, 2, 2, R)
+    if kind == 0:  # ENSEMBLE: Echo reaches out; Seek pulls; NOA has already answered.
+        era_edges(q)
+        q.blit(noa_portrait(0), 142, 8)
+        for x in (140, 148, 158, 168, 178, 186):
+            q.line(x, 4, x, 103, MD if x % 16 else M)
+        for y in range(84, 104, 5):
+            for x in range(128, 190, 7):
+                q.rect(x, y, 4, 2, MD)
+        q.rect(4, 78, 40, 26, B)
+        for y, x0, x1 in [(80, 10, 34), (81, 8, 37), (82, 7, 39), (88, 7, 39), (89, 9, 36), (90, 12, 32)]:
+            runs(q, y, [(x0, x1, S)])
+        q.rect(14, 83, 12, 5, B)
+        q.rect(17, 83, 6, 5, A); q.rect(19, 84, 3, 3, B); q.px(18, 84, W)
+        q.rect(30, 79, 2, 2, AD); q.rect(35, 90, 2, 2, AD)
+        cable = [(6, 96), (14, 97), (24, 98), (36, 98), (50, 97), (64, 95), (78, 92),
+                 (90, 88), (100, 84), (108, 80)]
+        for i in range(len(cable) - 1):
+            q.line(cable[i][0], cable[i][1], cable[i + 1][0], cable[i + 1][1], A)
+        q.rect(107, 76, 3, 3, AD)
+        q.rect(10, 99, 8, 5, W); q.frame(10, 99, 8, 5, AD); q.rect(12, 101, 4, 1, B)
+        big_ring(q, 62, 50, 44, 40, CD, lit={34, 35, 40, 46, 52}, gap=(10, 70), lit_c=C)
+        q.blit(echo_portrait(0), 30, 16)
+        echo_hand(q, 92, 68)
+        q.rect(118, 70, 4, 4, C); q.rect(119, 71, 2, 2, W)
+        q.px(115, 74, CD); q.px(124, 68, CD)
+        q.rect(132, 56, 4, 4, M); q.rect(133, 57, 2, 2, MD)
+    elif kind == 1:  # ECHO WAITING: the audience that is not there.
+        for y in range(20, 96, 9):
+            for x in range(8, 78, 11):
+                q.frame(x, y, 7, 5, S)
+        q.rect(30, 8, 34, 1, S)
+        big_ring(q, 128, 52, 46, 42, CD, lit={38}, gap=(10, 70), lit_c=C)
+        q.blit(echo_portrait(0), 96, 18)
+        q.rect(88, 70, 3, 3, C)
+        for i, x in enumerate((80, 71, 61, 50)):
+            q.px(x, 71 + i, CD)
+        q.px(38, 78, C)
+    elif kind == 2:  # SEEK FIRST LIVE x3: same clip, different dates.
+        q.blit(seek_portrait(0), 116, 12)
+        for i, (x, y) in enumerate(((22, 18), (30, 42), (22, 66))):
+            q.frame(x, y, 30, 20, AD)
+            q.rect(x + 2, y + 2, 26, 16, B)
+            q.rect(x + 4, y + 4, 10, 8, CD)
+            q.rect(x + 6, y + 6, 4, 3, C)
+            q.rect(x + 17, y + 5, 9, 1, A)
+            q.rect(x + 17, y + 8, 6 + i, 1, D)
+            q.rect(x + 17, y + 14, 8, 3, W); q.rect(x + 18, y + 15, 5, 1, B)
+        q.line(120, 60, 84, 30, A); q.line(84, 30, 54, 26, A)
+        q.line(120, 66, 88, 52, A); q.line(88, 52, 62, 50, A)
+        q.line(120, 72, 86, 76, A); q.line(86, 76, 54, 74, A)
+        q.rect(52, 24, 3, 3, AD); q.rect(60, 48, 3, 3, AD); q.rect(52, 72, 3, 3, AD)
+    elif kind == 3:  # NOA PERFECT AUDIENCE: the wall is even; she is beautiful.
+        for yy in range(4):
+            for xx in range(12):
+                x, y = 8 + xx * 15, 8 + yy * 15
+                q.frame(x, y, 6, 6, MD)
+                q.px(x + 2, y + 2, S)
+        q.blit(noa_portrait(1), 64, 14)
+        for y in range(84, 104, 5):
+            q.rect(10, y, 5, 2, D)
+            q.rect(18, y, 44, 2, MD)
+            q.rect(130, y, 5, 2, D)
+            q.rect(138, y, 44, 2, MD)
+        q.rect(88, 86, 16, 2, M); q.rect(88, 92, 16, 2, M)
+    elif kind == 4:  # OPEN CHANNEL: three colors own the 64 ring.
+        n = 64
+        for i in range(n):
+            a = i * 360 / n
+            x = 96 + round(math.cos(math.radians(a)) * 78)
+            y = 54 - round(math.sin(math.radians(a)) * 44)
+            c = C if i % 8 < 5 else (A if i % 8 < 7 else M)
+            q.rect(x, y, 2, 2, c)
+        for i in range(n):
+            a = i * 360 / n
+            x = 96 + round(math.cos(math.radians(a)) * 60)
+            y = 54 - round(math.sin(math.radians(a)) * 33)
+            if i % 4 == 0:
+                q.rect(x, y, 2, 2, CD)
+        for i, x in enumerate(range(28, 168, 18)):
+            h = (10, 16, 8, 20, 12, 18, 9, 15)[i]
+            q.rect(x, 84 - h, 4, h, CD if i % 3 else C)
+            q.px(x + 1, 84 - h - 2, C)
+        q.blit(echo_frame(8), 72, 32, scale=2)
+        q.rect(64, 82, 64, 1, S)
+        for x, y in ((52, 30), (140, 26), (36, 60), (156, 58)):
+            q.rect(x, y, 3, 3, C); q.px(x + 4, y - 1, CD)
+    else:  # NO CARRIER: three residues on a dead monitor.
+        q.frame(30, 14, 132, 80, S)
+        q.rect(32, 16, 128, 76, B)
+        for a in (140, 160, 180, 200, 220, 240):
+            x = 96 + round(math.cos(math.radians(a)) * 26)
+            y = 52 - round(math.sin(math.radians(a)) * 22)
+            q.rect(x, y, 2, 2, CD)
+        q.rect(96, 30, 2, 2, C)
+        q.rect(34, 52, 124, 1, P)
+        q.rect(70, 66, 10, 6, W); q.frame(70, 66, 10, 6, AD); q.rect(72, 68, 6, 1, B)
+        q.rect(118, 44, 3, 3, M)
+        q.px(96, 88, L)
+        q.rect(40, 22, 20, 1, CD); q.rect(40, 26, 12, 1, S)
     return q
 
+
+# ---------------------------------------------------------------- output
 
 def png(path: Path, cv: Canvas, scale: int = 1) -> None:
     w, h = cv.w * scale, cv.h * scale
@@ -446,14 +1106,17 @@ def capsule(source: Canvas, w: int, h: int, vertical: bool = False) -> Canvas:
     if vertical:
         q.blit(resized(source, w, max(1, h*5//9)), 0, 0)
         q.rect(0, h*5//9-2, w, h-h*5//9+2, B)
-        hero = resized(echo_portrait(1), w*2//5, w*2//5)
+        hero = resized(echo_portrait(0), w*2//5, w*2//5)
         q.blit(hero, w//12, h*4//9)
         mark = resized(logo(), w*4//5, max(12, h//11)); q.blit(mark, w//10, h*4//5)
         q.rect(w//10, h*9//10, w*3//5, max(2,h//150), C); q.rect(w*3//4,h*9//10,max(3,w//90),max(3,w//90),R)
     else:
         q.blit(resized(source, w, h), 0, 0)
-        panel = max(34, w*9//20); q.poly([(0,0),(panel,0),(panel-w//12,h),(0,h)],B)
-        hero_size = h*4//5; q.blit(resized(echo_portrait(1), hero_size, hero_size), panel-h//8, h//10)
+        panel = max(34, w*9//20); q.rect(0, 0, panel, h, B)
+        for yy in range(h):
+            x1 = panel - yy * (w // 12) // max(1, h)
+            q.rect(x1, yy, 1, 1, B)
+        hero_size = h*4//5; q.blit(resized(echo_portrait(0), hero_size, hero_size), panel-h//8, h//10)
         mark = resized(logo(), min(panel-6, w*2//5), max(8,h//3)); q.blit(mark, max(3,w//40), max(2,h//8))
         q.rect(max(3,w//40), h*4//5, max(12,panel*2//3), max(1,h//80), C)
     q.frame(0,0,w,h,P)
@@ -477,20 +1140,20 @@ def validate(echo: Canvas, seek: Canvas, seek_shell: Canvas, seek_avatar: Canvas
     assert (foes.w, foes.h) == (160, 16) and (cards.w, cards.h) == (208, 16)
     assert all((q.w, q.h) == (192, 108) for q in keys)
     assert all(v < 16 for cv in (echo, seek, seek_shell, seek_avatar, noa, noa_proxy, portraits, expressions, foes, cards, *keys) for v in cv.p)
-    # Identity anchors: every Echo frame has a red LIVE pin; each Noa stage has one white glove.
-    for i in range(10): assert sum(echo.p[y*echo.w+i*24:y*echo.w+(i+1)*24].count(R) for y in range(24)) >= 4
+    # Identity anchors: every Echo frame keeps a red LIVE pin; each Noa stage keeps the white glove.
+    for i in range(10): assert sum(echo.p[y*echo.w+i*24:y*echo.w+(i+1)*24].count(R) for y in range(24)) >= 3
     for i in range(3): assert sum(noa.p[y*noa.w+i*48:y*noa.w+(i+1)*48].count(W) for y in range(64)) >= 30
     for i in range(4): assert any(seek_shell.p[y*seek_shell.w+i*16] in (AD, A) for y in range(16))
     for i in range(6): assert sum(noa_proxy.p[y*noa_proxy.w+i*24:y*noa_proxy.w+(i+1)*24].count(W) for y in range(24)) >= 8
     assert len({bytes(enemy(i, p).p) for i in range(5) for p in range(2)}) == 10
     assert len({bytes(icon(i).p) for i in range(13)}) == 13
-    # Marketing originals must contain meaningful transparency-free framing and no out-of-palette pixels.
+    # Marketing originals must be fully painted (no transparency holes).
     assert all(q.p.count(T) == 0 for q in keys)
 
 
 def build() -> None:
     echo = sheet([echo_frame(i) for i in range(10)])
-    seek = sheet([seek_frame(i) for i in range(4)])
+    seek = sheet([seek_avatar_frame(i) for i in range(4)])
     seek_shell = sheet([seek_shell_frame(i) for i in range(4)])
     seek_avatar = sheet([seek_avatar_frame(i) for i in range(8)])
     noa = sheet([noa_frame(i) for i in range(3)])

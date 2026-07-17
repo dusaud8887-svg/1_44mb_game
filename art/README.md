@@ -9,11 +9,11 @@
 
 ## 출처 메타데이터
 
-- artist: Codex 수작업 픽셀 설계 + stdlib 생성기
-- concept_sources: `docs/06_CHARACTERS.md`, `40_ART_AUDIO_TEXT.md`, `41_PIXEL_ART.md`, `42_VISUAL_HOOK.md`, `45_UI_UX.md`
-- ai_assistance: 조사·프롬프트 구조·구도/명암 아이데이션만 사용, 생성 이미지 픽셀은 사용하지 않음
-- manual_redraw: true — 모든 최종 픽셀은 `tools/build_art.py`의 정수 좌표·16색 클러스터로 재작성
+- artist: Claude 수작업 픽셀 설계(행 단위 런·문자 그리드) + stdlib 생성기
+- concept_sources: `docs/06_CHARACTERS.md`, `40_ART_AUDIO_TEXT.md`, `41_PIXEL_ART.md`, `42_VISUAL_HOOK.md`, `45_UI_UX.md`, `43_ART_COMPETITIVE_RESEARCH.md` §11
+- ai_assistance: 조사·구도/명암 아이데이션·비전 검수 루프에 사용, 생성 이미지 픽셀은 사용하지 않음
+- manual_redraw: true — 캐릭터는 전부 행 단위 런/그리드 수작업, 프리미티브는 링·베일 등 기계 요소만
 - source_file: `tools/build_art.py`
-- approved_at: 2026-07-17, 1×/4×/8× 비전 검수 + Windows 실게임 타이틀/전투/OPEN CHANNEL/결과 검수
+- approved_at: 2026-07-17 V3, 1×/4×/8× 비전 검수(초상 3~5회 반복 수렴), art.inc 계약 불변 + gcc 신택스 체크
 
 런타임은 PNG 디코더나 시스템 글꼴을 포함하지 않는다. 빌드 때 생성한 4bpp 인덱스 배열만 사용한다.
