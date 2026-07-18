@@ -166,6 +166,7 @@ static void draw_edit(void){
     else if(g.turn<=3){int rr=(g.intent==GIFT_DROP);text_at(4,46,COL_DIM,L"추천 배정:");text_at(84,46,rr?COL_BLUE:COL_CYAN,rr?L"위협 낮음 · 수신(RX)로 경제":L"위협 높음 · 송신(TX)로 화력");}
     else if(g.turn>=5){text_at(4,46,COL_DIM,L"노아가 학습 중:");text_at(126,46,COL_MAGENTA,CARD_DEF[g.trend_card].short_name);}
     if(g.contract_applied){rect(260,34,56,15,COL_PANEL);frame(260,34,56,15,COL_MAGENTA);rect(263,37,3,9,COL_MAGENTA);text_at(269,36,COL_INK,L"계약+1");}
+    if(g.turn==1)text_at(30,72,COL_DIM,L"시간이 멈춰 있습니다 · 카드를 골라 편성하세요");
     rect(0,130,188,12,0x00120e1a);number_at(4,132,COL_DIM,L"덱%d",g.deck.draw_n+g.deck.discard_n+g.deck.hand_n+(g.cached_card!=0));number_at(62,132,COL_DIM,L"뽑기%d",g.deck.draw_n);number_at(132,132,COL_DIM,L"버림%d",g.deck.discard_n);text_at(4,145,COL_DIM,L"확인:배정  공백:탐색  탭:송출");
     for(int i=0;i<g.deck.hand_n;i++)draw_card(4+i*63,164-(i==g.cursor?2:0),59,72,g.deck.hand[i],i==g.cursor,i);
     if(g.cache_mode){rect(63,55,194,68,COL_PANEL);frame(63,55,194,68,COL_AMBER);text_at(77,63,COL_INK,L"다음 구절에 보관할 카드");draw_icon(111,87,g.deck.hand[g.cursor],COL_AMBER);text_at(137,89,COL_INK,CARD_DEF[g.deck.hand[g.cursor]].short_name);}
@@ -174,6 +175,7 @@ static void draw_edit(void){
 
 static void draw_air(void){
     draw_background();draw_world();draw_header();
+    if(g.turn==1&&g.phase_ticks>ON_AIR_TICKS-180)text_at(64,26,COL_DIM,L"움직이며 버티세요 · Space로 송출");
     rect(0,208,SCREEN_W,32,COL_PANEL);text_at(4,211,COL_DIM,L"공백:송출");
     /* SYNC payoff surfaced during combat: only when the boost is actually live (>=2) */
     if(g.sync>=2)text_at(4,224,COL_CYAN,g.sync>=3?L"동조 최고":L"동조 강화");
@@ -230,7 +232,9 @@ static void draw_title(void){
     int answer_x=121+(g.anim_ticks/2)%67;rect(answer_x,136,2,2,COL_CYAN);if((g.anim_ticks/24)&1)rect(241,151,2,2,COL_MAGENTA);
     text_scaled(83,37,COL_INK,L"에코/144",3);text_at(76,184,COL_CYAN,L"64번만 대답해 주세요.");
     rect(66,203,102,24,COL_PANEL);frame(66,203,102,24,COL_INK);rect(70,205,94,2,COL_CYAN);text_at(77,210,COL_INK,L"확인  접속");
-    rect(174,203,108,24,COL_PANEL);frame(174,203,108,24,COL_DIM);rect(178,205,100,2,COL_MAGENTA);text_at(184,210,COL_DIM,L"F2  오늘 채널");if(g.save_corrupt)text_at(45,229,COL_AMBER,L"손상된 기록은 제가 보관 중입니다.");
+    rect(174,203,108,24,COL_PANEL);frame(174,203,108,24,COL_DIM);rect(178,205,100,2,COL_MAGENTA);text_at(184,210,COL_DIM,L"F2  오늘 채널");
+    if(g.save_corrupt)text_at(45,228,COL_AMBER,L"손상된 기록은 제가 보관 중입니다.");
+    else text_at(60,228,COL_DIM,L"M 음소거 · F1 저자극 · ESC 일시정지");
 }
 
 static void draw_result(void){
@@ -267,13 +271,16 @@ static void render(void){
         static const int levels[]={0,16,32,48,64};
         int ti=g.ring_threshold%5;uint32_t col=ti==3?COL_MAGENTA:ti==4?COL_CYAN:ti==2?COL_AMBER:COL_INK;
         int bx=48,by=64,bw=224,bh=52;
-        if(g.threshold_ticks>90)frame(0,0,SCREEN_W,SCREEN_H,col); /* screen-edge glow on entry */
+        if(!g.low_fx&&g.threshold_ticks>90)frame(0,0,SCREEN_W,SCREEN_H,col); /* screen-edge glow (off under 저자극) */
         rect(bx,by,bw,bh,COL_PANEL);frame(bx,by,bw,bh,col);
-        if((g.threshold_ticks/4)&1)frame(bx-2,by-2,bw+4,bh+4,col); /* pulse */
+        if(g.low_fx||((g.threshold_ticks/4)&1))frame(bx-2,by-2,bw+4,bh+4,col); /* pulse → steady border under 저자극 */
         rect(bx+2,by+2,bw-4,2,col);
         wchar_t nb[8];wsprintfW(nb,L"%d",levels[ti]);text_scaled(bx+12,by+12,col,nb,2);
         text_scaled(bx+44,by+10,col,names[ti],2);
         text_at(bx+12,by+38,COL_DIM,subs[ti]);
     }
-    if(g.paused){rect(55,86,210,78,COL_PANEL);frame(55,86,210,78,COL_INK);text_scaled(91,96,COL_INK,L"일시정지",2);text_at(76,128,COL_DIM,L"취소:계속  M:음소거");text_at(108,144,COL_DIM,L"F1:저자극");}
+    if(g.paused){rect(55,86,210,78,COL_PANEL);frame(55,86,210,78,COL_INK);text_scaled(91,96,COL_INK,L"일시정지",2);
+        text_at(84,126,COL_DIM,L"취소:계속");
+        text_at(72,144,g.muted?COL_CYAN:COL_DIM,g.muted?L"M:음소거 켜짐":L"M:음소거 꺼짐");
+        text_at(178,144,g.low_fx?COL_CYAN:COL_DIM,g.low_fx?L"F1:저자극 켜짐":L"F1:저자극 꺼짐");}
 }
