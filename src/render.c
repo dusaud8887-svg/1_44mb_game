@@ -105,7 +105,7 @@ static void draw_header(void){
     number_at(44,2,COL_CYAN,L"동조%d",g.sync);
     number_at(118,2,COL_INK,L"메아리%d/64",g.echo_total);number_at(250,2,COL_DIM,L"구절%d/12",g.turn>12?12:g.turn);
     /* proportional baseline meters (2px) — the numbers now have a matching visual magnitude */
-    fill_bar(44,14,40,2,g.sync,3,COL_CYAN,COL_PANEL);
+    for(int i=0;i<3;i++)rect(44+i*14,14,12,2,i<g.sync?COL_CYAN:COL_PANEL); /* SYNC is 0-3: discrete segments */
     /* echo baseline: stacked live|archived|mimicked composition, width ∝ total/64 — ring makeup at all times */
     int bx=118,bw=122;rect(bx,14,bw,2,COL_DIM);
     int wl=bw*g.echo_live/64,wa=bw*g.echo_archived/64,wm=bw*g.echo_mimicked/64;
@@ -148,6 +148,11 @@ static const wchar_t *card_effect(CardId id){
 static void draw_edit(void){
     draw_background();rect(0,16,SCREEN_W,142,0x00171322);draw_world();draw_header();
     text_at(4,18,COL_MAGENTA,L"다음:");text_at(48,18,COL_INK,intent_name(g.intent));
+    /* next wave shape: direction glyph + enemy-count pips (docs 5 — 방향·수량 공개) */
+    {int nc=3+g.turn/2,shown=nc>7?7:nc,dx=190;text_at(176,18,COL_DIM,L"적");
+     if(g.intent==BOT_RAID){line(dx+6,20,dx,20,COL_RED);line(dx+3,17,dx,20,COL_RED);line(dx+3,23,dx,20,COL_RED);} /* from east */
+     else{line(dx+3,20,dx,17,COL_RED);line(dx+3,20,dx+6,17,COL_RED);line(dx+3,20,dx,23,COL_RED);line(dx+3,20,dx+6,23,COL_RED);} /* multi-direction */
+     draw_pips(202,19,shown,shown,3,1,COL_RED,COL_PANEL);}
     /* CUE as countable dots (docs 45: CUE = ● 개수) — Miller-friendly vs a bare number */
     text_at(262,18,COL_CYAN,L"편성");
     if(g.cue<=7)draw_pips(288,19,g.cue,g.cue,3,1,COL_CYAN,COL_BLACK);
@@ -170,6 +175,8 @@ static void draw_edit(void){
 static void draw_air(void){
     draw_background();draw_world();draw_header();
     rect(0,208,SCREEN_W,32,COL_PANEL);text_at(4,211,COL_DIM,L"공백:송출");
+    /* SYNC payoff surfaced during combat: only when the boost is actually live (>=2) */
+    if(g.sync>=2)text_at(4,224,COL_CYAN,g.sync>=3?L"동조 최고":L"동조 강화");
     for(int i=0;i<g.queue_n;i++){int x=58+i*48;uint32_t c=i<g.queue_at?COL_DIM:i==g.queue_at?COL_INK:COL_CYAN;if(i)line(x-22,223,x-2,223,c);frame(x,211,38,24,c);number_at(x+2,216,c,L"%d",i+1);draw_icon(x+19,215,g.queue[i],c);if(i==g.queue_at)rect(x+2,212,34,2,COL_INK);}
     /* card→effect causality: a signal packet travels from the fired queue slot up to
        the broadcaster, so the player sees which card produced the on-screen effect (docs 45) */
@@ -228,9 +235,24 @@ static void draw_title(void){
 
 static void draw_result(void){
     clear(COL_BG);draw_ring(160,92,65,true);art_blit(128,56,ART_RESULT_PORTRAIT,128,g.won?0:64,0,64,64);text_scaled(g.won?71:105,28,g.won?COL_CYAN:COL_RED,g.won?L"양방향 연결":L"연결 끊김",2);
-    if(g.won){text_at(112,142,COL_INK,ending_name(g.ending));text_at(96,156,COL_DIM,final_form_name(g.final_form));text_at(180,156,COL_DIM,final_modifier_name(g.final_modifier));}
-    else text_at(g.result_reason==RESULT_OFFLINE?94:112,146,COL_RED,g.result_reason==RESULT_OFFLINE?L"64 미완성 / 채널 종료":L"미송출 편성 남음");
-    number_at(83,171,COL_CYAN,L"실제%d",g.echo_live);number_at(143,171,COL_AMBER,L"보관%d",g.echo_archived);number_at(211,171,COL_MAGENTA,L"모방%d",g.echo_mimicked);
+    /* dominant echo color decides the closing line — the ending is not just a label but a verdict */
+    int dom=0;if(g.echo_archived>=g.echo_live&&g.echo_archived>=g.echo_mimicked)dom=1;else if(g.echo_mimicked>=g.echo_live&&g.echo_mimicked>=g.echo_archived)dom=2;
+    if(g.won){
+        static const uint32_t ecol[]={COL_CYAN,COL_AMBER,COL_MAGENTA,COL_INK};
+        static const wchar_t *narr[]={L"청록 우세 · 방송이 응답을 얻었다",L"호박 우세 · 시크가 당신을 보관했다",L"자홍 우세 · 노아가 관객을 완성했다",L"세 색 공존 · 누구의 것도 아니다"};
+        int e=g.ending%4;text_at(112,138,ecol[e],ending_name(g.ending));
+        text_at(56,152,COL_DIM,narr[e]);
+        text_at(96,166,COL_DIM,final_form_name(g.final_form));text_at(180,166,COL_DIM,final_modifier_name(g.final_modifier));
+    } else {
+        static const wchar_t *fnarr[]={L"청록 · 흔적은 남았지만 사람은 없었다",L"호박 · 시크가 남은 조각을 가져갔다",L"자홍 · 노아의 복제만 울렸다"};
+        text_at(g.result_reason==RESULT_OFFLINE?94:112,138,COL_RED,g.result_reason==RESULT_OFFLINE?L"64 미완성 / 채널 종료":L"미송출 편성 남음");
+        text_at(56,152,COL_DIM,fnarr[dom]);
+    }
+    /* stacked composition bar reinforces the numbers — the ending color and the bar agree */
+    int bx=70,bw=180;rect(bx,178,bw,4,COL_PANEL);
+    int wl=bw*g.echo_live/64,wa=bw*g.echo_archived/64,wm=bw*g.echo_mimicked/64;
+    if(wl)rect(bx,178,wl,4,COL_CYAN);if(wa)rect(bx+wl,178,wa,4,COL_AMBER);if(wm)rect(bx+wl+wa,178,wm,4,COL_MAGENTA);
+    number_at(83,188,COL_CYAN,L"실제%d",g.echo_live);number_at(143,188,COL_AMBER,L"보관%d",g.echo_archived);number_at(211,188,COL_MAGENTA,L"모방%d",g.echo_mimicked);
     text_at(g.today?91:69,211,COL_INK,g.today?L"확인:오늘의 신호 재접속":L"확인:같은 신호  오른쪽:새 신호");
 }
 
