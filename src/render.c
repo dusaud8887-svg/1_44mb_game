@@ -121,7 +121,7 @@ static void draw_world(void){
    Closes the loop between the Dominion buy decision and the moment-to-moment ON AIR combat. */
 static void draw_combat_build(int x,int y){
     static const uint8_t sch[4]={MOD_NETWORK,MOD_REPEAT,MOD_REPLAY,MOD_SAFE};
-    static const wchar_t *nm[4]={L"연사",L"다발",L"관통",L"내성"};
+    static const wchar_t *nm[4]={L"확산",L"다발",L"연사",L"내성"};
     text_at(x,y,COL_DIM,L"전투:");x+=34;bool any=false;
     for(int i=0;i<4;i++){int t=combat_tier(sch[i]);if(!t)continue;any=true;
         text_at(x,y,COL_CYAN,nm[i]);x+=28;

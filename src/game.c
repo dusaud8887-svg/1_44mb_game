@@ -188,14 +188,23 @@ static void fire_carriers(void) {
         for(int n=0;n<deck_count(CARD_2400);n++) bullet(g.px,g.py,dx,dy,DAMAGE_2400,false,1);
         for(int n=0;n<deck_count(CARD_14K);n++) bullet(g.px,g.py,dx,dy,DAMAGE_14K,false,2);
     } else {
-        /* REPEAT school -> multishot fan, REPLAY school -> pierce. NETWORK (fire rate) and SAFE
-           (toughness) act elsewhere. Each carrier's stream visibly grows with the deck. */
-        int rep=combat_tier(MOD_REPEAT),rpl=combat_tier(MOD_REPLAY);
-        int extra=rep>=3?2:rep?1:0,pierce=rpl>=3?2:rpl>=2?1:0;
+        /* Four distinct, always-additive combat identities from the deck's tag schools
+           (10_MECHANICS s4). Each only ADDS to the baseline volley, never weakens it:
+             NETWORK -> extra bullets at OTHER nearby enemies (spread/crowd control),
+             REPEAT  -> multishot fan around the primary target (burst),
+             REPLAY  -> fire rate (carrier_reload), SAFE -> toughness (damage_player). */
+        int netT=combat_tier(MOD_NETWORK),repT=combat_tier(MOD_REPEAT),rplT=combat_tier(MOD_REPLAY);
+        int extra=repT>=3?2:repT?1:0,pierce=rplT>=3?2:rplT?1:0,want=1+netT;if(want>4)want=4;
+        int tar[4],nt=0;bool used[MAX_ENEMIES]={0};
+        for(int s=0;s<want;s++){int best=-1;float bd=1e30f;for(int e=0;e<MAX_ENEMIES;e++)if(g.enemies[e].active&&!used[e]){float d=dist2(g.enemies[e].x-g.px,g.enemies[e].y-g.py);if(d<bd){bd=d;best=e;}}if(best<0)break;used[best]=1;tar[nt++]=best;}
+        if(!nt)return;
         for(int i=0;i<g.deck.hand_n;i++) if(CARD_DEF[g.deck.hand[i]].type==CARRIER&&!g.carrier_rx[i]){
+            /* REPLAY: fast (carrier_reload) + piercing stream so the extra fire rate converts to kills. */
             int is14k=g.deck.hand[i]==CARD_14K,dmg=is14k?DAMAGE_14K:DAMAGE_2400,hits=(is14k?2:1)+pierce;
-            bullet(g.px,g.py,dx,dy,dmg,false,hits);
-            for(int k=1;k<=extra;k++){float s=(k&1?1.0f:-1.0f)*(float)((k+1)/2)*0.20f;bullet(g.px,g.py,dx-dy*s,dy+dx*s,dmg,false,hits);}
+            float dx0=g.enemies[tar[0]].x-g.px,dy0=g.enemies[tar[0]].y-g.py;
+            bullet(g.px,g.py,dx0,dy0,dmg,false,hits);
+            for(int k=1;k<=extra;k++){float s=(k&1?1.0f:-1.0f)*(float)((k+1)/2)*0.20f;bullet(g.px,g.py,dx0-dy0*s,dy0+dx0*s,dmg,false,hits);}
+            for(int j=1;j<nt;j++)bullet(g.px,g.py,g.enemies[tar[j]].x-g.px,g.enemies[tar[j]].y-g.py,dmg,false,hits);
         }
     }
 }
@@ -273,7 +282,7 @@ int program_modifier_count(uint8_t modifier){int n=0;for(int id=CARD_MULTI;id<=C
    what you buy reshapes the survivor combat all run long, not only the last 60s. Strength 1 is
    baseline, 2+ rewards (mirrors s9). */
 int combat_tier(uint8_t modifier){int n=program_modifier_count(modifier);return n>=COMBAT_TAG_TIER3?3:n>=COMBAT_TAG_TIER2?2:n>=COMBAT_TAG_TIER1?1:0;}
-static int carrier_reload(void){int r=CARRIER_TICKS-CARRIER_SPEED_PER_TIER*combat_tier(MOD_NETWORK);return r<CARRIER_RELOAD_MIN?CARRIER_RELOAD_MIN:r;}
+static int carrier_reload(void){int r=CARRIER_TICKS-CARRIER_SPEED_PER_TIER*combat_tier(MOD_REPLAY);return r<CARRIER_RELOAD_MIN?CARRIER_RELOAD_MIN:r;}
 
 static void compile_finale(void){
     int chat=deck_count(CARD_CHAT),voice=deck_count(CARD_VOICE);
@@ -347,6 +356,10 @@ static void begin_air(void) {
     int count=3+g.turn/2;
     uint8_t type=g.intent==GIFT_DROP?SPON_GIFT:g.intent==MUTE?MOD_MASK:g.intent==COMMENT_WALL?POP_AD:g.intent==MIRROR?POP_AD:BOT_CHAT;
     for(int i=0;i<count;i++)spawn_edge(type,g.intent==BOT_RAID?1:(int)(rng(&g.encounter_rng)&3));
+    /* Encounter texture: the BOT_CHAT swarm deals no HP damage (it only delays the queue), so a
+       raid used to be risk-free. Mix in a few POP.AD shooters from mid-game on so those waves
+       actually threaten and the deck's combat build has something to bite on (10_MECHANICS s4). */
+    if(type==BOT_CHAT&&g.turn>=4){int shooters=1+g.turn/6;for(int i=0;i<shooters;i++)spawn_edge(POP_AD,(int)(rng(&g.encounter_rng)&3));}
     if(g.turn==2)spawn_edge(BUF_WORM,0);
     if(g.turn==7){
         if(deck_remove_one(CARD_VOICE))g.stolen_card=CARD_VOICE+1;else if(deck_remove_one(CARD_CHAT))g.stolen_card=CARD_CHAT+1;
@@ -657,6 +670,38 @@ static void test_finale_effects(void){
     g.ring[0].state=ECHO_MIMICKED;recount_echo();assert(restore_echo(ECHO_MIMICKED)&&g.ring[0].state==ECHO_LIVE);g.ring[1].state=ECHO_ARCHIVED;recount_echo();assert(restore_echo(ECHO_ARCHIVED)&&g.ring[1].state==ECHO_LIVE);
 }
 
+/* Mortal combat measurement — the invulnerable throughput SIM cannot see combat, so this asserts
+   the deck's tag schools actually change survival/kills under real pressure (10_MECHANICS s4). */
+static int combat_trial(CardId tag,int copies,int *kills){
+    game_start(0x1440u);g.turn=8;g.intent=BOT_RAID;
+    memset(held_keys,0,sizeof(held_keys));memset(pressed_keys,0,sizeof(pressed_keys));
+    g.deck.hand_n=0;g.deck.hand[g.deck.hand_n++]=CARD_2400;g.deck.hand[g.deck.hand_n++]=CARD_2400;
+    memset(g.carrier_rx,0,sizeof(g.carrier_rx));
+    g.deck.draw_n=g.deck.discard_n=0;g.cached_card=0;
+    for(int i=0;i<copies&&g.deck.discard_n<MAX_DECK;i++)g.deck.discard[g.deck.discard_n++]=tag;
+    g.mode=ON_AIR;g.phase_ticks=100000;g.carrier_ticks=1;
+    memset(g.enemies,0,sizeof(g.enemies));memset(g.bullets,0,sizeof(g.bullets));
+    for(int i=0;i<16;i++)spawn_edge(POP_AD,i&3);
+    int spawned=0;for(int e=0;e<MAX_ENEMIES;e++)spawned+=g.enemies[e].active;
+    int surv=3600;
+    for(int t=0;t<3600;t++){game_tick();if(g.hp<=0){surv=t;break;}}
+    int rem=0;for(int e=0;e<MAX_ENEMIES;e++)rem+=g.enemies[e].active;
+    *kills=spawned-rem;return surv;
+}
+static void test_combat_diversity(void){
+    int bk,nk,rk,pk,sk;
+    int bs=combat_trial(CARD_2400,0,&bk);      /* baseline: no tag school */
+    int ns=combat_trial(CARD_MARKER,6,&nk);    /* NETWORK — spread */
+    int rs=combat_trial(CARD_MULTI,6,&rk);     /* REPEAT  — multishot */
+    int ps=combat_trial(CARD_MACRO,6,&pk);     /* REPLAY  — fire rate + pierce */
+    int ss=combat_trial(CARD_FIREWALL,6,&sk);  /* SAFE    — toughness */
+    printf("SIM %-12s base surv%d k%d|NET %d/%d|REP %d/%d|RPL %d/%d|SAFE %d/%d\n","COMBAT",bs,bk,ns,nk,rs,rk,ps,pk,ss,sk);
+    /* Each school must measurably beat the invuln SIM's blind spot; margins absorb float jitter. */
+    assert(ns>=bs*2);         /* NETWORK clears the crowd -> outlasts baseline by a wide margin */
+    assert(ss>bs+40);         /* SAFE toughness -> outlasts baseline */
+    assert(nk>bk&&rk>bk);     /* NETWORK/REPEAT out-kill baseline */
+    assert(ps>=bs&&pk>=bk);   /* REPLAY never worse than baseline (monotonic force-multiplier) */
+}
 static bool sim_available(CardId id){if(id==CARD_14K||id==CARD_CHAT||id==CARD_VOICE)return true;for(int i=0;i<5;i++)if(g.kingdom[i]==id)return true;return false;}
 static int program_count(void){int n=0;for(int id=CARD_MULTI;id<=CARD_CHECKSUM;id++)n+=deck_count((CardId)id);return n;}
 static CardId sim_pick(int policy,int baud){
@@ -711,5 +756,5 @@ static void test_strategy_sim(void){
     for(int policy=0;policy<7;policy++){int wins=0,echoes=0,terminal=0;for(uint32_t seed=1;seed<=SIM_SEEDS;seed++){int echo=sim_run_policy(policy,seed,&terminal);echoes+=echo;wins+=echo>=64;}printf("SIM %-12s win %d/%d echo %d terminal %d\n",name[policy],wins,SIM_SEEDS,echoes/SIM_SEEDS,terminal);assert(echoes>=0&&echoes<=64*SIM_SEEDS);positive+=wins>0;total_wins+=wins;if(wins>max_wins)max_wins=wins;}
     assert(positive>=5&&max_wins*10<=total_wins*4);
 }
-int main(void){setvbuf(stdout,NULL,_IONBF,0);test_movement();test_ring();test_finale_model();test_turn_flow();test_controls();test_edit_recommendation();test_rule_feedback();test_cache_no_duplicate();test_open_scheduler();test_p1_cards();test_p1_content();test_seek_intervention();test_finale_effects();test_strategy_sim();puts("V2 P1 selftest: PASS");return 0;}
+int main(void){setvbuf(stdout,NULL,_IONBF,0);test_movement();test_ring();test_finale_model();test_turn_flow();test_controls();test_edit_recommendation();test_rule_feedback();test_cache_no_duplicate();test_open_scheduler();test_p1_cards();test_p1_content();test_seek_intervention();test_finale_effects();test_combat_diversity();test_strategy_sim();puts("V2 P1 selftest: PASS");return 0;}
 #endif
