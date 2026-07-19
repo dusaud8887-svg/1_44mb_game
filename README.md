@@ -18,7 +18,7 @@ Windows 10/11용 1.44MB 덱빌딩 서바이버. 현재 빌드는 문서의 **V2 
 - [docs/45_UI_UX.md](docs/45_UI_UX.md) — UI/UX·화면 연출
 - [docs/50_PRODUCTION.md](docs/50_PRODUCTION.md) — 일정·게이트·리스크
 - [docs/52_PLAYTEST_PROTOCOL.md](docs/52_PLAYTEST_PROTOCOL.md) — 사람 플레이테스트 실행·기록·판정 절차
-- [docs/60_FUSION_SIGNAL_COMBO.md](docs/60_FUSION_SIGNAL_COMBO.md) — 신호 경제 + 연쇄 공명 (도미니언×뱀서 전투↔경제 융합 정본)
+- [docs/60_FUSION_SIGNAL_COMBO.md](docs/60_FUSION_SIGNAL_COMBO.md) — 신호 경제 + 연쇄 공명 + VS/HoloCure 전투 패스(필살기·엘리트) 정본
 - [docs/90_STATUS.md](docs/90_STATUS.md) — 구현 상태 (SPEC/STATUS 분리)
 - [docs/adr/](docs/adr/) — 설계 결정 기록
 - [docs/CHANGELOG.md](docs/CHANGELOG.md) — 변경 이력
@@ -41,6 +41,6 @@ build.bat
 - 타이틀: `Enter` 일반 채널, `F2` 오늘의 채널, `Esc` 종료
 - 공통: `WASD`·방향키 이동/선택, `M` 음소거, `F1` 저자극, `Esc` 일시정지
 - 편성: `Enter` 송신/수신 또는 프로그램 편성, `Space` 탐색, `Tab` 송출
-- 송출: `Space` 다음 편성 발동
+- 송출: `Space` 다음 편성 발동, `J` 특수기(Overdrive, 충전 시)
 - 휴식: `Enter` 구매/정리, `Tab` 넘김, 8턴부터 `O` 열린 채널
 - 열린 채널: `Space` 최종 방송 프로토콜

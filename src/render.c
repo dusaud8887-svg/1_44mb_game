@@ -121,6 +121,8 @@ static void draw_background(void){clear(COL_BG);for(int y=24;y<ARENA_BOTTOM;y+=1
 static void draw_world(void){
     int previous=-1;for(int i=0;i<MAX_ENEMIES;i++)if(g.enemies[i].active&&g.enemies[i].marked){if(previous>=0)line((int)g.enemies[previous].x,(int)g.enemies[previous].y,(int)g.enemies[i].x,(int)g.enemies[i].y,COL_CYAN);previous=i;frame((int)g.enemies[i].x-6,(int)g.enemies[i].y-6,12,12,COL_CYAN);}
     for(int i=0;i<MAX_ENEMIES;i++)if(g.enemies[i].active)draw_enemy(&g.enemies[i]);
+    /* Elite telegraph — a pulsing amber/red ring + crown pip marks the priority treasure target. */
+    for(int i=0;i<MAX_ENEMIES;i++)if(g.enemies[i].active&&g.enemies[i].elite){int x=(int)g.enemies[i].x,y=(int)g.enemies[i].y;uint32_t ec=(g.anim_ticks/6&1)?COL_AMBER:COL_RED;frame(x-9,y-9,18,18,ec);rect(x-2,y-11,4,2,ec);}
     for(int i=0;i<MAX_BULLETS;i++)if(g.bullets[i].active){Bullet *b=&g.bullets[i];rect((int)b->x-1,(int)b->y-1,3,3,b->hostile?COL_RED:COL_CYAN);if(b->hostile)rect((int)b->x,(int)b->y,1,1,COL_INK);}
     /* Signal shards — VS-style pickups that fund the shop; brighter cores are worth more. */
     for(int i=0;i<MAX_PICKUPS;i++)if(g.pickups[i].active){int x=(int)g.pickups[i].x,y=(int)g.pickups[i].y;rect(x-1,y-1,3,3,COL_BG);rect(x-1,y-1,2,2,g.pickups[i].worth>1?COL_MAGENTA:COL_AMBER);rect(x,y,1,1,COL_INK);}
@@ -183,6 +185,11 @@ static void draw_air(void){
     /* Live fusion readout: the kill chain and the signal it is banking toward the shop (docs 60). */
     if(g.combo>1){int tier=combo_tier();uint32_t cc=tier>=3?COL_MAGENTA:tier>=1?COL_CYAN:COL_INK;if(tier>=COMBO_TIER_MAX)text_at(SCREEN_W/2-58,20,COL_MAGENTA,L"공명");number_at(SCREEN_W/2-30,20,cc,L"연쇄x%d",g.combo);for(int k=0;k<tier;k++)rect(SCREEN_W/2-30+k*5,32,3,3,cc);}
     if(g.signal)number_at(SCREEN_W/2+34,20,COL_AMBER,L"신호%d",g.signal);
+    /* Overdrive 필살기 charge — fills from kills; press J at full. Color/label track the deck school. */
+    {int full=g.special_charge>=SPECIAL_MAX,w=54*g.special_charge/SPECIAL_MAX;uint32_t sc=full?COL_MAGENTA:COL_BLUE;
+     text_at(4,20,COL_DIM,L"특수");rect(4,29,54,3,COL_TRACK);rect(4,29,w>54?54:w,3,sc);
+     if(full&&(g.anim_ticks/8&1))text_at(62,25,COL_MAGENTA,L"J!");}
+    if(g.special_ticks)text_at(4,36,COL_CYAN,L"연사 과부하");
     if(!g.low_fx&&g.mirror_label_ticks>PROGRAM_LABEL_TICKS-12)frame(2,18,SCREEN_W-4,188,COL_MAGENTA);
     rect(0,208,SCREEN_W,32,COL_PANEL);
     /* ON AIR countdown — the verse drains as an amber sliver so time pressure is felt, not read. */

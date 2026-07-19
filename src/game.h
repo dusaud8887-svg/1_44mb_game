@@ -37,7 +37,7 @@ typedef struct {
     float x, y, vx, vy;
     int16_t hp;
     uint16_t fire, marked;
-    uint8_t type, active;
+    uint8_t type, active, elite;
 } Enemy;
 typedef struct {
     float x, y, vx, vy;
@@ -71,7 +71,7 @@ typedef struct {
     float px, py, last_dx, last_dy, spawn_budget;
     /* Signal economy + combo resonance (docs 60): the ON AIR combat<->deck economy loop. */
     uint8_t combo, combo_best, bonus_cue, amp_active;
-    int combo_ticks, signal, signal_baud, resonance_ticks;
+    int combo_ticks, signal, signal_baud, resonance_ticks, special_charge, special_ticks;
     Deck deck;
     EchoCell ring[64];
     Enemy enemies[MAX_ENEMIES];
@@ -96,6 +96,7 @@ int program_modifier_count(uint8_t modifier);
 int combat_tier(uint8_t modifier);
 int combo_tier(void);
 int pickup_magnet(void);
+int special_school(void);
 int final_protocol_cooldown(void);
 
 #endif

@@ -37,6 +37,7 @@ V1의 초기 정적 평가(콘셉트 9/10, 런타임 정확성 신뢰도 4.5/10,
 
 - **검증 상태**: 리눅스 `windows.h` 심 하 selftest + 1000시드 SIM PASS. **Windows MSVC `/W4` 실빌드·결정론 릴리스·실화면 연출 검수는 PENDING**(리눅스 CI에 MSVC·GDI·Aseprite 부재). 사용자 지시로 1.44MB 상한은 이 설계 단계에서 완화했으므로, Windows 빌드 후 크기·의존 DLL 재게이트 필요.
 - **새 킹덤 카드**: 공명 증폭 AMP 구현(카드 13→14종). `build_art.py`가 리눅스 실행 가능해 아이콘 스트립 확장·재생성 검증. 남은 후보 4종(MAGNET/FREEZE/O.C./FEEDBACK)은 [60](60_FUSION_SIGNAL_COMBO.md) §6-2 스펙.
+- **VS/HoloCure 전투 패스**([60](60_FUSION_SIGNAL_COMBO.md) §8): 필살기 Overdrive(처치 충전→`J` 발동, 덱 학파가 노바/탄막/과부하/요새 결정) + 엘리트 조우(6구절부터 탱키 슈터, 처치 시 보물 버스트). ON AIR 조작에 `J` 추가. `test_combat_skills` 회귀, 기본 전투·SIM 불변식 유지(엘리트로 위험/생존 트레이드오프 강화).
 
 ## 3. V1 결함의 V2 처리 (2026-07-17)
 

@@ -153,23 +153,32 @@ static void bullet(float x,float y,float dx,float dy,int damage,uint8_t hostile,
     }
 }
 
-static bool spawn_enemy(uint8_t type, float x, float y) {
+static int spawn_enemy(uint8_t type, float x, float y) {
     static const int hp[] = {4,8,10,14,4};
     for (int i=0;i<MAX_ENEMIES;i++) if (!g.enemies[i].active) {
         Enemy *e=&g.enemies[i]; memset(e,0,sizeof(*e));
-        e->active=1;e->type=type;e->x=x;e->y=y;e->hp=(int16_t)hp[type];e->fire=60;return true;
+        e->active=1;e->type=type;e->x=x;e->y=y;e->hp=(int16_t)hp[type];e->fire=60;return i;
     }
-    return false;
+    return -1;
 }
 
-static void spawn_edge(uint8_t type, int side) {
+static int spawn_edge(uint8_t type, int side) {
     float x=4,y=(float)(24+rng(&g.encounter_rng)%176);
     if(side==1)x=SCREEN_W-4; else if(side==2){x=(float)(8+rng(&g.encounter_rng)%(SCREEN_W-16));y=20;}
     else if(side==3){x=(float)(8+rng(&g.encounter_rng)%(SCREEN_W-16));y=204;}
-    spawn_enemy(type,x,y);
+    return spawn_enemy(type,x,y);
+}
+
+/* Elite: a telegraphed, tanky shooter that appears from mid-game — a climax/priority target
+   (VS/HoloCure §8.2 boss role, §10.5 treasure burst). Drops a rich shard burst + special charge. */
+static int spawn_elite(uint8_t type, int side) {
+    int e=spawn_edge(type,side);
+    if(e>=0){g.enemies[e].elite=1;g.enemies[e].hp=(int16_t)(g.enemies[e].hp*ELITE_HP_MULT);}
+    return e;
 }
 
 static void on_enemy_killed(float x,float y);
+static void drop_shard(float x,float y,int worth);
 static void damage_enemy(int i,int damage) {
     if (!g.enemies[i].active) return;
     if(g.enemies[i].marked)damage=(damage*3+1)/2;
@@ -178,7 +187,11 @@ static void damage_enemy(int i,int damage) {
         if(g.enemies[i].type==SPON_GIFT&&g.sync<3)g.sync++;
         if(g.enemies[i].type==BUF_WORM&&g.stolen_card){g.deck.discard[g.deck.discard_n++]=(CardId)(g.stolen_card-1);g.stolen_card=0;add_echo(ECHO_LIVE,1,0);}
         on_enemy_killed(g.enemies[i].x,g.enemies[i].y);
-        g.enemies[i].active=0; g.flash_ticks=g.low_fx?0:2;
+        if(g.enemies[i].elite&&g.mode==ON_AIR){ /* treasure burst: rich shards + special charge */
+            for(int k=0;k<ELITE_SHARDS;k++)drop_shard(g.enemies[i].x+(float)((k%3-1)*7),g.enemies[i].y+(float)((k/3-1)*7),2+combo_tier());
+            g.special_charge+=ELITE_CHARGE;if(g.special_charge>SPECIAL_MAX)g.special_charge=SPECIAL_MAX;
+        }
+        g.flash_ticks=g.low_fx?0:(g.enemies[i].elite?5:2);g.enemies[i].active=0;
     }
 }
 
@@ -202,6 +215,7 @@ static void fire_carriers(void) {
              REPLAY  -> fire rate (carrier_reload), SAFE -> toughness (damage_player). */
         int netT=combat_tier(MOD_NETWORK),repT=combat_tier(MOD_REPEAT),rplT=combat_tier(MOD_REPLAY);
         int extra=repT>=3?2:repT?1:0,pierce=rplT>=3?2:rplT?1:0,want=1+netT;if(want>4)want=4;
+        if(g.special_ticks)pierce+=2; /* REPLAY overdrive special: carriers punch through */
         int tar[4],nt=0;bool used[MAX_ENEMIES]={0};
         for(int s=0;s<want;s++){int best=-1;float bd=1e30f;for(int e=0;e<MAX_ENEMIES;e++)if(g.enemies[e].active&&!used[e]){float d=dist2(g.enemies[e].x-g.px,g.enemies[e].y-g.py);if(d<bd){bd=d;best=e;}}if(best<0)break;used[best]=1;tar[nt++]=best;}
         if(!nt)return;
@@ -300,7 +314,7 @@ int program_modifier_count(uint8_t modifier){int n=0;for(int id=CARD_MULTI;id<=C
    what you buy reshapes the survivor combat all run long, not only the last 60s. Strength 1 is
    baseline, 2+ rewards (mirrors s9). */
 int combat_tier(uint8_t modifier){int n=program_modifier_count(modifier);return n>=COMBAT_TAG_TIER3?3:n>=COMBAT_TAG_TIER2?2:n>=COMBAT_TAG_TIER1?1:0;}
-static int carrier_reload(void){int r=CARRIER_TICKS-CARRIER_SPEED_PER_TIER*combat_tier(MOD_REPLAY);return r<CARRIER_RELOAD_MIN?CARRIER_RELOAD_MIN:r;}
+static int carrier_reload(void){if(g.special_ticks)return SPECIAL_OVERDRIVE_RELOAD;int r=CARRIER_TICKS-CARRIER_SPEED_PER_TIER*combat_tier(MOD_REPLAY);return r<CARRIER_RELOAD_MIN?CARRIER_RELOAD_MIN:r;}
 
 /* Combo resonance (VS/HoloCure kill chain). The tier scales your PROGRAM payoff and the
    worth of the signal shards you collect — REPEAT sharpens it, REPLAY lengthens the window. */
@@ -309,16 +323,46 @@ int combo_tier(void){int t=g.combo/COMBO_TIER_STEP;return t>COMBO_TIER_MAX?COMBO
 int pickup_magnet(void){return PICKUP_MAGNET_BASE+NETWORK_MAGNET_PER_TIER*combat_tier(MOD_NETWORK);}
 static int combo_scale_pct(void){return combo_tier()*(COMBO_SCALE_PER_TIER+REPEAT_COMBO_PER_TIER*combat_tier(MOD_REPEAT));}
 
-/* A kill during ON AIR feeds both halves of the loop: it drops a signal shard (economy) and
-   extends the combo chain (resonance). Guarded to ON AIR so the finale echo math is untouched. */
+/* The deck's dominant weapon school (highest combat tier) picks which Overdrive special fires.
+   -1 = no school committed yet -> a balanced default burst. */
+int special_school(void){int best=-1,bt=0;for(int m=0;m<4;m++){int t=combat_tier((uint8_t)m);if(t>bt){bt=t;best=m;}}return best;}
+
+/* A kill during ON AIR feeds both halves of the loop: it drops a signal shard (economy),
+   extends the combo chain (resonance), and charges the Overdrive special (VS/HoloCure §6.4).
+   Guarded to ON AIR so the finale echo math is untouched. */
 static void on_enemy_killed(float x,float y){
     if(g.mode!=ON_AIR)return;
     if(g.combo<250)g.combo++;
     if(g.combo>g.combo_best)g.combo_best=g.combo;
+    g.special_charge+=SPECIAL_PER_KILL+combo_tier();if(g.special_charge>SPECIAL_MAX)g.special_charge=SPECIAL_MAX;
     g.combo_ticks=COMBO_DECAY_TICKS+REPLAY_COMBO_WINDOW_PER_TIER*combat_tier(MOD_REPLAY);
+    drop_shard(x,y,1+combo_tier()+(g.amp_active?1:0));
+}
+static void drop_shard(float x,float y,int worth){
+    if(worth<1)worth=1;if(worth>255)worth=255;
     for(int i=0;i<MAX_PICKUPS;i++)if(!g.pickups[i].active){
-        Pickup *p=&g.pickups[i];p->active=1;p->x=x;p->y=y;p->life=PICKUP_LIFE_TICKS;
-        p->worth=(uint8_t)(1+combo_tier()+(g.amp_active?1:0));return;
+        Pickup *p=&g.pickups[i];p->active=1;p->x=x;p->y=y;p->life=PICKUP_LIFE_TICKS;p->worth=(uint8_t)worth;return;
+    }
+}
+
+/* Overdrive special (VS 필살기): a school-flavored active attack. The deck you built decides
+   which one fires — the buy decision reaches all the way into your panic button. */
+static void fire_special(void){
+    int sch=special_school();
+    g.flash_ticks=g.low_fx?0:4;g.shake_ticks=g.low_fx?0:6;g.effect_ticks=24;
+    if(sch==MOD_REPEAT){                     /* 다발: a focused fanned barrage at the nearest cluster */
+        int tgt=nearest_enemy(g.px,g.py);float dx=g.last_dx,dy=g.last_dy;
+        if(tgt>=0){dx=g.enemies[tgt].x-g.px;dy=g.enemies[tgt].y-g.py;}
+        for(int k=0;k<SPECIAL_BARRAGE_SHOTS;k++){float s=(float)(k-SPECIAL_BARRAGE_SHOTS/2)*0.14f;bullet(g.px,g.py,dx-dy*s,dy+dx*s,SPECIAL_BARRAGE_DAMAGE,false,2);}
+    } else if(sch==MOD_REPLAY){              /* 연사: fire-rate overdrive window */
+        g.special_ticks=SPECIAL_OVERDRIVE_TICKS;
+    } else if(sch==MOD_SAFE){                /* 내성: bulwark — wipe hostile fire, firewall, knock enemies back */
+        for(int i=0;i<MAX_BULLETS;i++)if(g.bullets[i].hostile)g.bullets[i].active=0;
+        g.firewall_ticks=FIREWALL_TICKS;
+        for(int i=0;i<MAX_ENEMIES;i++)if(g.enemies[i].active){float dx=g.enemies[i].x-g.px,dy=g.enemies[i].y-g.py;normalize(&dx,&dy);g.enemies[i].x=clampf(g.enemies[i].x+dx*SPECIAL_KNOCKBACK,3,SCREEN_W-3);g.enemies[i].y=clampf(g.enemies[i].y+dy*SPECIAL_KNOCKBACK,ARENA_TOP+3,ARENA_BOTTOM-3);}
+    } else {                                 /* 확산 nova, or a balanced burst when no school is committed */
+        int dmg=sch==MOD_NETWORK?SPECIAL_NOVA_DAMAGE:SPECIAL_NOVA_DAMAGE*2/3;
+        for(int i=0;i<MAX_ENEMIES;i++)if(g.enemies[i].active)damage_enemy(i,dmg);
     }
 }
 
@@ -401,7 +445,7 @@ static void cleanup(void) {
 
 static void begin_air(void) {
     g.mode=ON_AIR;g.phase_ticks=ON_AIR_TICKS;g.carrier_ticks=1;g.turn_hit=false;g.program_fired=false;
-    g.combo=g.combo_best=0;g.combo_ticks=0;g.signal=0;g.signal_baud=0;g.resonance_ticks=0;g.amp_active=0;
+    g.combo=g.combo_best=0;g.combo_ticks=0;g.signal=0;g.signal_baud=0;g.resonance_ticks=0;g.amp_active=0;g.special_ticks=0;
     memset(g.enemies,0,sizeof(g.enemies));memset(g.bullets,0,sizeof(g.bullets));memset(g.pickups,0,sizeof(g.pickups));
     int count=3+g.turn/2;
     uint8_t type=g.intent==GIFT_DROP?SPON_GIFT:g.intent==MUTE?MOD_MASK:g.intent==COMMENT_WALL?POP_AD:g.intent==MIRROR?POP_AD:BOT_CHAT;
@@ -417,6 +461,8 @@ static void begin_air(void) {
         if(g.stolen_card)spawn_edge(BUF_WORM,3);
     }
     if(g.intent==TREND){choose_trend();g.stolen_program=g.trend_card+1;g.mirror_ticks=120;}
+    /* Elite: a tanky shooter from mid-game — a priority target that pays a treasure burst. */
+    if(g.turn>=ELITE_MIN_TURN)spawn_elite(POP_AD,(int)(rng(&g.encounter_rng)&3));
     apply_off_air();
 }
 
@@ -436,7 +482,7 @@ static void end_air(void) {
 
 static void begin_open(void) {
     g.mode=OPEN_CHANNEL;g.open_ticks=OPEN_TICKS;g.open_card_ticks=1;g.protocol_ticks=0;g.mirror_ticks=MIRROR_TICKS;g.seek_ticks=1;g.open_sequence_at=0;
-    choose_trend();compile_finale();g.carrier_ticks=1;g.combo=g.combo_best=0;g.combo_ticks=0;g.resonance_ticks=0;g.amp_active=0;
+    choose_trend();compile_finale();g.carrier_ticks=1;g.combo=g.combo_best=0;g.combo_ticks=0;g.resonance_ticks=0;g.amp_active=0;g.special_ticks=0;
     memset(g.enemies,0,sizeof(g.enemies));memset(g.bullets,0,sizeof(g.bullets));memset(g.pickups,0,sizeof(g.pickups));
 }
 
@@ -492,6 +538,8 @@ static void move_player(void) {
 
 static void update_air(void) {
     move_player();
+    if(pressed_keys['J']&&g.special_charge>=SPECIAL_MAX){fire_special();g.special_charge=0;} /* Overdrive 필살기 */
+    if(g.special_ticks)g.special_ticks--;
     if(--g.carrier_ticks<=0){fire_carriers();g.carrier_ticks=carrier_reload();}
     if(g.auto_fire_ticks)g.auto_fire_ticks--;if(g.queue_delay_ticks)g.queue_delay_ticks--;
     if(!g.queue_delay_ticks&&(pressed_keys[VK_SPACE]||(held_keys[VK_SPACE]&&!g.auto_fire_ticks))&&g.queue_at<g.queue_n){int at=g.queue_at++;CardId id=g.queue[at];execute_program_scaled(id,false,g.queue_scale[at]);g.auto_fire_ticks=10;if(g.intent==MIRROR&&g.queue_at==1)execute_program(id,true);if(g.intent==CLIP_THEFT&&g.queue_at==1){g.stolen_program=id+1;g.mirror_ticks=90;}}
@@ -843,6 +891,33 @@ static void test_signal_combo(void){
     int w=-1;for(int i=0;i<MAX_PICKUPS;i++)if(g.pickups[i].active){w=g.pickups[i].worth;break;}
     assert(w==1+combo_tier()+1);
 }
+static int active_bullets(bool hostile){int n=0;for(int i=0;i<MAX_BULLETS;i++)n+=g.bullets[i].active&&(g.bullets[i].hostile!=0)==hostile;return n;}
+/* Overdrive special (필살기) + elite encounters — the VS/HoloCure combat pass (docs 60 §9). */
+static void test_combat_skills(void){
+    /* A kill charges the special. */
+    game_start(90);g.mode=ON_AIR;g.special_charge=0;memset(g.enemies,0,sizeof(g.enemies));spawn_enemy(BOT_CHAT,40,40);damage_enemy(0,99);
+    assert(g.special_charge==SPECIAL_PER_KILL);
+    /* The deck's dominant school picks which special fires; none committed -> -1 (default burst). */
+    game_start(91);assert(special_school()==-1);for(int i=0;i<6;i++)g.deck.discard[g.deck.discard_n++]=CARD_MARKER;assert(special_school()==MOD_NETWORK);
+    /* NETWORK special = arena-wide nova (hits an enemy across the screen). */
+    game_start(92);g.mode=ON_AIR;for(int i=0;i<6;i++)g.deck.discard[g.deck.discard_n++]=CARD_MARKER;memset(g.enemies,0,sizeof(g.enemies));spawn_enemy(BOT_CHAT,SCREEN_W-20,200);fire_special();assert(!g.enemies[0].active);
+    /* REPEAT special = a fanned barrage of friendly bullets. */
+    game_start(93);g.mode=ON_AIR;for(int i=0;i<6;i++)g.deck.discard[g.deck.discard_n++]=CARD_MULTI;memset(g.bullets,0,sizeof(g.bullets));memset(g.enemies,0,sizeof(g.enemies));spawn_enemy(BOT_CHAT,80,112);fire_special();assert(active_bullets(false)==SPECIAL_BARRAGE_SHOTS&&special_school()==MOD_REPEAT);
+    /* REPLAY special = fire-rate overdrive: carriers reload faster while it lasts. */
+    game_start(94);g.mode=ON_AIR;for(int i=0;i<6;i++)g.deck.discard[g.deck.discard_n++]=CARD_MACRO;fire_special();assert(g.special_ticks==SPECIAL_OVERDRIVE_TICKS&&carrier_reload()==SPECIAL_OVERDRIVE_RELOAD);
+    /* SAFE special = bulwark: wipes hostile fire and raises a firewall. */
+    game_start(95);g.mode=ON_AIR;for(int i=0;i<6;i++)g.deck.discard[g.deck.discard_n++]=CARD_FIREWALL;memset(g.bullets,0,sizeof(g.bullets));bullet(g.px+5,g.py,1,0,1,1,1);g.firewall_ticks=0;fire_special();assert(active_bullets(true)==0&&g.firewall_ticks>0);
+    /* Input path: press J at full charge unleashes and resets the meter. */
+    game_start(96);g.mode=ON_AIR;g.phase_ticks=1000;g.special_charge=SPECIAL_MAX;game_press('J');game_tick();assert(g.special_charge==0);
+    /* Elite: tanky flagged spawn; its death pays a treasure burst of shards + special charge. */
+    game_start(97);g.mode=ON_AIR;memset(g.enemies,0,sizeof(g.enemies));memset(g.pickups,0,sizeof(g.pickups));g.special_charge=0;
+    int e=spawn_elite(POP_AD,0);assert(e>=0&&g.enemies[e].elite&&g.enemies[e].hp==(int16_t)(8*ELITE_HP_MULT));
+    damage_enemy(e,9999);assert(active_pickups()==1+ELITE_SHARDS&&g.special_charge>=ELITE_CHARGE);
+    /* Elites appear from ELITE_MIN_TURN, not before. */
+    game_start(98);g.turn=ELITE_MIN_TURN-1;g.intent=BOT_RAID;begin_air();int before=0;for(int i=0;i<MAX_ENEMIES;i++)before+=g.enemies[i].active&&g.enemies[i].elite;
+    game_start(98);g.turn=ELITE_MIN_TURN;g.intent=BOT_RAID;begin_air();int after=0;for(int i=0;i<MAX_ENEMIES;i++)after+=g.enemies[i].active&&g.enemies[i].elite;
+    assert(before==0&&after==1);
+}
 static bool sim_available(CardId id){if(id==CARD_14K||id==CARD_CHAT||id==CARD_VOICE)return true;for(int i=0;i<5;i++)if(g.kingdom[i]==id)return true;return false;}
 static int program_count(void){int n=0;for(int id=CARD_MULTI;id<=CARD_AMP;id++)n+=deck_count((CardId)id);return n;}
 static CardId sim_pick(int policy,int baud){
@@ -907,5 +982,5 @@ static void test_mortal_strategy_sim(void){
        ~1/30-verse tie; the robust invariant is the rusher's survival deficit.) */
     assert(turns[6]<turns[3]&&turns[6]<turns[0]);
 }
-int main(void){setvbuf(stdout,NULL,_IONBF,0);test_movement();test_ring();test_finale_model();test_turn_flow();test_controls();test_edit_recommendation();test_first_turn_onboarding();test_rule_feedback();test_cache_no_duplicate();test_open_scheduler();test_p1_cards();test_p1_content();test_comment_wall();test_seek_intervention();test_finale_effects();test_result_feedback();test_combat_diversity();test_signal_combo();test_strategy_sim();test_mortal_strategy_sim();puts("V2 P1 selftest: PASS");return 0;}
+int main(void){setvbuf(stdout,NULL,_IONBF,0);test_movement();test_ring();test_finale_model();test_turn_flow();test_controls();test_edit_recommendation();test_first_turn_onboarding();test_rule_feedback();test_cache_no_duplicate();test_open_scheduler();test_p1_cards();test_p1_content();test_comment_wall();test_seek_intervention();test_finale_effects();test_result_feedback();test_combat_diversity();test_signal_combo();test_combat_skills();test_strategy_sim();test_mortal_strategy_sim();puts("V2 P1 selftest: PASS");return 0;}
 #endif

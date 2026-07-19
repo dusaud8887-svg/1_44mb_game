@@ -135,7 +135,28 @@
 
 **미정합/의도적 이탈**: 신호→BAUD·연쇄→편성은 덱 바깥에서 자원을 생성하므로 도미니언의 "덱 순도"([36](36_DOMINION_DEEP_RESEARCH.md) §5-3)를 일부 희석한다. 이는 뱀서식 "전투가 성장을 산다"를 위한 **의도적 융합점**이며, 상한(`SIGNAL_BAUD_CAP`)·문턱(`COMBO_CUE_KILLS`)으로 RX 경제를 대체하지 않고 보완하도록 제한했다.
 
-## 8. 관련 문서
+## 8. VS/HoloCure 전투 패스 — 필살기 + 엘리트
+
+전투 방면(각종 공격·스킬·전투 매커니즘·전략)을 [37](37_VAMPIRE_SURVIVORS_HOLOCURE_RESEARCH.md) 근거로 고도화한 패스.
+
+### 8-1. 필살기 (Overdrive) — HoloCure §6.3 캐릭터 스킬, §6.4 필살기, §10.7 능동 조작
+- 처치마다 `special_charge`가 `SPECIAL_PER_KILL + 연쇄 티어`만큼 찬다(엘리트는 `ELITE_CHARGE` 대량). 런 지속 자원(구절 사이 유지, `game_start`에서만 초기화).
+- 가득 차면 **`J`**로 발동. **덱의 지배 학파**(최고 전투 티어)가 어떤 필살기인지 결정한다 — 구매 결정이 "패닉 버튼"까지 닿는다([37](37_VAMPIRE_SURVIVORS_HOLOCURE_RESEARCH.md) §6.3 중심 메커니즘):
+  - **확산 NETWORK** → 아레나 전역 노바(화면 청소). 학파 미보유 시 약한 기본 버스트.
+  - **다발 REPEAT** → 최근접 군집에 부채꼴 집중 탄막.
+  - **연사 REPLAY** → 반송파 재장전 급가속 + 관통(`special_ticks` 창).
+  - **내성 SAFE** → 요새: 적탄 소거 + 방벽 + 넉백.
+- SIM 봇은 `J`를 누르지 않아 밸런스 SIM 불변(기본 전투 회귀도 반송파 미변경).
+
+### 8-2. 엘리트 조우 — §8.2 보스 역할, §10.5 보물 연출
+- `ELITE_MIN_TURN`(6)부터 각 구절에 텔레그래프된 탱키 슈터(POP_AD, HP ×`ELITE_HP_MULT`) 1체 등장. 아트 추가 없이 `Enemy.elite` 플래그 + 맥동 링 연출.
+- 처치 시 **보물 버스트**: 신호 조각 `ELITE_SHARDS`개 + 특수 충전 `ELITE_CHARGE` → 우선 처치·카이팅 전략 타깃.
+- **창발 효과**: 엘리트 압박으로 SAFE 학파(내성) 방어 가치가 커져, 필사 SIM에서 CLEAN_SIGNAL의 생존 우위가 다시 뚜렷해졌다(엘리트 전 10.9 근접 → 후 CLEAN 10.2 vs BIG 9.9, THREE_WAY 9.0 최단). 위험/생존 트레이드오프가 더 선명.
+
+### 8-3. 회귀·검증
+`test_combat_skills` — 특수 충전·학파별 필살기(노바/탄막/과부하/요새)·`J` 입력·엘리트 스폰(등장 턴 경계·부스트 HP)·보물 버스트를 고정. selftest + 1000시드 SIM PASS, `test_combat_diversity` 기본 전투(base surv479) 불변.
+
+## 9. 관련 문서
 - [10_MECHANICS](10_MECHANICS.md) §4 (4학파 전투), §8 (링/경제)
 - [15_CARDS](15_CARDS.md) §9 (최종 컴파일)
 - [20_BALANCE](20_BALANCE.md) `B3-융합`

@@ -75,3 +75,18 @@ BALANCE(RESONANCE_FIELD_DAMAGE, 6)
    jump-starts the chain and enriches shards for the verse (docs 60 §6). */
 BALANCE(COST_AMP, 3)
 BALANCE(AMP_COMBO_JUMP, 6)           /* +combo on fire (1.5 tiers) */
+/* B4-필살기: an Overdrive special charged by kills, unleashed on a key — a school-flavored
+   active attack (VS/HoloCure §6.3 character skill, §6.4 필살기, §10.7 능동 조작). */
+BALANCE(SPECIAL_MAX, 100)            /* charge needed to unleash */
+BALANCE(SPECIAL_PER_KILL, 7)        /* charge per kill (+combo tier) */
+BALANCE(SPECIAL_NOVA_DAMAGE, 20)    /* NETWORK: arena-wide nova / default burst */
+BALANCE(SPECIAL_BARRAGE_SHOTS, 9)   /* REPEAT: fanned barrage bullet count */
+BALANCE(SPECIAL_BARRAGE_DAMAGE, 10)
+BALANCE(SPECIAL_OVERDRIVE_TICKS, 180)/* REPLAY: fire-rate overdrive window */
+BALANCE(SPECIAL_OVERDRIVE_RELOAD, 10)/* carrier reload during overdrive */
+BALANCE(SPECIAL_KNOCKBACK, 40)      /* SAFE: bulwark push distance */
+/* B5-엘리트: a telegraphed tanky shooter from mid-game — climax/priority target (§8.2, §10.5). */
+BALANCE(ELITE_MIN_TURN, 6)          /* first verse an elite can appear */
+BALANCE(ELITE_HP_MULT, 5)           /* elite HP = base type HP x this */
+BALANCE(ELITE_SHARDS, 5)            /* treasure-burst shards on death */
+BALANCE(ELITE_CHARGE, 40)           /* special charge granted on elite kill */
