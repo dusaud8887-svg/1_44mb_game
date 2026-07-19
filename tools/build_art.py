@@ -931,8 +931,8 @@ def enemy(kind: int, pose: int = 0) -> Canvas:
 
 
 def icon(kind: int) -> Canvas:
-    q = Canvas(16, 16); c = (C, U, C, A, C, W, C, C, U, C, M, U, D, A, R)[kind]
-    base = AD if kind in (3, 13) else MD if kind == 12 else P
+    q = Canvas(16, 16); c = (C, U, C, A, C, W, C, C, U, C, M, U, C, U, A, D, A, R)[kind]
+    base = AD if kind in (3, 16) else MD if kind == 15 else P
     q.rect(3, 1, 10, 14, base)
     q.rect(1, 3, 14, 10, base)
     q.rect(2, 2, 2, 2, base); q.rect(12, 2, 2, 2, base)
@@ -965,10 +965,17 @@ def icon(kind: int) -> Canvas:
     elif kind == 11:                          # SCAN: bracketed scan-lines (dig/sift the deck)
         q.rect(2, 3, 1, 9, c); q.rect(13, 3, 1, 9, c); q.rect(2, 3, 3, 1, c); q.rect(11, 3, 3, 1, c)
         q.rect(2, 11, 3, 1, c); q.rect(11, 11, 3, 1, c); q.rect(4, 5, 8, 1, c); q.rect(4, 8, 8, 1, c); q.rect(4, 10, 6, 1, c); q.px(8, 8, W)
-    elif kind == 12:
+    elif kind == 12:                          # MAGNET: horseshoe magnet, red/blue pole tips
+        q.rect(4, 3, 8, 2, c); q.rect(4, 3, 2, 9, c); q.rect(10, 3, 2, 9, c)
+        q.rect(4, 12, 2, 2, R); q.rect(10, 12, 2, 2, U); q.px(8, 4, W)
+    elif kind == 13:                          # FREEZE: snowflake (chain insurance)
+        q.rect(7, 2, 2, 12, c); q.rect(2, 7, 12, 2, c); q.line(4, 4, 11, 11, c); q.line(11, 4, 4, 11, c); q.rect(7, 7, 2, 2, W)
+    elif kind == 14:                          # OVERCLOCK: gauge pinned to max (needle top-right)
+        q.frame(3, 4, 10, 8, c); q.line(8, 8, 12, 5, c); q.rect(7, 7, 2, 2, W); q.px(4, 5, c); q.px(11, 5, c)
+    elif kind == 15:
         q.rect(3, 4, 11, 7, c); q.rect(5, 11, 3, 3, c)
         q.rect(5, 6, 2, 2, W); q.rect(10, 6, 2, 2, W)
-    elif kind == 13: q.rect(6, 3, 4, 8, c); q.rect(5, 8, 6, 4, c); q.line(3, 12, 13, 12, A); q.px(8, 4, W)
+    elif kind == 16: q.rect(6, 3, 4, 8, c); q.rect(5, 8, 6, 4, c); q.line(3, 12, 13, 12, A); q.px(8, 4, W)
     else: q.line(3, 3, 12, 12, c); q.line(12, 3, 3, 12, c); q.rect(7, 2, 2, 12, W); q.rect(2, 7, 12, 2, R)
     return q
 
@@ -1246,7 +1253,7 @@ def validate(echo: Canvas, seek: Canvas, seek_shell: Canvas, seek_avatar: Canvas
     assert (seek_shell.w, seek_shell.h) == (64, 16) and (seek_avatar.w, seek_avatar.h) == (192, 24)
     assert (noa.w, noa.h) == (144, 64) and (noa_proxy.w, noa_proxy.h) == (144, 24)
     assert (portraits.w, portraits.h) == (192, 64) and (expressions.w, expressions.h) == (960, 64)
-    assert (foes.w, foes.h) == (160, 16) and (cards.w, cards.h) == (240, 16)
+    assert (foes.w, foes.h) == (160, 16) and (cards.w, cards.h) == (288, 16)
     assert all((q.w, q.h) == (192, 108) for q in keys)
     assert all(v < 16 for cv in (echo, seek, seek_shell, seek_avatar, noa, noa_proxy, portraits, expressions, foes, cards, *keys) for v in cv.p)
     # Identity anchors: every Echo frame keeps a red LIVE pin; each Noa stage keeps the white glove.
@@ -1255,7 +1262,7 @@ def validate(echo: Canvas, seek: Canvas, seek_shell: Canvas, seek_avatar: Canvas
     for i in range(4): assert any(seek_shell.p[y*seek_shell.w+i*16] in (AD, A) for y in range(16))
     for i in range(6): assert sum(noa_proxy.p[y*noa_proxy.w+i*24:y*noa_proxy.w+(i+1)*24].count(W) for y in range(24)) >= 8
     assert len({bytes(enemy(i, p).p) for i in range(5) for p in range(2)}) == 10
-    assert len({bytes(icon(i).p) for i in range(15)}) == 15
+    assert len({bytes(icon(i).p) for i in range(18)}) == 18
     # Marketing originals must be fully painted (no transparency holes).
     assert all(q.p.count(T) == 0 for q in keys)
 
@@ -1268,7 +1275,7 @@ def build() -> None:
     noa = sheet([noa_frame(i) for i in range(3)])
     noa_proxy = sheet([noa_proxy_frame(i) for i in range(6)])
     foes = sheet([enemy(i, p) for i in range(5) for p in range(2)])
-    cards = sheet([icon(i) for i in range(15)])
+    cards = sheet([icon(i) for i in range(18)])
     portraits = sheet([echo_portrait(), seek_portrait(), noa_portrait()])
     result_portraits = sheet([echo_portrait(7), noa_portrait(2)])
     echo_expressions = [echo_portrait(i) for i in range(8)]

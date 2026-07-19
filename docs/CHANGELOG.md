@@ -1,5 +1,11 @@
 # 문서 변경 이력
 
+## 2026-07-19 — 학파별 융합 유틸리티 카드 3종: 자기장·정지·연산 가속 (15→18종)
+
+docs/60 §6-2의 남은 후보를 각 학파 정체성에 맞춰 융합 루프의 한 축에 걸어 구현했다. **신호 자기장 MAGNET**(확산/payload, 비용3): 이번 구절 자석 반경 +40(신호 회수). **신호 정지 FREEZE**(내성/safe, 비용3): 피격 시 연쇄 유지 보험 적립 — 소비되면 다음 피격에 붕괴(연쇄 보존). **연산 가속 OVERCLOCK**(연사/payload, 비용4): 반송파 과부하(재장전 급가속+관통) + 연쇄 창 갱신(연쇄 지속). NOA 복제는 각각 습격 증폭.
+
+enum은 SCAN 뒤 3장 삽입(CHAT/VOICE/NOISE→15/16/17), 프로그램 범위 종단 `CARD_SCAN`→`CARD_OVERCLOCK`, 킹덤 풀 10→13, 아이콘 스트립 15→18종(1920→2304B, stride 240→288), `program_modifier`(NETWORK/SAFE/REPLAY), `kingdom_valid`(payload/safe), `pickup_magnet`·`damage_player`(FREEZE) 훅, `card_hint`. `test_signal_combo`에 3종 회귀(자석 반경↑·보험 소비/붕괴·과부하+창 갱신·태그·킹덤 유효성) 추가. 킹덤 풀 확대로 SIM 분포 미세 이동했으나 불변식(THREE_WAY 8.9 최단·CLEAN_SIGNAL 10.2 최장) 유지, 기본 전투(base surv479) 불변. selftest·1000시드 SIM PASS, render.c 심 컴파일, build_art.py 재생성 검증(18종 고유). 남은 후보 FEEDBACK 1종은 docs/60 §6-3. Windows 실빌드 PENDING.
+
 ## 2026-07-19 — 도미니언 축 감사: 드로우 엔진 SCAN 반영 + +Buy 제외 (14→15종)
 
 도미니언 핵심 축(카드/액션/코인/구매·역할)을 코드로 감사하고 두 미비 축을 분석했다. (1) **드로우 축 → 반영**: 손패 5장 고정에서 MULTI의 `+2 cue`가 손에 프로그램이 없으면 낭비되는 게 진짜 병목이었다. **회선 스캔 SCAN**(REPLAY/엔진, 비용 2) 추가 — 편성 시 cue 순증 0(캔트립)이고 손패를 순환해 프로그램을 파낸다. "빌리지(MULTI)+드로우(SCAN)" 엔진 완성. SIM에서 LOOP_ENGINE에 편입하자 낭비 프로그램(`terminal`) 지표가 감소(터미널 충돌 해소를 수치로 확인). (2) **+Buy/게이너 → 제외**: 이 게임 병목은 구매 수가 아니라 cue·손패라 +Buy는 비병목 문제를 푸는 중복 레버이고, "다르게 획득" 역할은 이미 시크 거래/NOA/정리로 어레인지됨. 구절당 1획득 리듬(짧은 런 페이싱)을 흐려 제외(docs/60 §6-1c).

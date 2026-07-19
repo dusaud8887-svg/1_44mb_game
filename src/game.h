@@ -18,7 +18,8 @@ typedef enum { TITLE, EDIT, ON_AIR, BREAK, OPEN_CHANNEL, RESULT } Mode;
 typedef enum { CARRIER, PROGRAM, ARCHIVE, NOISE } CardType;
 typedef enum { CARD_2400, CARD_14K, CARD_MULTI, CARD_CACHE, CARD_FIREWALL,
                CARD_MACRO, CARD_PREFETCH, CARD_MARKER, CARD_SURGE, CARD_CHECKSUM,
-               CARD_AMP, CARD_SCAN, CARD_CHAT, CARD_VOICE, CARD_NOISE, CARD_COUNT } Card;
+               CARD_AMP, CARD_SCAN, CARD_MAGNET, CARD_FREEZE, CARD_OVERCLOCK,
+               CARD_CHAT, CARD_VOICE, CARD_NOISE, CARD_COUNT } Card;
 typedef enum { BOT_RAID, MUTE, GIFT_DROP, COMMENT_WALL, MIRROR, CLIP_THEFT, TREND, INTENT_COUNT } Intent;
 typedef enum { BOT_CHAT, POP_AD, SPON_GIFT, MOD_MASK, BUF_WORM } EnemyType;
 typedef enum { ECHO_EMPTY, ECHO_LIVE, ECHO_ARCHIVED, ECHO_MIMICKED } EchoState;
@@ -70,7 +71,7 @@ typedef struct {
     int baud, mirror_ticks, surge_ticks, effect_ticks, anim_ticks, echo_total, echo_live, echo_archived, echo_mimicked;
     float px, py, last_dx, last_dy, spawn_budget;
     /* Signal economy + combo resonance (docs 60): the ON AIR combat<->deck economy loop. */
-    uint8_t combo, combo_best, bonus_cue, amp_active;
+    uint8_t combo, combo_best, bonus_cue, amp_active, magnet_boost, freeze_charge;
     int combo_ticks, signal, signal_baud, resonance_ticks, special_charge, special_ticks;
     Deck deck;
     EchoCell ring[64];

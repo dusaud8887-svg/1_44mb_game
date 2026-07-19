@@ -78,6 +78,14 @@ BALANCE(AMP_COMBO_JUMP, 6)           /* +combo on fire (1.5 tiers) */
 /* 회선 스캔 SCAN — an engine-school cantrip sifter (Dominion draw axis, arranged): cueing it is
    net-0 cue and cycles the hand, so MULTI's +cue finds programs to spend on (docs 60 §6). */
 BALANCE(COST_SCAN, 2)
+/* 신호 자기장/정지/연산 가속 — 학파별 융합 유틸리티 킹덤 카드 (docs 60 §6-2). */
+BALANCE(COST_MAGNET, 3)
+BALANCE(MAGNET_BONUS, 40)            /* NETWORK: +collect radius this verse */
+BALANCE(COST_FREEZE, 3)
+BALANCE(FREEZE_CHARGES, 1)           /* SAFE: chain-insurance hits banked */
+BALANCE(COST_OVERCLOCK, 4)
+BALANCE(OVERCLOCK_TICKS, 120)        /* REPLAY: carrier overdrive window */
+BALANCE(OVERCLOCK_COMBO_WINDOW, 240) /* REPLAY: combo window refreshed to keep the chain */
 /* B4-필살기: an Overdrive special charged by kills, unleashed on a key — a school-flavored
    active attack (VS/HoloCure §6.3 character skill, §6.4 필살기, §10.7 능동 조작). */
 BALANCE(SPECIAL_MAX, 100)            /* charge needed to unleash */

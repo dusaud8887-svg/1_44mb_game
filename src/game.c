@@ -39,6 +39,9 @@ const CardDef CARD_DEF[CARD_COUNT] = {
     {L"무결성 검사", L"검사", PROGRAM, COST_CHECKSUM, 0, 0},
     {L"공명 증폭", L"증폭", PROGRAM, COST_AMP, 0, 0},
     {L"회선 스캔", L"스캔", PROGRAM, COST_SCAN, 0, 0},
+    {L"신호 자기장", L"자장", PROGRAM, COST_MAGNET, 0, 0},
+    {L"신호 정지", L"정지", PROGRAM, COST_FREEZE, 0, 0},
+    {L"연산 가속", L"가속", PROGRAM, COST_OVERCLOCK, 0, 0},
     {L"채팅 기록", L"채팅", ARCHIVE, COST_CHAT, 0, ECHO_CHAT},
     {L"음성 기록", L"음성", ARCHIVE, COST_VOICE, 0, ECHO_VOICE},
     {L"불량 잡음", L"잡음", NOISE, 0, 0, 0}
@@ -272,6 +275,15 @@ static void program_effect(CardId id,bool mirrored,int scale) {
         if(mirrored)for(int i=0;i<2;i++)spawn_edge(BOT_CHAT,i);
         else{int v=g.combo+AMP_COMBO_JUMP;g.combo=(uint8_t)(v>250?250:v);if(g.combo>g.combo_best)g.combo_best=g.combo;g.combo_ticks=COMBO_DECAY_TICKS+REPLAY_COMBO_WINDOW_PER_TIER*combat_tier(MOD_REPLAY);g.amp_active=1;}
         break;
+    case CARD_MAGNET: /* 확산: widen the shard vacuum for the verse — recover scattered kills. */
+        if(mirrored)for(int i=0;i<2;i++)spawn_edge(BOT_CHAT,i);else g.magnet_boost=1;
+        break;
+    case CARD_FREEZE: /* 내성: bank chain insurance — the next hit(s) don't break the combo. */
+        if(mirrored)for(int i=0;i<2;i++)spawn_edge(MOD_MASK,i);else if(g.freeze_charge<9)g.freeze_charge=(uint8_t)(g.freeze_charge+FREEZE_CHARGES);
+        break;
+    case CARD_OVERCLOCK: /* 연사: on-demand carrier overdrive + refresh the combo window. */
+        if(mirrored)for(int i=0;i<2;i++)spawn_edge(POP_AD,i);else{g.special_ticks=OVERCLOCK_TICKS;g.combo_ticks=OVERCLOCK_COMBO_WINDOW;}
+        break;
     default: break;
     }
 }
@@ -292,7 +304,7 @@ static void execute_program(CardId id,bool mirrored){execute_program_scaled(id,m
 
 static void choose_trend(void) {
     int best=-1,uses=-1;
-    for(int id=CARD_MULTI;id<=CARD_SCAN;id++){int score=g.program_uses[id];for(int t=0;t<6;t++)score+=g.program_recent[t][id];if(score>uses){uses=score;best=id;}}
+    for(int id=CARD_MULTI;id<=CARD_OVERCLOCK;id++){int score=g.program_uses[id];for(int t=0;t<6;t++)score+=g.program_recent[t][id];if(score>uses){uses=score;best=id;}}
     g.trend_card=(uint8_t)(best<0?CARD_FIREWALL:best);
 }
 
@@ -307,9 +319,9 @@ static void start_next_threshold(void){
 }
 
 uint8_t program_modifier(CardId id){
-    if(id==CARD_MARKER||id==CARD_SURGE)return MOD_NETWORK;if(id==CARD_FIREWALL||id==CARD_CHECKSUM)return MOD_SAFE;if(id==CARD_MACRO||id==CARD_PREFETCH||id==CARD_SCAN)return MOD_REPLAY;return MOD_REPEAT;
+    if(id==CARD_MARKER||id==CARD_SURGE||id==CARD_MAGNET)return MOD_NETWORK;if(id==CARD_FIREWALL||id==CARD_CHECKSUM||id==CARD_FREEZE)return MOD_SAFE;if(id==CARD_MACRO||id==CARD_PREFETCH||id==CARD_SCAN||id==CARD_OVERCLOCK)return MOD_REPLAY;return MOD_REPEAT;
 }
-int program_modifier_count(uint8_t modifier){int n=0;for(int id=CARD_MULTI;id<=CARD_SCAN;id++)if(program_modifier((CardId)id)==modifier)n+=deck_count((CardId)id);return n;}
+int program_modifier_count(uint8_t modifier){int n=0;for(int id=CARD_MULTI;id<=CARD_OVERCLOCK;id++)if(program_modifier((CardId)id)==modifier)n+=deck_count((CardId)id);return n;}
 /* Deck-composition -> live combat identity. The four PROGRAM tag schools already compile the
    finale (15_CARDS s9); extend that "deck build pays off as throughput" payoff to every ON AIR so
    what you buy reshapes the survivor combat all run long, not only the last 60s. Strength 1 is
@@ -321,7 +333,7 @@ static int carrier_reload(void){if(g.special_ticks)return SPECIAL_OVERDRIVE_RELO
    worth of the signal shards you collect — REPEAT sharpens it, REPLAY lengthens the window. */
 int combo_tier(void){int t=g.combo/COMBO_TIER_STEP;return t>COMBO_TIER_MAX?COMBO_TIER_MAX:t;}
 /* Live combat throughput -> deck economy: collect radius, widened by the NETWORK school. */
-int pickup_magnet(void){return PICKUP_MAGNET_BASE+NETWORK_MAGNET_PER_TIER*combat_tier(MOD_NETWORK);}
+int pickup_magnet(void){return PICKUP_MAGNET_BASE+NETWORK_MAGNET_PER_TIER*combat_tier(MOD_NETWORK)+(g.magnet_boost?MAGNET_BONUS:0);}
 static int combo_scale_pct(void){return combo_tier()*(COMBO_SCALE_PER_TIER+REPEAT_COMBO_PER_TIER*combat_tier(MOD_REPEAT));}
 
 /* The deck's dominant weapon school (highest combat tier) picks which Overdrive special fires.
@@ -402,13 +414,13 @@ static bool restore_echo(uint8_t from){
 
 static bool kingdom_valid(const CardId *cards) {
     int engine=0,payload=0,safe=0;
-    for(int i=0;i<5;i++){CardId id=cards[i];engine+=id==CARD_MULTI||id==CARD_CACHE||id==CARD_PREFETCH||id==CARD_SCAN;payload+=id==CARD_MACRO||id==CARD_MARKER||id==CARD_SURGE||id==CARD_FIREWALL||id==CARD_AMP;safe+=id==CARD_FIREWALL||id==CARD_CHECKSUM;}
+    for(int i=0;i<5;i++){CardId id=cards[i];engine+=id==CARD_MULTI||id==CARD_CACHE||id==CARD_PREFETCH||id==CARD_SCAN;payload+=id==CARD_MACRO||id==CARD_MARKER||id==CARD_SURGE||id==CARD_FIREWALL||id==CARD_AMP||id==CARD_MAGNET||id==CARD_OVERCLOCK;safe+=id==CARD_FIREWALL||id==CARD_CHECKSUM||id==CARD_FREEZE;}
     return engine>=1&&payload>=2&&safe>=1;
 }
 
 static void generate_kingdom(void) {
-    CardId pool[]={CARD_MULTI,CARD_CACHE,CARD_FIREWALL,CARD_MACRO,CARD_PREFETCH,CARD_MARKER,CARD_SURGE,CARD_CHECKSUM,CARD_AMP,CARD_SCAN};
-    do{for(int i=9;i>0;i--){int j=(int)(rng(&g.reward_rng)%(uint32_t)(i+1));CardId t=pool[i];pool[i]=pool[j];pool[j]=t;}memcpy(g.kingdom,pool,5);}while(!kingdom_valid(g.kingdom));
+    CardId pool[]={CARD_MULTI,CARD_CACHE,CARD_FIREWALL,CARD_MACRO,CARD_PREFETCH,CARD_MARKER,CARD_SURGE,CARD_CHECKSUM,CARD_AMP,CARD_SCAN,CARD_MAGNET,CARD_FREEZE,CARD_OVERCLOCK};
+    do{for(int i=12;i>0;i--){int j=(int)(rng(&g.reward_rng)%(uint32_t)(i+1));CardId t=pool[i];pool[i]=pool[j];pool[j]=t;}memcpy(g.kingdom,pool,5);}while(!kingdom_valid(g.kingdom));
 }
 
 static void begin_open(void);
@@ -446,7 +458,7 @@ static void cleanup(void) {
 
 static void begin_air(void) {
     g.mode=ON_AIR;g.phase_ticks=ON_AIR_TICKS;g.carrier_ticks=1;g.turn_hit=false;g.program_fired=false;
-    g.combo=g.combo_best=0;g.combo_ticks=0;g.signal=0;g.signal_baud=0;g.resonance_ticks=0;g.amp_active=0;g.special_ticks=0;
+    g.combo=g.combo_best=0;g.combo_ticks=0;g.signal=0;g.signal_baud=0;g.resonance_ticks=0;g.amp_active=0;g.special_ticks=0;g.magnet_boost=0;g.freeze_charge=0;
     memset(g.enemies,0,sizeof(g.enemies));memset(g.bullets,0,sizeof(g.bullets));memset(g.pickups,0,sizeof(g.pickups));
     int count=3+g.turn/2;
     uint8_t type=g.intent==GIFT_DROP?SPON_GIFT:g.intent==MUTE?MOD_MASK:g.intent==COMMENT_WALL?POP_AD:g.intent==MIRROR?POP_AD:BOT_CHAT;
@@ -483,15 +495,18 @@ static void end_air(void) {
 
 static void begin_open(void) {
     g.mode=OPEN_CHANNEL;g.open_ticks=OPEN_TICKS;g.open_card_ticks=1;g.protocol_ticks=0;g.mirror_ticks=MIRROR_TICKS;g.seek_ticks=1;g.open_sequence_at=0;
-    choose_trend();compile_finale();g.carrier_ticks=1;g.combo=g.combo_best=0;g.combo_ticks=0;g.resonance_ticks=0;g.amp_active=0;g.special_ticks=0;
+    choose_trend();compile_finale();g.carrier_ticks=1;g.combo=g.combo_best=0;g.combo_ticks=0;g.resonance_ticks=0;g.amp_active=0;g.special_ticks=0;g.magnet_boost=0;g.freeze_charge=0;
     memset(g.enemies,0,sizeof(g.enemies));memset(g.bullets,0,sizeof(g.bullets));memset(g.pickups,0,sizeof(g.pickups));
 }
 
 static void damage_player(void) {
     if(g.invuln_ticks||g.firewall_ticks)return;
     g.hp--;g.invuln_ticks=HIT_INVULN_TICKS+SAFE_INVULN_PER_TIER*combat_tier(MOD_SAFE);g.turn_hit=true;g.shake_ticks=g.low_fx?0:5;
-    /* Taking a hit breaks the chain — the SAFE school only bends it (keeps half). */
-    if(g.mode==ON_AIR){g.combo=combat_tier(MOD_SAFE)?(uint8_t)(g.combo/2):0;if(!g.combo)g.combo_ticks=0;}
+    /* Taking a hit breaks the chain — FREEZE insures it, else the SAFE school bends it (keeps half). */
+    if(g.mode==ON_AIR){
+        if(g.freeze_charge)g.freeze_charge--; /* chain insured through this hit */
+        else{g.combo=combat_tier(MOD_SAFE)?(uint8_t)(g.combo/2):0;if(!g.combo)g.combo_ticks=0;}
+    }
     if(g.mode==OPEN_CHANNEL&&!g.echo_convert_ticks){for(int i=0;i<64;i++)if(g.ring[i].state==ECHO_LIVE){g.ring[i].state=ECHO_MIMICKED;g.echo_convert_ticks=ECHO_CONVERT_TICKS;break;}}
     recount_echo();
     if(!g.hp){g.won=false;g.result_reason=RESULT_STREAM_LOST;g.mode=RESULT;g.phase_ticks=RESULT_INPUT_TICKS;}
@@ -904,6 +919,19 @@ static void test_signal_combo(void){
     assert(g.cue==1&&g.queue_n==0&&deck_total()==total&&g.deck.hand[0]!=CARD_SCAN&&program_modifier(CARD_SCAN)==MOD_REPLAY);
     /* SCAN counts as an engine card for kingdom validity. */
     {CardId k[5]={CARD_SCAN,CARD_MARKER,CARD_SURGE,CARD_FIREWALL,CARD_CHECKSUM};assert(kingdom_valid(k));}
+    /* MAGNET (확산): firing widens the shard vacuum for the verse. */
+    game_start(86);g.magnet_boost=0;int m0=pickup_magnet();execute_program(CARD_MAGNET,false);
+    assert(g.magnet_boost&&pickup_magnet()==m0+MAGNET_BONUS&&program_modifier(CARD_MAGNET)==MOD_NETWORK);
+    /* FREEZE (내성): banks chain insurance; a hit consumes it and the combo survives, next hit breaks. */
+    game_start(87);g.mode=ON_AIR;g.freeze_charge=0;execute_program(CARD_FREEZE,false);
+    assert(g.freeze_charge==FREEZE_CHARGES&&program_modifier(CARD_FREEZE)==MOD_SAFE);
+    g.combo=8;g.invuln_ticks=0;damage_player();assert(g.combo==8&&g.freeze_charge==0);
+    g.invuln_ticks=0;damage_player();assert(g.combo==0);
+    /* OVERCLOCK (연사): on-demand carrier overdrive + refreshed combo window. */
+    game_start(88);g.mode=ON_AIR;g.special_ticks=0;g.combo_ticks=0;execute_program(CARD_OVERCLOCK,false);
+    assert(g.special_ticks==OVERCLOCK_TICKS&&g.combo_ticks==OVERCLOCK_COMBO_WINDOW&&program_modifier(CARD_OVERCLOCK)==MOD_REPLAY&&carrier_reload()==SPECIAL_OVERDRIVE_RELOAD);
+    /* All three are valid kingdom cards (payload/safe classification satisfiable). */
+    {CardId k[5]={CARD_MULTI,CARD_MAGNET,CARD_OVERCLOCK,CARD_FREEZE,CARD_SCAN};assert(kingdom_valid(k));}
 }
 static int active_bullets(bool hostile){int n=0;for(int i=0;i<MAX_BULLETS;i++)n+=g.bullets[i].active&&(g.bullets[i].hostile!=0)==hostile;return n;}
 /* Overdrive special (필살기) + elite encounters — the VS/HoloCure combat pass (docs 60 §9). */
@@ -933,7 +961,7 @@ static void test_combat_skills(void){
     assert(before==0&&after==1);
 }
 static bool sim_available(CardId id){if(id==CARD_14K||id==CARD_CHAT||id==CARD_VOICE)return true;for(int i=0;i<5;i++)if(g.kingdom[i]==id)return true;return false;}
-static int program_count(void){int n=0;for(int id=CARD_MULTI;id<=CARD_SCAN;id++)n+=deck_count((CardId)id);return n;}
+static int program_count(void){int n=0;for(int id=CARD_MULTI;id<=CARD_OVERCLOCK;id++)n+=deck_count((CardId)id);return n;}
 static CardId sim_pick(int policy,int baud){
     static const CardId priority[7][5]={
         {CARD_14K,CARD_CHAT,CARD_VOICE,CARD_CHECKSUM,CARD_MULTI},
