@@ -1,7 +1,7 @@
 #ifndef ECHO144_GAME_H
 #define ECHO144_GAME_H
 
-#define SCREEN_W 320
+#define SCREEN_W 400
 #define SCREEN_H 240
 #define ARENA_TOP 16
 #define ARENA_BOTTOM 208
@@ -84,6 +84,7 @@ const wchar_t *final_form_name(uint8_t form);
 const wchar_t *final_modifier_name(uint8_t modifier);
 uint8_t program_modifier(CardId id);
 int program_modifier_count(uint8_t modifier);
+int combat_tier(uint8_t modifier);
 int final_protocol_cooldown(void);
 
 #endif

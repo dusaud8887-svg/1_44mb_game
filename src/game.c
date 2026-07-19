@@ -159,8 +159,8 @@ static bool spawn_enemy(uint8_t type, float x, float y) {
 
 static void spawn_edge(uint8_t type, int side) {
     float x=4,y=(float)(24+rng(&g.encounter_rng)%176);
-    if(side==1)x=316; else if(side==2){x=(float)(8+rng(&g.encounter_rng)%304);y=20;}
-    else if(side==3){x=(float)(8+rng(&g.encounter_rng)%304);y=204;}
+    if(side==1)x=SCREEN_W-4; else if(side==2){x=(float)(8+rng(&g.encounter_rng)%(SCREEN_W-16));y=20;}
+    else if(side==3){x=(float)(8+rng(&g.encounter_rng)%(SCREEN_W-16));y=204;}
     spawn_enemy(type,x,y);
 }
 
@@ -188,8 +188,15 @@ static void fire_carriers(void) {
         for(int n=0;n<deck_count(CARD_2400);n++) bullet(g.px,g.py,dx,dy,DAMAGE_2400,false,1);
         for(int n=0;n<deck_count(CARD_14K);n++) bullet(g.px,g.py,dx,dy,DAMAGE_14K,false,2);
     } else {
-        for(int i=0;i<g.deck.hand_n;i++) if(CARD_DEF[g.deck.hand[i]].type==CARRIER&&!g.carrier_rx[i])
-            bullet(g.px,g.py,dx,dy,g.deck.hand[i]==CARD_14K?DAMAGE_14K:DAMAGE_2400,false,g.deck.hand[i]==CARD_14K?2:1);
+        /* REPEAT school -> multishot fan, REPLAY school -> pierce. NETWORK (fire rate) and SAFE
+           (toughness) act elsewhere. Each carrier's stream visibly grows with the deck. */
+        int rep=combat_tier(MOD_REPEAT),rpl=combat_tier(MOD_REPLAY);
+        int extra=rep>=3?2:rep?1:0,pierce=rpl>=3?2:rpl>=2?1:0;
+        for(int i=0;i<g.deck.hand_n;i++) if(CARD_DEF[g.deck.hand[i]].type==CARRIER&&!g.carrier_rx[i]){
+            int is14k=g.deck.hand[i]==CARD_14K,dmg=is14k?DAMAGE_14K:DAMAGE_2400,hits=(is14k?2:1)+pierce;
+            bullet(g.px,g.py,dx,dy,dmg,false,hits);
+            for(int k=1;k<=extra;k++){float s=(k&1?1.0f:-1.0f)*(float)((k+1)/2)*0.20f;bullet(g.px,g.py,dx-dy*s,dy+dx*s,dmg,false,hits);}
+        }
     }
 }
 
@@ -212,7 +219,7 @@ static void program_effect(CardId id,bool mirrored,int scale) {
     switch(id) {
     case CARD_FIREWALL:
         if (mirrored) {
-            for(int i=0;i<3;i++) bullet(160.0f,(float)(32+i*64),g.px-160.0f,g.py-(float)(32+i*64),1,true,1);
+            for(int i=0;i<3;i++) bullet((float)(SCREEN_W/2),(float)(32+i*64),g.px-(float)(SCREEN_W/2),g.py-(float)(32+i*64),1,true,1);
         } else {g.firewall_ticks=FIREWALL_TICKS*scale/100;g.firewall_open_dir=fabsf(g.last_dx)>fabsf(g.last_dy)?(g.last_dx>=0?0:2):(g.last_dy>=0?1:3);}
         break;
     case CARD_MACRO: if(g.last_program<CARD_COUNT&&g.last_program!=CARD_MACRO)program_effect((CardId)g.last_program,mirrored,70);break;
@@ -261,6 +268,12 @@ uint8_t program_modifier(CardId id){
     if(id==CARD_MARKER||id==CARD_SURGE)return MOD_NETWORK;if(id==CARD_FIREWALL||id==CARD_CHECKSUM)return MOD_SAFE;if(id==CARD_MACRO||id==CARD_PREFETCH)return MOD_REPLAY;return MOD_REPEAT;
 }
 int program_modifier_count(uint8_t modifier){int n=0;for(int id=CARD_MULTI;id<=CARD_CHECKSUM;id++)if(program_modifier((CardId)id)==modifier)n+=deck_count((CardId)id);return n;}
+/* Deck-composition -> live combat identity. The four PROGRAM tag schools already compile the
+   finale (15_CARDS s9); extend that "deck build pays off as throughput" payoff to every ON AIR so
+   what you buy reshapes the survivor combat all run long, not only the last 60s. Strength 1 is
+   baseline, 2+ rewards (mirrors s9). */
+int combat_tier(uint8_t modifier){int n=program_modifier_count(modifier);return n>=COMBAT_TAG_TIER3?3:n>=COMBAT_TAG_TIER2?2:n>=COMBAT_TAG_TIER1?1:0;}
+static int carrier_reload(void){int r=CARRIER_TICKS-CARRIER_SPEED_PER_TIER*combat_tier(MOD_NETWORK);return r<CARRIER_RELOAD_MIN?CARRIER_RELOAD_MIN:r;}
 
 static void compile_finale(void){
     int chat=deck_count(CARD_CHAT),voice=deck_count(CARD_VOICE);
@@ -358,7 +371,7 @@ static void begin_open(void) {
 
 static void damage_player(void) {
     if(g.invuln_ticks||g.firewall_ticks)return;
-    g.hp--;g.invuln_ticks=HIT_INVULN_TICKS;g.turn_hit=true;g.shake_ticks=g.low_fx?0:5;
+    g.hp--;g.invuln_ticks=HIT_INVULN_TICKS+SAFE_INVULN_PER_TIER*combat_tier(MOD_SAFE);g.turn_hit=true;g.shake_ticks=g.low_fx?0:5;
     if(g.mode==OPEN_CHANNEL&&!g.echo_convert_ticks){for(int i=0;i<64;i++)if(g.ring[i].state==ECHO_LIVE){g.ring[i].state=ECHO_MIMICKED;g.echo_convert_ticks=ECHO_CONVERT_TICKS;break;}}
     recount_echo();
     if(!g.hp){g.won=false;g.result_reason=RESULT_STREAM_LOST;g.mode=RESULT;g.phase_ticks=RESULT_INPUT_TICKS;}
@@ -368,7 +381,7 @@ static void update_enemies(void) {
     static const float speed[]={22,10,0,10,18};
     for(int i=0;i<MAX_ENEMIES;i++)if(g.enemies[i].active){Enemy *e=&g.enemies[i];
         float dx=g.px-e->x,dy=g.py-e->y;normalize(&dx,&dy);
-        e->x=clampf(e->x+dx*speed[e->type]/TICK_HZ,3,317);
+        e->x=clampf(e->x+dx*speed[e->type]/TICK_HZ,3,SCREEN_W-3);
         e->y=clampf(e->y+dy*speed[e->type]/TICK_HZ,ARENA_TOP+3,ARENA_BOTTOM-3);
         if(e->type==POP_AD||e->type==MOD_MASK){if(e->fire)--e->fire;else{bullet(e->x,e->y,dx,dy,1,e->type==MOD_MASK?2:1,1);e->fire=120;}}
         if(e->marked)e->marked--;
@@ -392,12 +405,12 @@ static void update_bullets(void) {
 static void move_player(void) {
     float dx=(float)((held_keys[VK_RIGHT]||held_keys['D'])-(held_keys[VK_LEFT]||held_keys['A']));
     float dy=(float)((held_keys[VK_DOWN]||held_keys['S'])-(held_keys[VK_UP]||held_keys['W']));
-    if(dx||dy){normalize(&dx,&dy);g.last_dx=dx;g.last_dy=dy;g.px=clampf(g.px+dx*PLAYER_SPEED/TICK_HZ,4,316);g.py=clampf(g.py+dy*PLAYER_SPEED/TICK_HZ,ARENA_TOP+4,ARENA_BOTTOM-4);}
+    if(dx||dy){normalize(&dx,&dy);g.last_dx=dx;g.last_dy=dy;g.px=clampf(g.px+dx*PLAYER_SPEED/TICK_HZ,4,SCREEN_W-4);g.py=clampf(g.py+dy*PLAYER_SPEED/TICK_HZ,ARENA_TOP+4,ARENA_BOTTOM-4);}
 }
 
 static void update_air(void) {
     move_player();
-    if(--g.carrier_ticks<=0){fire_carriers();g.carrier_ticks=CARRIER_TICKS;}
+    if(--g.carrier_ticks<=0){fire_carriers();g.carrier_ticks=carrier_reload();}
     if(g.auto_fire_ticks)g.auto_fire_ticks--;if(g.queue_delay_ticks)g.queue_delay_ticks--;
     if(!g.queue_delay_ticks&&(pressed_keys[VK_SPACE]||(held_keys[VK_SPACE]&&!g.auto_fire_ticks))&&g.queue_at<g.queue_n){int at=g.queue_at++;CardId id=g.queue[at];execute_program_scaled(id,false,g.queue_scale[at]);g.auto_fire_ticks=10;if(g.intent==MIRROR&&g.queue_at==1)execute_program(id,true);if(g.intent==CLIP_THEFT&&g.queue_at==1){g.stolen_program=id+1;g.mirror_ticks=90;}}
     if(g.stolen_program&&--g.mirror_ticks<=0){execute_program((CardId)(g.stolen_program-1),true);g.stolen_program=0;}
@@ -434,7 +447,7 @@ int final_protocol_cooldown(void){int power=g.final_power>FINAL_POWER_CAP?FINAL_
 static void update_open(void) {
     if(g.won){if(--g.victory_ticks<=0){g.mode=RESULT;g.phase_ticks=RESULT_INPUT_TICKS;}return;}
     move_player();
-    if(--g.carrier_ticks<=0){fire_carriers();g.carrier_ticks=CARRIER_TICKS;}
+    if(--g.carrier_ticks<=0){fire_carriers();g.carrier_ticks=carrier_reload();}
     if(--g.open_card_ticks<=0){
         open_archive_tick();
         if(g.echo_total>=64){finish_open_success();return;}
@@ -528,7 +541,7 @@ void game_start(uint32_t seed) {
 #ifdef DEV_LOG
     dev_cheated=false;
 #endif
-    g.hp=HP_START;g.turn=1;g.px=160;g.py=112;g.last_dx=1;g.trend_card=CARD_FIREWALL;g.last_program=255;
+    g.hp=HP_START;g.turn=1;g.px=SCREEN_W/2;g.py=112;g.last_dx=1;g.trend_card=CARD_FIREWALL;g.last_program=255;
     uint8_t intents[12]={BOT_RAID,GIFT_DROP,BOT_RAID,COMMENT_WALL,MUTE,GIFT_DROP,COMMENT_WALL,MUTE,BOT_RAID,MIRROR,CLIP_THEFT,TREND};
     memcpy(g.intent_deck,intents,sizeof(intents));generate_kingdom();
     CardId rest[]={CARD_2400,CARD_2400,CARD_2400,CARD_2400,CARD_CHAT};
