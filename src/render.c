@@ -71,7 +71,7 @@ static void draw_enemy(const Enemy *e){int x=(int)e->x,y=(int)e->y;
 }
 
 static void draw_icon(int x,int y,CardId id,uint32_t c){
-    (void)c;art_blit(x,y,ART_CARD,208,id*16,0,16,16);
+    (void)c;art_blit(x,y,ART_CARD,224,id*16,0,16,16);
 }
 
 static const wchar_t *card_hint(CardId id){
@@ -79,7 +79,8 @@ static const wchar_t *card_hint(CardId id){
         L"송신 공격 / 수신 전송+1",L"강한 송신 / 수신 전송+2",L"이번 구절 편성 +2",
         L"다음 구절 150% 보관",L"이동 방향 한 면이 열린 방벽",L"직전 프로그램 70% 반복",
         L"다음 3장 중 하나 선택",L"가까운 적 5개 표식",L"표식 적 우선 연쇄 피해",
-        L"잡음 제거 / 모방 복구",L"지금 부담 / 최종 응답+1",L"지금 부담 / 최종 응답+3",
+        L"잡음 제거 / 모방 복구",L"연쇄 급증 / 이번 구절 신호+1",
+        L"지금 부담 / 최종 응답+1",L"지금 부담 / 최종 응답+3",
         L"덱 방해 / 검사나 정리로 제거"
     };
     return hints[id<CARD_COUNT?id:CARD_NOISE];

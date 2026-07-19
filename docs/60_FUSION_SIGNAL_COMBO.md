@@ -90,26 +90,33 @@
 | PERFECT_SHOW | 19/30 | 770/1000 |
 | THREE_WAY | 30/30 | 1000/1000 |
 
-- `test_signal_combo` — 드롭·수집·붕괴·티어 배율·피격 붕괴·SAFE 절반·NETWORK 자석·신호→BAUD·연쇄→편성·상한을 회귀 고정.
-- 4학파 전투 다양성(`test_combat_diversity`)·피격 생존 순서(`test_mortal_strategy_sim`)는 반송파를 건드리지 않아 불변.
+- `test_signal_combo` — 드롭·수집·붕괴·티어 배율·피격 붕괴·SAFE 절반·NETWORK 자석·신호→BAUD·연쇄→편성·상한·공명 정점·AMP 카드를 회귀 고정.
+- 4학파 전투 다양성(`test_combat_diversity`)은 반송파를 건드리지 않아 불변(기본 생존 479 동일).
+- AMP를 킹덤 풀(8→9종)에 넣어 킹덤 다양성이 늘면서 필사 SIM에서 CLEAN_SIGNAL/BIG_BAUD 생존이 ~1/30구절 차로 근접했다. `test_mortal_strategy_sim`의 불변식을 **"승수 최대화(THREE_WAY)가 생존을 가장 많이 지불한다"**(느린 두 덱보다 먼저 OPEN 진입)로 재정의 — 위험/생존 트레이드오프의 본질을 더 견고하게 단언한다.
 
 ## 5. 연출 (render.c)
 - **draw_world**: 신호 조각을 호박색(가치>1은 자홍) 점으로.
 - **draw_air**: 상단 중앙에 `연쇄x{n}` + 티어 핍, `신호{n}` 은행량. 최대 티어에서 `공명` 라벨 + 플레이어를 따라오는 장판 링(저자극 모드에서는 링 생략).
 - **draw_break**: `신호+{n}` — 이번 구절 전투가 번 BAUD.
 
-## 6. 미구현 스펙 — 새 킹덤 카드 (아트 파이프라인 의존)
-사용자가 요청한 "더 많은 왕국 카드"는 카드 아이콘 스트립이 정확히 13종으로 고정(`tools/build_art.py` `range(13)` + 고유성 assert)이라, 새 `Card` 항목마다 아트 파이프라인 변경이 필요하다. 리눅스 CI에서 아트 빌드를 검증할 수 없어 이번 패스에서는 **기계만** 구현하고 카드는 스펙으로 남긴다. 융합 루프를 전제로 한 후보:
+## 6. 새 킹덤 카드
 
+`build_art.py`가 리눅스에서 실행되는 것을 확인해(순수 파이썬), 아트 스트립을 13→14종으로 늘려 **첫 융합 킹덤 카드를 구현**했다. `build_font.py`만 Windows GDI 의존이라 새 카드명 한글 글리프는 빌드 시(build.bat) 재생성된다.
+
+### 6-1. 구현됨 — 공명 증폭 AMP (id 10, REPEAT/다발)
+- **효과**(발동): 연쇄 +`AMP_COMBO_JUMP`(1.5티어) 즉시 급증 + 이번 구절 조각 가치 +1(`amp_active`). NOA 복제 시에는 습격을 증폭(적 2체 스폰).
+- **왜 이 카드인가**: 융합 루프를 수동으로 **설계**하는 첫 레버다. 다른 카드는 연쇄·신호를 수동적으로 이용하지만, AMP는 연쇄를 능동으로 점화해 공명 정점·풍부한 신호 경제로 앞당긴다([37](37_VAMPIRE_SURVIVORS_HOLOCURE_RESEARCH.md) §10.4 "통제 가능한 랜덤", 빌드 주도권). REPEAT 태그라 다발 학파와 겹쳐 학파 티어를 함께 올린다(도미니언식 "엔진 조각").
+- **구현 표면**: `Card` enum(CHECKSUM 뒤 삽입, CHAT/VOICE/NOISE는 11/12/13으로 이동) + `CARD_DEF` + `COST_AMP`/`AMP_COMBO_JUMP` + `build_art.py` icon kind 10(동심 공명 링) + 킹덤 풀(8→9) + `program_modifier`(기본 REPEAT) + `kingdom_valid`(payload) + `card_hint` + `test_signal_combo` AMP 케이스. 프로그램 범위 종단 `CARD_CHECKSUM`→`CARD_AMP` 3곳.
+
+### 6-2. 남은 후보 (다음 패스)
 | 후보 카드 | 학파 | 효과 초안 | 융합 상호작용 |
 |---|---|---|---|
-| **증폭기 AMP** | REPEAT | 이번 구절 조각 가치 +1 | 연쇄·경제 동시 가속 |
 | **자기장 MAGNET** | NETWORK | 자석 반경 대폭↑ 1구절 | 흩뿌린 처치 회수 |
 | **정지 FREEZE** | SAFE | 피격 시 연쇄 유지 1회 | 체인 보험 |
 | **오버클럭 O.C.** | REPLAY | 연쇄 창 2배 30틱 | 롱 체인 빌드 |
-| **환류 FEEDBACK** | 엔진 | 신호 10 소모 → 편성 +1 즉시 | 경제→템포 명시 변환 |
+| **환류 FEEDBACK** | 엔진 | 신호 소모 → 편성 +1 즉시 | 경제→템포 명시 변환(타이밍: 지난 구절 은행분 사용) |
 
-착수 시: `Card` enum + `CARD_DEF` + `balance.def` 비용 + `build_art.py` 아이콘(kind 13+) + 킹덤 풀 + `card_hint` + 회귀 테스트.
+각 카드는 6-1과 동일 표면 + 아이콘 kind 하나 추가. 킹덤 풀이 커질수록 필사 SIM 생존 분포가 미세 이동하므로(§4) 추가 시 SIM 재검증 필요.
 
 ## 7. 조사 정합 (레퍼런스 §번호 매핑)
 

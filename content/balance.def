@@ -71,3 +71,7 @@ BALANCE(RESONANCE_FIELD_TICKS, 90)   /* field lifetime after a program fires at 
 BALANCE(RESONANCE_FIELD_INTERVAL, 15)/* pulse cadence */
 BALANCE(RESONANCE_FIELD_RADIUS, 42)
 BALANCE(RESONANCE_FIELD_DAMAGE, 6)
+/* 공명 증폭 AMP — a REPEAT-school kingdom card that engineers the fusion loop directly:
+   jump-starts the chain and enriches shards for the verse (docs 60 §6). */
+BALANCE(COST_AMP, 3)
+BALANCE(AMP_COMBO_JUMP, 6)           /* +combo on fire (1.5 tiers) */
