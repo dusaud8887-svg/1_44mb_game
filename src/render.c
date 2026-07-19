@@ -86,10 +86,21 @@ static void draw_card(int x,int y,int w,int h,CardId id,bool focus,int slot){
     else text_at(x+4,y+h-13,COL_DIM,c->type==ARCHIVE?L"기록":c->type==NOISE?L"잡음":L"기능");
 }
 
+enum { COL_TRACK=0x00171322 };
 static void draw_header(void){
     rect(0,0,SCREEN_W,16,COL_PANEL);number_at(4,2,COL_INK,L"체력%d",g.hp);number_at(54,2,COL_CYAN,L"동조%d",g.sync);
     number_at(118,2,COL_INK,L"메아리%d/64",g.echo_total);number_at(250,2,COL_DIM,L"구절%d/12",g.turn>12?12:g.turn);
-    rect(0,15,50,1,g.hp<3?COL_RED:COL_INK);rect(54,15,54,1,COL_CYAN);rect(118,15,122,1,g.echo_mimicked?COL_MAGENTA:COL_DIM);rect(250,15,70,1,COL_DIM);
+    /* HP = discrete life pips (Miller: small counts read faster as units than as a bar). */
+    for(int i=0;i<HP_START;i++)rect(4+i*10,13,7,2,i<g.hp?(g.hp<3?COL_RED:COL_INK):COL_TRACK);
+    /* SYNC 0..3 as three filling pips = the arrangement gauge, not a static bar. */
+    for(int i=0;i<3;i++)rect(54+i*17,13,15,2,i<g.sync?COL_CYAN:COL_TRACK);
+    /* ECHO = stacked composition gauge toward 64. Live/archived/mimicked widths make the
+       ending-deciding colour mix readable every frame (goal-gradient + docs 10 s8). */
+    rect(118,13,122,2,COL_TRACK);
+    int wl=122*g.echo_live/64,wa=122*g.echo_archived/64,wm=122*g.echo_mimicked/64,cx=118;
+    rect(cx,13,wl,2,COL_CYAN);cx+=wl;rect(cx,13,wa,2,COL_AMBER);cx+=wa;rect(cx,13,wm,2,COL_MAGENTA);
+    /* TURN = elapsed fraction of the 12-verse run. */
+    rect(250,13,70,2,COL_TRACK);rect(250,13,70*(g.turn>12?12:g.turn)/12,2,COL_DIM);
 }
 
 static void draw_background(void){clear(COL_BG);for(int y=24;y<ARENA_BOTTOM;y+=16)for(int x=(y&16)?8:0;x<SCREEN_W;x+=16)rect(x,y,1,1,COL_DIM);frame(2,18,316,188,COL_PANEL);}
@@ -108,11 +119,22 @@ static void draw_world(void){
 static void draw_edit(void){
     draw_background();rect(0,16,SCREEN_W,142,0x00171322);draw_world();draw_header();
     text_at(4,18,COL_MAGENTA,L"다음:");text_at(48,18,COL_INK,intent_name(g.intent));
+    /* Threat telegraph — which enemy is coming and how many. Makes the intent deck (the
+       one-screen level design, docs 10 s5) legible without a wall of text. */
+    {uint8_t nt=g.intent==GIFT_DROP?SPON_GIFT:g.intent==MUTE?MOD_MASK:g.intent==COMMENT_WALL||g.intent==MIRROR?POP_AD:BOT_CHAT;
+     art_blit(150,16,ART_ENEMY,160,nt*32,0,16,16);number_at(168,18,COL_DIM,L"x%d",3+g.turn/2);}
     if(g.turn<=3)text_at(4,34,COL_BLUE,L"추천: 공격 1장, 나머지는 수신");
     else if(g.turn>=5){text_at(4,34,COL_DIM,L"노아가 학습 중:");text_at(126,34,COL_MAGENTA,CARD_DEF[g.trend_card].short_name);}
     if(g.new_ticks&&g.new_card){text_at(4,50,COL_CYAN,L"구매 카드 귀환:");text_at(126,50,COL_INK,CARD_DEF[g.new_card-1].short_name);}
     else if(g.message_ticks)text_at(4,50,COL_AMBER,L"버린 더미를 섞었습니다.");
-    number_at(266,18,COL_CYAN,L"편성%d",g.cue);if(g.contract_applied){rect(260,34,56,15,COL_PANEL);frame(260,34,56,15,COL_MAGENTA);rect(263,37,3,9,COL_MAGENTA);text_at(269,36,COL_INK,L"계약+1");}number_at(4,132,COL_DIM,L"덱%d",g.deck.draw_n+g.deck.discard_n+g.deck.hand_n+(g.cached_card!=0));number_at(62,132,COL_DIM,L"뽑기%d",g.deck.draw_n);number_at(132,132,COL_DIM,L"버림%d",g.deck.discard_n);text_at(4,145,COL_DIM,L"확인:배정  공백:탐색  탭:송출");
+    number_at(266,18,COL_CYAN,L"편성%d",g.cue);
+    /* CUE as filled pips — a small count reads faster as units than as a digit alone. */
+    for(int i=0;i<(g.cue>7?7:g.cue);i++)rect(266+i*7,27,4,3,COL_CYAN);
+    if(g.contract_applied){rect(260,34,56,15,COL_PANEL);frame(260,34,56,15,COL_MAGENTA);rect(263,37,3,9,COL_MAGENTA);text_at(269,36,COL_INK,L"계약+1");}
+    number_at(4,132,COL_DIM,L"덱%d",g.deck.draw_n+g.deck.discard_n+g.deck.hand_n+(g.cached_card!=0));number_at(62,132,COL_DIM,L"뽑기%d",g.deck.draw_n);number_at(132,132,COL_DIM,L"버림%d",g.deck.discard_n);
+    /* SEEK is a HUD invariant (docs 10 s15) but was never shown — surface its once-per-hand state. */
+    text_at(210,132,g.seek_used?COL_DIM:COL_CYAN,g.seek_used?L"탐색 소진":L"탐색 가능");
+    text_at(4,145,COL_DIM,L"확인:배정  공백:탐색  탭:송출");
     for(int i=0;i<g.deck.hand_n;i++)draw_card(4+i*63,164-(i==g.cursor?2:0),59,72,g.deck.hand[i],i==g.cursor,i);
     if(g.cache_mode){rect(63,55,194,68,COL_PANEL);frame(63,55,194,68,COL_AMBER);text_at(77,63,COL_INK,L"다음 구절에 보관할 카드");draw_icon(111,87,g.deck.hand[g.cursor],COL_AMBER);text_at(137,89,COL_INK,CARD_DEF[g.deck.hand[g.cursor]].short_name);}
     if(g.prefetch_mode){rect(63,55,194,68,COL_PANEL);frame(63,55,194,68,COL_CYAN);text_at(72,61,COL_INK,L"미리 읽기 / 하나 선택");for(int i=0;i<g.prefetch_n;i++){int x=77+i*58;frame(x,79,50,34,i==g.prefetch_cursor?COL_INK:COL_DIM);draw_icon(x+4,86,g.prefetch_cards[i],COL_CYAN);text_at(x+22,87,COL_INK,CARD_DEF[g.prefetch_cards[i]].short_name);}}
@@ -120,9 +142,15 @@ static void draw_edit(void){
 
 static void draw_air(void){
     draw_background();draw_world();draw_header();
-    rect(0,208,SCREEN_W,32,COL_PANEL);text_at(4,211,COL_DIM,L"공백:송출");
+    rect(0,208,SCREEN_W,32,COL_PANEL);
+    /* ON AIR countdown — the verse drains as an amber sliver so time pressure is felt, not read. */
+    rect(0,208,SCREEN_W*g.phase_ticks/ON_AIR_TICKS,1,COL_AMBER);
+    text_at(4,211,COL_DIM,L"공백:송출");
+    /* Name what Space fires next — closes the card->effect loop the queue icons only half-tell. */
+    if(g.queue_at<g.queue_n){text_at(4,224,COL_INK,L">");text_at(12,224,COL_CYAN,CARD_DEF[g.queue[g.queue_at]].short_name);}
+    else text_at(4,224,COL_DIM,g.queue_n?L"편성 완료":L"편성 없음");
     for(int i=0;i<g.queue_n;i++){int x=58+i*48;uint32_t c=i<g.queue_at?COL_DIM:i==g.queue_at?COL_INK:COL_CYAN;if(i)line(x-22,223,x-2,223,c);frame(x,211,38,24,c);number_at(x+2,216,c,L"%d",i+1);draw_icon(x+19,215,g.queue[i],c);if(i==g.queue_at)rect(x+2,212,34,2,COL_INK);}
-    number_at(274,211,COL_INK,L"%d",(g.phase_ticks+59)/60);
+    number_at(274,211,COL_INK,L"%d초",(g.phase_ticks+59)/60);
 }
 
 static void draw_break(void){

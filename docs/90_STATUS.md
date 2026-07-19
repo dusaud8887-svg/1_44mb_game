@@ -52,6 +52,7 @@ V2 재작성으로 구 라인 위치는 폐기됐다. 이동 좌표는 상태에
 | balance.def·콘텐츠 컴파일러·이벤트·구조 분리 | [30](30_TECH.md) §4~7 | P0 balance.def·파일 구조 완료 / 생성기·이벤트 미착수 |
 | 내장 비트맵 폰트 | [30](30_TECH.md) §9 | ASCII + 게임 노출 한글 subset 완료, 전 화면 한글화 |
 | 접근성·재시작 | [45](45_UI_UX.md) §6 | M 음소거·F1 저자극·ESC 일시정지·Space 홀드·10초 무입력 PROGRAM 추천·결과 0.5초 입력 보호·같은/새 시드 재시작 완료 / 자동 TX/RX 옵션 미착수 |
+| HUD 정보 설계·계기 값 인코딩 | [45](45_UI_UX.md) §1·§3, [46](46_UX_EVALUATION.md) | 헤더 HP 핍·SYNC 3핍·ECHO 3색 스택 구성 막대·TURN 경과 막대, EDIT 위협 텔레그래프·SEEK 상태·CUE 핍, ON AIR 다음 발동 프로그램 문구·카운트다운 막대 코드 반영 / render.c 실제 화면 검수는 Windows 빌드 게이트 대기 |
 | P1 규칙 완결 | [10](10_MECHANICS.md) §8~11, [15](15_CARDS.md) §9 | CACHE 대상 선택, FIREWALL 개구부, OFF AIR 3종, BOT/MOD 덱 공격, 시크 거래·OC 케이블, 최근 6구절 TREND, 4 modifier·4엔딩·실패 원인 완료 |
 | TODAY·저장·계측 | [10](10_MECHANICS.md) §1·§13, [30](30_TECH.md) §8 | F2 로컬 날짜 시드, 60B 체크섬 저장, 손상 시 시크 문구, 읽기/쓰기 실패 무시, DEV 전이별 CSV 완료 |
 | V2 자산 재설계 (DNA 계승) | [41](41_PIXEL_ART.md) §1~§2·§7, [43](43_ART_COMPETITIVE_RESEARCH.md) | 전장 표현 분리·3인 표정/동작 확장·적 5종 2프레임·사건형 키아트·편성/계약/보관/결과 행동·원형 최종 프로토콜·스토어 캡슐 7규격·4bpp 런타임·AI-slop 검수 완료 / 타인 재현·사람 대상 선호도·레이어드 Aseprite 원본 게이트 미실시 |

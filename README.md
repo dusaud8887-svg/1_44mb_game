@@ -15,6 +15,7 @@ Windows 10/11용 1.44MB 덱빌딩 서바이버. 현재 빌드는 문서의 **V2 
 - [docs/42_VISUAL_HOOK.md](docs/42_VISUAL_HOOK.md) — 비주얼 후킹·마케팅
 - [docs/43_ART_COMPETITIVE_RESEARCH.md](docs/43_ART_COMPETITIVE_RESEARCH.md) — 2026 도구·커뮤니티 조사, 아트 감정·재설계·AI-slop 검수
 - [docs/45_UI_UX.md](docs/45_UI_UX.md) — UI/UX·화면 연출
+- [docs/46_UX_EVALUATION.md](docs/46_UX_EVALUATION.md) — UX 휴리스틱 평가·정보 설계 감사 (매직 넘버 7 등 UX 법칙 기준)
 - [docs/50_PRODUCTION.md](docs/50_PRODUCTION.md) — 일정·게이트·리스크
 - [docs/90_STATUS.md](docs/90_STATUS.md) — 구현 상태 (SPEC/STATUS 분리)
 - [docs/adr/](docs/adr/) — 설계 결정 기록
