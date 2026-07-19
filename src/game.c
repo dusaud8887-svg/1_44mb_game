@@ -38,6 +38,7 @@ const CardDef CARD_DEF[CARD_COUNT] = {
     {L"회선 폭주", L"폭주", PROGRAM, COST_SURGE, 0, 0},
     {L"무결성 검사", L"검사", PROGRAM, COST_CHECKSUM, 0, 0},
     {L"공명 증폭", L"증폭", PROGRAM, COST_AMP, 0, 0},
+    {L"회선 스캔", L"스캔", PROGRAM, COST_SCAN, 0, 0},
     {L"채팅 기록", L"채팅", ARCHIVE, COST_CHAT, 0, ECHO_CHAT},
     {L"음성 기록", L"음성", ARCHIVE, COST_VOICE, 0, ECHO_VOICE},
     {L"불량 잡음", L"잡음", NOISE, 0, 0, 0}
@@ -291,7 +292,7 @@ static void execute_program(CardId id,bool mirrored){execute_program_scaled(id,m
 
 static void choose_trend(void) {
     int best=-1,uses=-1;
-    for(int id=CARD_MULTI;id<=CARD_AMP;id++){int score=g.program_uses[id];for(int t=0;t<6;t++)score+=g.program_recent[t][id];if(score>uses){uses=score;best=id;}}
+    for(int id=CARD_MULTI;id<=CARD_SCAN;id++){int score=g.program_uses[id];for(int t=0;t<6;t++)score+=g.program_recent[t][id];if(score>uses){uses=score;best=id;}}
     g.trend_card=(uint8_t)(best<0?CARD_FIREWALL:best);
 }
 
@@ -306,9 +307,9 @@ static void start_next_threshold(void){
 }
 
 uint8_t program_modifier(CardId id){
-    if(id==CARD_MARKER||id==CARD_SURGE)return MOD_NETWORK;if(id==CARD_FIREWALL||id==CARD_CHECKSUM)return MOD_SAFE;if(id==CARD_MACRO||id==CARD_PREFETCH)return MOD_REPLAY;return MOD_REPEAT;
+    if(id==CARD_MARKER||id==CARD_SURGE)return MOD_NETWORK;if(id==CARD_FIREWALL||id==CARD_CHECKSUM)return MOD_SAFE;if(id==CARD_MACRO||id==CARD_PREFETCH||id==CARD_SCAN)return MOD_REPLAY;return MOD_REPEAT;
 }
-int program_modifier_count(uint8_t modifier){int n=0;for(int id=CARD_MULTI;id<=CARD_AMP;id++)if(program_modifier((CardId)id)==modifier)n+=deck_count((CardId)id);return n;}
+int program_modifier_count(uint8_t modifier){int n=0;for(int id=CARD_MULTI;id<=CARD_SCAN;id++)if(program_modifier((CardId)id)==modifier)n+=deck_count((CardId)id);return n;}
 /* Deck-composition -> live combat identity. The four PROGRAM tag schools already compile the
    finale (15_CARDS s9); extend that "deck build pays off as throughput" payoff to every ON AIR so
    what you buy reshapes the survivor combat all run long, not only the last 60s. Strength 1 is
@@ -401,13 +402,13 @@ static bool restore_echo(uint8_t from){
 
 static bool kingdom_valid(const CardId *cards) {
     int engine=0,payload=0,safe=0;
-    for(int i=0;i<5;i++){CardId id=cards[i];engine+=id==CARD_MULTI||id==CARD_CACHE||id==CARD_PREFETCH;payload+=id==CARD_MACRO||id==CARD_MARKER||id==CARD_SURGE||id==CARD_FIREWALL||id==CARD_AMP;safe+=id==CARD_FIREWALL||id==CARD_CHECKSUM;}
+    for(int i=0;i<5;i++){CardId id=cards[i];engine+=id==CARD_MULTI||id==CARD_CACHE||id==CARD_PREFETCH||id==CARD_SCAN;payload+=id==CARD_MACRO||id==CARD_MARKER||id==CARD_SURGE||id==CARD_FIREWALL||id==CARD_AMP;safe+=id==CARD_FIREWALL||id==CARD_CHECKSUM;}
     return engine>=1&&payload>=2&&safe>=1;
 }
 
 static void generate_kingdom(void) {
-    CardId pool[]={CARD_MULTI,CARD_CACHE,CARD_FIREWALL,CARD_MACRO,CARD_PREFETCH,CARD_MARKER,CARD_SURGE,CARD_CHECKSUM,CARD_AMP};
-    do{for(int i=8;i>0;i--){int j=(int)(rng(&g.reward_rng)%(uint32_t)(i+1));CardId t=pool[i];pool[i]=pool[j];pool[j]=t;}memcpy(g.kingdom,pool,5);}while(!kingdom_valid(g.kingdom));
+    CardId pool[]={CARD_MULTI,CARD_CACHE,CARD_FIREWALL,CARD_MACRO,CARD_PREFETCH,CARD_MARKER,CARD_SURGE,CARD_CHECKSUM,CARD_AMP,CARD_SCAN};
+    do{for(int i=9;i>0;i--){int j=(int)(rng(&g.reward_rng)%(uint32_t)(i+1));CardId t=pool[i];pool[i]=pool[j];pool[j]=t;}memcpy(g.kingdom,pool,5);}while(!kingdom_valid(g.kingdom));
 }
 
 static void begin_open(void);
@@ -627,6 +628,12 @@ static void edit_activate(void) {
     } else if(id==CARD_MARKER){
         if(g.queue_n<QUEUE_SIZE){g.queue_scale[g.queue_n]=g.cached_ready_slot==g.cursor+1?150:100;g.queue[g.queue_n++]=id;}
         if(g.deck.draw_n||g.deck.discard_n){g.deck.discard[g.deck.discard_n++]=id;g.deck.hand[g.cursor]=note_card_return(draw_one());g.selected[g.cursor]=0;}
+    } else if(id==CARD_SCAN){
+        /* Cantrip sifter (Dominion draw axis, arranged): net-0 cue + cycle the hand so MULTI's
+           extra cue finds programs to spend on. No combat payload, so it never enters the queue. */
+        if(!(g.deck.draw_n||g.deck.discard_n)){g.selected[g.cursor]=0;g.cue++;g.cards_cued[id]--;return;}
+        g.cue++;g.deck.discard[g.deck.discard_n++]=id;g.deck.hand[g.cursor]=note_card_return(draw_one());g.selected[g.cursor]=0;
+        g.program_uses[id]++;g.program_recent[(g.turn-1)%6][id]++;
     } else if(g.queue_n<QUEUE_SIZE){g.queue_scale[g.queue_n]=g.cached_ready_slot==g.cursor+1?150:100;g.queue[g.queue_n++]=id;}
 }
 
@@ -890,6 +897,13 @@ static void test_signal_combo(void){
     memset(g.pickups,0,sizeof(g.pickups));memset(g.enemies,0,sizeof(g.enemies));spawn_enemy(BOT_CHAT,g.px+120,g.py);damage_enemy(0,99);
     int w=-1;for(int i=0;i<MAX_PICKUPS;i++)if(g.pickups[i].active){w=g.pickups[i].worth;break;}
     assert(w==1+combo_tier()+1);
+    /* 회선 스캔 SCAN (docs 60 §6): a REPLAY-school engine cantrip — cueing it is net-0 cue and
+       cycles the hand (no queue entry), so MULTI's +cue finds programs to spend on. */
+    game_start(85);g.deck.hand[0]=CARD_SCAN;g.deck.hand[1]=CARD_MARKER;g.deck.hand_n=2;g.cursor=0;g.cue=1;g.queue_n=0;
+    int total=deck_total();edit_activate();
+    assert(g.cue==1&&g.queue_n==0&&deck_total()==total&&g.deck.hand[0]!=CARD_SCAN&&program_modifier(CARD_SCAN)==MOD_REPLAY);
+    /* SCAN counts as an engine card for kingdom validity. */
+    {CardId k[5]={CARD_SCAN,CARD_MARKER,CARD_SURGE,CARD_FIREWALL,CARD_CHECKSUM};assert(kingdom_valid(k));}
 }
 static int active_bullets(bool hostile){int n=0;for(int i=0;i<MAX_BULLETS;i++)n+=g.bullets[i].active&&(g.bullets[i].hostile!=0)==hostile;return n;}
 /* Overdrive special (필살기) + elite encounters — the VS/HoloCure combat pass (docs 60 §9). */
@@ -919,11 +933,11 @@ static void test_combat_skills(void){
     assert(before==0&&after==1);
 }
 static bool sim_available(CardId id){if(id==CARD_14K||id==CARD_CHAT||id==CARD_VOICE)return true;for(int i=0;i<5;i++)if(g.kingdom[i]==id)return true;return false;}
-static int program_count(void){int n=0;for(int id=CARD_MULTI;id<=CARD_AMP;id++)n+=deck_count((CardId)id);return n;}
+static int program_count(void){int n=0;for(int id=CARD_MULTI;id<=CARD_SCAN;id++)n+=deck_count((CardId)id);return n;}
 static CardId sim_pick(int policy,int baud){
     static const CardId priority[7][5]={
         {CARD_14K,CARD_CHAT,CARD_VOICE,CARD_CHECKSUM,CARD_MULTI},
-        {CARD_MULTI,CARD_CACHE,CARD_PREFETCH,CARD_14K,CARD_CHAT},
+        {CARD_MULTI,CARD_SCAN,CARD_CACHE,CARD_PREFETCH,CARD_14K}, /* LOOP_ENGINE now buys the draw engine (MULTI village + SCAN dig) */
         {CARD_VOICE,CARD_CHAT,CARD_14K,CARD_PREFETCH,CARD_FIREWALL},
         {CARD_CHECKSUM,CARD_FIREWALL,CARD_14K,CARD_CHAT,CARD_VOICE},
         {CARD_MARKER,CARD_SURGE,CARD_MULTI,CARD_MACRO,CARD_CACHE},

@@ -18,9 +18,9 @@ verified_by: MSVC /W4 selftest + throughput 7x1000 + mortal 7x30 + reproducible 
 | V2 구현 | **W‑V2‑P1 기능 완결 + 코드 통합 아트 패스 플레이 가능.** 정본 P1 자동 게이트와 실제 Windows 화면 검수 완료. 사람 대상 GV2/G3′와 최종 Aseprite 원본 게이트는 미실시 |
 | 소스 | `echo144.c` unity 진입점 + `game.h/game.c/render.c/win32.c` 변경 이유별 분리 |
 | 릴리스 exe | 185,344B (2026-07-19, 상한의 12.6%, 결정론 2회 동일 SHA-256 `F04A78CEAF6DED2134584572833EA1058FE2DCC874AA79BDBEC25A25A4BDC8D9`) |
-| 카드 수 | 14종: P0 8종 + MACRO / PREFETCH / MARKER / SURGE / CHECKSUM + AMP(공명 증폭) + NØA BOOST 계약 + DEFRAG SERVICE |
+| 카드 수 | 15종: P0 8종 + MACRO / PREFETCH / MARKER / SURGE / CHECKSUM + AMP(공명 증폭) + SCAN(회선 스캔) + NØA BOOST 계약 + DEFRAG SERVICE |
 | selftest | MSVC `/W4` PASS: P0 회귀 + P1 카드·킹덤·의도·시크·입력/접근성·링 전환·OC 컴파일 강도/4엔딩 + 무적 처리량 7정책×30/1,000 및 실제 피격 7정책×30. 복잡 엔진 고점과 CLEAN_SIGNAL 방어 우위 PASS, 조작 재미는 사람 검증 필요([완성도 감사](archive/91_COMPLETENESS_AUDIT.md) §4) |
-| 자산 | V2 수작업 PNG: 에코 24×24×10·표정 8종, 시크 아바타 24×24×8·표정 4종·셸 16×16×4, 노아 대리체 24×24×6·보스 48×64×3, 초상 64×64×3, 적 5종×2프레임, 카드 아이콘 14종, 직접 구성한 192×108 키아트 A~F. 로고 2종과 120×45·184×69·300×168·462×174·920×430·1232×706·748×896 수동 구도 마케팅 PNG를 함께 생성한다. 런타임은 4bpp 패킹 |
+| 자산 | V2 수작업 PNG: 에코 24×24×10·표정 8종, 시크 아바타 24×24×8·표정 4종·셸 16×16×4, 노아 대리체 24×24×6·보스 48×64×3, 초상 64×64×3, 적 5종×2프레임, 카드 아이콘 15종, 직접 구성한 192×108 키아트 A~F. 로고 2종과 120×45·184×69·300×168·462×174·920×430·1232×706·748×896 수동 구도 마케팅 PNG를 함께 생성한다. 런타임은 4bpp 패킹 |
 
 V1의 초기 정적 평가(콘셉트 9/10, 런타임 정확성 신뢰도 4.5/10, 기능 완성도 ≈80%·제출 준비도 ≈55~65% — 이동·스케줄러·GDI 수정 전 기준)는 [archive/ECHO144_complete_design_history.md](archive/ECHO144_complete_design_history.md) 부록 A에 동결. V1 자산의 검수 상태 분리 표기 원칙(단품 검수 PASS / Windows 실빌드 검수 PENDING / 외부 테스터 검수 PENDING)은 아래 §2에 반영되어 있다.
 
@@ -36,7 +36,7 @@ V1의 초기 정적 평가(콘셉트 9/10, 런타임 정확성 신뢰도 4.5/10,
 **신호 경제 + 연쇄 공명**([60](60_FUSION_SIGNAL_COMBO.md)) 구현 — ON AIR 전투가 신호 조각을 드롭·수집해 BAUD를 자금하고(도미니언 코인), 연쇄 미터가 프로그램 배율·조각 가치를 올리며 피격이 체인을 끊는다(뱀서). 4학파에 경제·연쇄 정체성을 겹쳐 덱이 전투 형태를 재구성한다. 회귀 `test_signal_combo` 추가, 반송파 불변으로 전투 다양성·필사 순서 유지.
 
 - **검증 상태**: 리눅스 `windows.h` 심 하 selftest + 1000시드 SIM PASS. **Windows MSVC `/W4` 실빌드·결정론 릴리스·실화면 연출 검수는 PENDING**(리눅스 CI에 MSVC·GDI·Aseprite 부재). 사용자 지시로 1.44MB 상한은 이 설계 단계에서 완화했으므로, Windows 빌드 후 크기·의존 DLL 재게이트 필요.
-- **새 킹덤 카드**: 공명 증폭 AMP 구현(카드 13→14종). `build_art.py`가 리눅스 실행 가능해 아이콘 스트립 확장·재생성 검증. 남은 후보 4종(MAGNET/FREEZE/O.C./FEEDBACK)은 [60](60_FUSION_SIGNAL_COMBO.md) §6-2 스펙.
+- **새 킹덤 카드**: 공명 증폭 AMP + 회선 스캔 SCAN 구현(카드 13→15종). `build_art.py`가 리눅스 실행 가능해 아이콘 스트립 확장·재생성 검증. SCAN은 도미니언 드로우 축을 어레인지한 엔진 캔트립(터미널 충돌 해소). +Buy/게이너는 분석 후 제외([60](60_FUSION_SIGNAL_COMBO.md) §6-1c). 남은 후보 3종(MAGNET/FREEZE/O.C.)은 §6-2 스펙.
 - **VS/HoloCure 전투 패스**([60](60_FUSION_SIGNAL_COMBO.md) §8): 필살기 Overdrive(처치 충전→`J` 발동, 덱 학파가 노바/탄막/과부하/요새 결정) + 엘리트 조우(6구절부터 탱키 슈터, 처치 시 보물 버스트). ON AIR 조작에 `J` 추가. `test_combat_skills` 회귀, 기본 전투·SIM 불변식 유지(엘리트로 위험/생존 트레이드오프 강화).
 
 ## 3. V1 결함의 V2 처리 (2026-07-17)

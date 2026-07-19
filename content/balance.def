@@ -75,6 +75,9 @@ BALANCE(RESONANCE_FIELD_DAMAGE, 6)
    jump-starts the chain and enriches shards for the verse (docs 60 §6). */
 BALANCE(COST_AMP, 3)
 BALANCE(AMP_COMBO_JUMP, 6)           /* +combo on fire (1.5 tiers) */
+/* 회선 스캔 SCAN — an engine-school cantrip sifter (Dominion draw axis, arranged): cueing it is
+   net-0 cue and cycles the hand, so MULTI's +cue finds programs to spend on (docs 60 §6). */
+BALANCE(COST_SCAN, 2)
 /* B4-필살기: an Overdrive special charged by kills, unleashed on a key — a school-flavored
    active attack (VS/HoloCure §6.3 character skill, §6.4 필살기, §10.7 능동 조작). */
 BALANCE(SPECIAL_MAX, 100)            /* charge needed to unleash */

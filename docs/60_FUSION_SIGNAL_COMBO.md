@@ -108,6 +108,15 @@
 - **왜 이 카드인가**: 융합 루프를 수동으로 **설계**하는 첫 레버다. 다른 카드는 연쇄·신호를 수동적으로 이용하지만, AMP는 연쇄를 능동으로 점화해 공명 정점·풍부한 신호 경제로 앞당긴다([37](37_VAMPIRE_SURVIVORS_HOLOCURE_RESEARCH.md) §10.4 "통제 가능한 랜덤", 빌드 주도권). REPEAT 태그라 다발 학파와 겹쳐 학파 티어를 함께 올린다(도미니언식 "엔진 조각").
 - **구현 표면**: `Card` enum(CHECKSUM 뒤 삽입, CHAT/VOICE/NOISE는 11/12/13으로 이동) + `CARD_DEF` + `COST_AMP`/`AMP_COMBO_JUMP` + `build_art.py` icon kind 10(동심 공명 링) + 킹덤 풀(8→9) + `program_modifier`(기본 REPEAT) + `kingdom_valid`(payload) + `card_hint` + `test_signal_combo` AMP 케이스. 프로그램 범위 종단 `CARD_CHECKSUM`→`CARD_AMP` 3곳.
 
+### 6-1b. 구현됨 — 회선 스캔 SCAN (id 11, REPLAY/연사, 엔진)
+도미니언 자원 감사([36](36_DOMINION_DEEP_RESEARCH.md) §2-3,§2-4)에서 드러난 **드로우 축**을 어레인지해 채운 카드.
+- **효과**(편성): **캔트립 시프터** — 편성해도 cue 순증 0(환급)이고 손패를 1장 순환(자기 폐기+새 카드)한다. 전투 페이로드가 없어 큐에 들어가지 않는다.
+- **왜 필요했나**: 손패 5장 고정에서 MULTI의 `+2 cue`는 손에 프로그램이 없으면 **자주 낭비**된다(진짜 병목). SCAN이 덱을 파내 그 cue를 실제로 쓰게 해 **"빌리지(MULTI)+드로우(SCAN)" 엔진**을 완성한다. SIM에서 LOOP_ENGINE에 편입하니 낭비 프로그램(`terminal`) 지표가 뚜렷이 감소 — 터미널 충돌 해소가 수치로 확인된다.
+- **구현 표면**: AMP와 동일(enum은 AMP 뒤 삽입, CHAT/VOICE/NOISE→12/13/14, 프로그램 범위 종단 `CARD_AMP`→`CARD_SCAN`, 킹덤 풀 9→10, `kingdom_valid` engine, `program_modifier` REPLAY, 아이콘 kind 11=스캔 라인, `card_hint`, `edit_activate` 캔트립 분기, `test_signal_combo` SCAN 케이스).
+
+### 6-1c. 분석 후 제외 — +Buy / 게이너
+도미니언에서 +Buy가 중요한 건 *"코인은 많은데 구매는 1"* 병목 때문인데, 이 게임의 엔진 조립 병목은 **cue(액션)와 손패 품질**이지 구매 수가 아니다 — 보(baud)가 남아 도는 상황이 잘 없다. 또 "다르게 획득"하는 역할은 이미 어레인지돼 있다(시크 거래=폐기→가치, NOA=구매 스킵→템포, 정리=trasher). 구절당 1획득 리듬은 5~7분 짧은 런의 페이싱 기둥이라 원 +Buy는 이를 흐린다. **비병목 문제를 푸는 중복 레버**라 판단해 제외했다(사용자 지시 "안 맞으면 제외").
+
 ### 6-2. 남은 후보 (다음 패스)
 | 후보 카드 | 학파 | 효과 초안 | 융합 상호작용 |
 |---|---|---|---|
