@@ -1,0 +1,16 @@
+draw_set_color(c_white);
+draw_set_font(Galmuri14);
+draw_set_halign(fa_center);
+draw_text_scribble(190, 40, global.TextContainer.tutText.selectedLanguage[0]);
+draw_text_scribble(450, 40, global.TextContainer.tutText.selectedLanguage[1]);
+draw_sprite_ext(spr_tutorial1, 0, 190, 150, 1, 1, 0, c_white, 1);
+draw_sprite_ext(spr_tutorial2, 0, 450, 150, 1, 1, 0, c_white, 1);
+draw_sprite_ext(spr_tutorialMove, 0, 190, 250, 1, 1, 0, c_white, 1);
+draw_set_color(c_white);
+draw_set_font(Galmuri14);
+draw_set_halign(fa_center);
+draw_sprite(hud_shopButton, 1, 320, 300);
+draw_text_scribble(450, 240, key_to_string(global.theButtons[0]));
+draw_set_color(c_black);
+draw_set_font(Galmuri9);
+draw_text_scribble(320, 294, "START!");

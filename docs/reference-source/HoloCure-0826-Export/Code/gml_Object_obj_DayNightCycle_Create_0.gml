@@ -1,0 +1,16 @@
+effectsLayer = layer_get_fx("NightFilter");
+nightTint = [0.25, 0.38, 0.72, 1];
+dayTint = [1, 1, 1, 1];
+fx_set_parameter(effectsLayer, "g_TintCol", dayTint);
+currentTint = [1, 1, 1, 1];
+changeTime = 300;
+dayTime = 0;
+rPerTick = (dayTint[0] - nightTint[0]) / changeTime;
+gPerTick = (dayTint[1] - nightTint[1]) / changeTime;
+bPerTick = (dayTint[2] - nightTint[2]) / changeTime;
+changingTo = "night";
+rain = false;
+rainCD = 5;
+rainTime = 0;
+audio_play_sound(snd_rain, 0, true);
+alarm[1] = 18000;

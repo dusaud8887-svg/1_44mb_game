@@ -1,0 +1,44 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+public class CharacterSelection : MonoBehaviour
+{
+    public GameObject Player;
+    public RuntimeAnimatorController[] characterAnimators; // Use RuntimeAnimatorController
+    public CharacterScriptableObject[] characterData;
+    public Sprite[] characterIcons;
+    public Image characterIconImage;
+    private PlayerStats playerStats;
+
+    void Start()
+    {
+        // Get the selected character from GameManager
+        int selectedCharacter = PlayerStats.Instance.CharacterID;
+
+        Player.transform.GetChild(0).GetComponent<Animator>().runtimeAnimatorController = characterAnimators[selectedCharacter];
+        Player.GetComponent<PlayerHealth>().MaxHealth = characterData[selectedCharacter].BaseHP;
+        Player.GetComponent<Player_Controller>().movmentSpeed = characterData[selectedCharacter].MovementSpeed;
+        PlayerStats.Instance.HealthRegeneration = characterData[selectedCharacter].HealthRegeneration;
+        PlayerStats.Instance.experienceBonus += characterData[selectedCharacter].XPBoost;
+        PlayerStats.Instance.CharacterID += selectedCharacter;
+        PlayerStats.Instance.LuckBonus += characterData[selectedCharacter].LuckBoost;
+        PlayerStats.Instance.DamageBonus += characterData[selectedCharacter].Damage;
+        characterIconImage.sprite = characterIcons[selectedCharacter];
+
+        switch (selectedCharacter)
+        {
+            case 0:
+                UpgradeManager.Instance.ShootProjectile();
+                break;
+            case 1:
+                UpgradeManager.Instance.KnifeProjectile();
+                break;
+            case 2:
+                UpgradeManager.Instance.LightningBolt();
+                break;
+            case 3:
+                UpgradeManager.Instance.SwordSlash();
+                break;
+        }
+    }
+}

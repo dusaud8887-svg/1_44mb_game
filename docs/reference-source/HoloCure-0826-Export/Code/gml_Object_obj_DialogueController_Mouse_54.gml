@@ -1,0 +1,4 @@
+if (showingDialogue)
+{
+    ReturnMenu();
+}

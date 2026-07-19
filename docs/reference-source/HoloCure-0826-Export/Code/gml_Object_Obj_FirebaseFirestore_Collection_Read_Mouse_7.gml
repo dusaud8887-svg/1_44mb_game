@@ -1,0 +1,1 @@
+FirebaseFirestore("Collection").Read();

@@ -1,0 +1,9 @@
+vspeed = -7 - random(5);
+alarm[0] = 50 + irandom(10);
+gravity = 0.2;
+color = 16777215;
+var randomColor = [255, 16711680, 32768, 16777215, 4235519, 8388736];
+color = randomColor[irandom(5)];
+image_xscale = 2;
+image_yscale = 2;
+add = true;

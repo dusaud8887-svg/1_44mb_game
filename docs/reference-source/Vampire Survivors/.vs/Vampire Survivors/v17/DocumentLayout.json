@@ -1,0 +1,1012 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|c:\\users\\on\\desktop\\gamedev\\vampire survivors\\assets\\scripts\\enemy\\rangedenemy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\enemy\\rangedenemy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\enemy\\enemy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\enemy\\enemy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\objectpoolingmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\objectpoolingmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\playerstats.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\playerstats.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\upgrades\\upgrademanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\upgrades\\upgrademanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\characterselection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\characterselection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\stagebuttonui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\stagebuttonui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\firsttimesetup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\firsttimesetup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\stageselection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\stageselection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\characterselectionmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\characterselectionmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\stagescriptableobject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\stagescriptableobject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\overall\\gamemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\overall\\gamemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\menu\\menubuttoncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\menu\\menubuttoncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\characterselectionbutton.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\characterselectionbutton.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\powerupbutton.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\powerupbutton.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Library\\PackageCache\\com.unity.textmeshpro@3.0.6\\Scripts\\Runtime\\TMPro_UGUI_Private.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Library\\PackageCache\\com.unity.textmeshpro@3.0.6\\Scripts\\Runtime\\TMPro_UGUI_Private.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\powerupmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\powerupmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\spawnsyestem\\wavespawner.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\spawnsyestem\\wavespawner.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\sowrdslash.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\sowrdslash.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\pet\\petcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\pet\\petcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\player\\knifethrowingability.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\player\\knifethrowingability.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\player\\knife.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\player\\knife.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\player\\abilitylightning.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\player\\abilitylightning.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\turret\\turretbullet.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\turret\\turretbullet.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\turret\\turret.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\turret\\turret.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\player\\dodamage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\player\\dodamage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\characterscriptableobject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\characterscriptableobject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\powerupscriptableobject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\powerupscriptableobject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\player\\playerhealth.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\player\\playerhealth.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\player\\player_controller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\player\\player_controller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\DroneCombat.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Player\\DroneCombat.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\enemy\\enemyexplod.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\enemy\\enemyexplod.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\bomb\\bomb.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\bomb\\bomb.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\player\\damage_enemy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:assets\\scripts\\player\\damage_enemy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|c:\\users\\on\\desktop\\gamedev\\vampire survivors\\assets\\scripts\\orbs\\orbitaround.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:assets\\scripts\\orbs\\orbitaround.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\player\\idamageable.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\player\\idamageable.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\enemy\\meleeenemy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\enemy\\meleeenemy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\orbs\\orbs.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\orbs\\orbs.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\orbs\\iceorb.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\orbs\\iceorb.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\xpcrystal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\xpcrystal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\powerupui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\powerupui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\poweruptooltip.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\poweruptooltip.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\carduieffects.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\carduieffects.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\upgrades\\upgradeui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\upgrades\\upgradeui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\savemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\savemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\tooltipmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\tooltipmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\cardwithtooltip.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\cardwithtooltip.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\permanentupgrademanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\permanentupgrademanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\dontdestroyonload_.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\dontdestroyonload_.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\charactertooltip.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\charactertooltip.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\classesui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\classesui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\uidisplay.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\uidisplay.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\upgrades\\upgradescriptableobject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\upgrades\\upgradescriptableobject.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\overall\\destroy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C10C831-6474-04D8-83D7-C65B8945540A}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\overall\\destroy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Pet\\Pet_Player.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Pet\\Pet_Player.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Exp_Coin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Player\\Exp_Coin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\assets\\scripts\\newplayerstats.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:assets\\scripts\\newplayerstats.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Rocket Launcher\\Scripts\\PlayerController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Rocket Launcher\\Scripts\\PlayerController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Bullet1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Player\\Bullet1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Bullet2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Player\\Bullet2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PowerUpStats.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\PowerUpStats.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PlayerGold.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\PlayerGold.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ObjectPoolingManager.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\ObjectPoolingManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\ObjectPoolingManager.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\ObjectPoolingManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\ObjectPoolingManager.cs",
+              "ViewState": "AQIAAEoAAAAAAAAAAAAAAGQAAABdAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-03T01:28:33.21Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "RangedEnemy.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Enemy\\RangedEnemy.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Enemy\\RangedEnemy.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Enemy\\RangedEnemy.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Enemy\\RangedEnemy.cs",
+              "ViewState": "AQIAAAMAAAAAAAAAAAAiwCMAAABYAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-03T01:16:40.855Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "FirstTimeSetup.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\FirstTimeSetup.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\FirstTimeSetup.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\FirstTimeSetup.cs",
+              "RelativeToolTip": "Assets\\Scripts\\FirstTimeSetup.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABkAAAAkAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-02T22:42:41.027Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "CharacterSelectionManager.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\CharacterSelectionManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\CharacterSelectionManager.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\CharacterSelectionManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\CharacterSelectionManager.cs",
+              "ViewState": "AQIAAJAAAAAAAAAAAAASwCcAAAAFAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-14T05:37:13.984Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "TMPro_UGUI_Private.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Library\\PackageCache\\com.unity.textmeshpro@3.0.6\\Scripts\\Runtime\\TMPro_UGUI_Private.cs",
+              "RelativeDocumentMoniker": "Library\\PackageCache\\com.unity.textmeshpro@3.0.6\\Scripts\\Runtime\\TMPro_UGUI_Private.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Library\\PackageCache\\com.unity.textmeshpro@3.0.6\\Scripts\\Runtime\\TMPro_UGUI_Private.cs",
+              "RelativeToolTip": "Library\\PackageCache\\com.unity.textmeshpro@3.0.6\\Scripts\\Runtime\\TMPro_UGUI_Private.cs",
+              "ViewState": "AQIAAHADAAAAAAAAAAApwIoDAAB4AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-07T10:02:34.03Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "StageSelection.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\StageSelection.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\StageSelection.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\StageSelection.cs",
+              "RelativeToolTip": "Assets\\Scripts\\StageSelection.cs",
+              "ViewState": "AQIAAAgAAAAAAAAAAAAQwBYAAAAOAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-07T10:25:12.183Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "StageButtonUi.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\StageButtonUi.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\StageButtonUi.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\StageButtonUi.cs",
+              "RelativeToolTip": "Assets\\Scripts\\StageButtonUi.cs",
+              "ViewState": "AQIAADkAAAAAAAAAAAAqwFoAAAAvAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-17T03:30:35.218Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "StageScriptableObject.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\StageScriptableObject.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\StageScriptableObject.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\StageScriptableObject.cs",
+              "RelativeToolTip": "Assets\\Scripts\\StageScriptableObject.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAgAAAAZAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-17T02:27:53.681Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "CharacterSelection.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\CharacterSelection.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\CharacterSelection.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\CharacterSelection.cs",
+              "RelativeToolTip": "Assets\\Scripts\\CharacterSelection.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAB0AAAATAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-19T23:49:10.36Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "UpgradeManager.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Upgrades\\UpgradeManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Upgrades\\UpgradeManager.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Upgrades\\UpgradeManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Upgrades\\UpgradeManager.cs",
+              "ViewState": "AQIAAEgAAAAAAAAAAAAAAEAAAAAdAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-19T00:05:42.264Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Enemy.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Enemy\\Enemy.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Enemy\\Enemy.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Enemy\\Enemy.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Enemy\\Enemy.cs",
+              "ViewState": "AQIAAGIAAAAAAAAAAAAqwIIAAAANAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-10T12:55:22.634Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "CharacterSelectionButton.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\CharacterSelectionButton.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\CharacterSelectionButton.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\CharacterSelectionButton.cs",
+              "RelativeToolTip": "Assets\\Scripts\\CharacterSelectionButton.cs",
+              "ViewState": "AQIAAHAAAAAAAAAAAAAcwI0AAAAhAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-14T03:10:40.716Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "PowerUpButton.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PowerUpButton.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\PowerUpButton.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PowerUpButton.cs",
+              "RelativeToolTip": "Assets\\Scripts\\PowerUpButton.cs",
+              "ViewState": "AQIAAOcAAAAAAAAAAAAWwAIBAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-12T16:31:24.843Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "PlayerStats.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PlayerStats.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\PlayerStats.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PlayerStats.cs",
+              "RelativeToolTip": "Assets\\Scripts\\PlayerStats.cs",
+              "ViewState": "AQIAACcAAAAAAAAAAAAowEoAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-19T00:04:58.615Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "GameManager.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\OverAll\\GameManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\OverAll\\GameManager.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\OverAll\\GameManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\OverAll\\GameManager.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABYAAAAJAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-20T00:16:17.15Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "PowerUpManager.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PowerUpManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\PowerUpManager.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PowerUpManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\PowerUpManager.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABwAAAAFAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-13T03:10:42.223Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "MenuButtonController.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Menu\\MenuButtonController.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Menu\\MenuButtonController.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Menu\\MenuButtonController.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Menu\\MenuButtonController.cs",
+              "ViewState": "AQIAAPYAAAAAAAAAAAAkwAsBAAAeAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-20T01:44:07.177Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "KnifeThrowingAbility.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\KnifeThrowingAbility.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Player\\KnifeThrowingAbility.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\KnifeThrowingAbility.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Player\\KnifeThrowingAbility.cs",
+              "ViewState": "AQIAACYAAAAAAAAAAAAwwDYAAAAWAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-09T15:03:11.312Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "SowrdSlash.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\SowrdSlash.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\SowrdSlash.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\SowrdSlash.cs",
+              "RelativeToolTip": "Assets\\Scripts\\SowrdSlash.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABgAAAAoAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-18T20:02:26.804Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "Knife.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Knife.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Player\\Knife.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Knife.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Player\\Knife.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABYAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-09T15:09:47.397Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 56,
+              "Title": "NewPlayerStats.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\NewPlayerStats.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\NewPlayerStats.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\NewPlayerStats.cs",
+              "RelativeToolTip": "Assets\\Scripts\\NewPlayerStats.cs",
+              "ViewState": "AQIAAEQAAAAAAAAAAAAwwBMAAAApAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-13T03:10:04.895Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "PetController.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Pet\\PetController.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Pet\\PetController.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Pet\\PetController.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Pet\\PetController.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABYAAAAFAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-29T19:48:02.758Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "WaveSpawner.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\SpawnSyestem\\WaveSpawner.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\SpawnSyestem\\WaveSpawner.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\SpawnSyestem\\WaveSpawner.cs",
+              "RelativeToolTip": "Assets\\Scripts\\SpawnSyestem\\WaveSpawner.cs",
+              "ViewState": "AQIAAEgAAAAAAAAAAAAtwF8AAACRAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-29T21:41:42.147Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "AbilityLightning.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\AbilityLightning.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Player\\AbilityLightning.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\AbilityLightning.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Player\\AbilityLightning.cs",
+              "ViewState": "AQIAACQAAAAAAAAAAAAowEEAAAAzAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-14T13:23:37.962Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "TurretBullet.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Turret\\TurretBullet.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Turret\\TurretBullet.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Turret\\TurretBullet.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Turret\\TurretBullet.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABoAAABkAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-14T13:18:38.62Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "Turret.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Turret\\Turret.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Turret\\Turret.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Turret\\Turret.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Turret\\Turret.cs",
+              "ViewState": "AQIAAEsAAAAAAAAAAAAQwFAAAAAqAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-19T00:53:19.735Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "DoDamage.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\DoDamage.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Player\\DoDamage.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\DoDamage.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Player\\DoDamage.cs",
+              "ViewState": "AQIAAFoAAAAAAAAAAAAmwHoAAAABAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-19T16:33:39.899Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "CharacterScriptableObject.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\CharacterScriptableObject.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\CharacterScriptableObject.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\CharacterScriptableObject.cs",
+              "RelativeToolTip": "Assets\\Scripts\\CharacterScriptableObject.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAUAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-14T03:13:38.198Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 57,
+              "Title": "PlayerController.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Rocket Launcher\\Scripts\\PlayerController.cs",
+              "RelativeDocumentMoniker": "Assets\\Rocket Launcher\\Scripts\\PlayerController.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Rocket Launcher\\Scripts\\PlayerController.cs",
+              "RelativeToolTip": "Assets\\Rocket Launcher\\Scripts\\PlayerController.cs",
+              "ViewState": "AQIAAEsAAAAAAAAAAAAowHUAAAAnAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-29T03:38:51.031Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "PowerUpScriptableObject.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PowerUpScriptableObject.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\PowerUpScriptableObject.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PowerUpScriptableObject.cs",
+              "RelativeToolTip": "Assets\\Scripts\\PowerUpScriptableObject.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAoAAAAbAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-12T15:46:27.726Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "PlayerHealth.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\PlayerHealth.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Player\\PlayerHealth.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\PlayerHealth.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Player\\PlayerHealth.cs",
+              "ViewState": "AQIAABEAAAAAAAAAAAAQwC8AAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-20T02:17:34.952Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "Player_Controller.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Player_Controller.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Player\\Player_Controller.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Player_Controller.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Player\\Player_Controller.cs",
+              "ViewState": "AQIAAF8AAAAAAAAAAAAIwHwAAAAfAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-19T00:38:10.919Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 34,
+              "Title": "OrbitAround.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Orbs\\OrbitAround.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Orbs\\OrbitAround.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Orbs\\OrbitAround.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Orbs\\OrbitAround.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-14T13:13:01.77Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 39,
+              "Title": "XPCrystal.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\XPCrystal.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\XPCrystal.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\XPCrystal.cs",
+              "RelativeToolTip": "Assets\\Scripts\\XPCrystal.cs",
+              "ViewState": "AQIAAAUAAAAAAAAAAAAQwBwAAAAZAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-10T13:44:22.86Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 37,
+              "Title": "Orbs.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Orbs\\Orbs.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Orbs\\Orbs.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Orbs\\Orbs.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Orbs\\Orbs.cs",
+              "ViewState": "AQIAABsAAAAAAAAAAAAowD0AAABhAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-10T14:28:26.224Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 38,
+              "Title": "IceOrb.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Orbs\\IceOrb.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Orbs\\IceOrb.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Orbs\\IceOrb.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Orbs\\IceOrb.cs",
+              "ViewState": "AQIAAAoAAAAAAAAAAAA1wCcAAAAPAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-14T10:13:25.251Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 36,
+              "Title": "MeleeEnemy.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Enemy\\MeleeEnemy.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Enemy\\MeleeEnemy.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Enemy\\MeleeEnemy.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Enemy\\MeleeEnemy.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAMAAAABAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-14T13:04:41.906Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 35,
+              "Title": "IDamageable.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\IDamageable.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Player\\IDamageable.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\IDamageable.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Player\\IDamageable.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAIAAAA/AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-14T13:07:28.46Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "Bomb.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Bomb\\Bomb.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Bomb\\Bomb.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Bomb\\Bomb.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Bomb\\Bomb.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABcAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-14T13:20:04.96Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "EnemyExplod.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Enemy\\EnemyExplod.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Enemy\\EnemyExplod.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Enemy\\EnemyExplod.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Enemy\\EnemyExplod.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAA0AAAABAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-14T13:20:19.426Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 58,
+              "Title": "Bullet1.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Bullet1.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Player\\Bullet1.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Bullet1.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Player\\Bullet1.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABEAAAAFAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-14T13:21:01.674Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 59,
+              "Title": "Bullet2.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Bullet2.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Player\\Bullet2.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Bullet2.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Player\\Bullet2.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABUAAABQAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-14T13:21:28.427Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 54,
+              "Title": "Pet_Player.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Pet\\Pet_Player.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Pet\\Pet_Player.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Pet\\Pet_Player.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Pet\\Pet_Player.cs",
+              "ViewState": "AQIAAEQAAAAAAAAAAAAAAFUAAAAJAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-14T13:21:48.233Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "DroneCombat.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\DroneCombat.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Player\\DroneCombat.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\DroneCombat.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Player\\DroneCombat.cs",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-14T13:24:33.518Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 40,
+              "Title": "PowerUpUI.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PowerUpUI.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\PowerUpUI.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PowerUpUI.cs",
+              "RelativeToolTip": "Assets\\Scripts\\PowerUpUI.cs",
+              "ViewState": "AQIAABQAAAAAAAAAAAAQwDIAAAAvAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-13T03:11:39.504Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 42,
+              "Title": "CardUIEffects.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\CardUIEffects.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\CardUIEffects.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\CardUIEffects.cs",
+              "RelativeToolTip": "Assets\\Scripts\\CardUIEffects.cs",
+              "ViewState": "AQIAADgAAAAAAAAAAAAkwG0AAAAuAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-19T23:41:23.261Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 51,
+              "Title": "UiDisplay.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\UiDisplay.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\UiDisplay.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\UiDisplay.cs",
+              "RelativeToolTip": "Assets\\Scripts\\UiDisplay.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAADUAAAAJAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-20T00:46:30.542Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 41,
+              "Title": "PowerUpToolTip.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PowerUpToolTip.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\PowerUpToolTip.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PowerUpToolTip.cs",
+              "RelativeToolTip": "Assets\\Scripts\\PowerUpToolTip.cs",
+              "ViewState": "AQIAAAYAAAAAAAAAAAAAABkAAAAWAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-13T08:10:53.012Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 44,
+              "Title": "SaveManager.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\SaveManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\SaveManager.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\SaveManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\SaveManager.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAA4AAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-13T03:19:26.235Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 60,
+              "Title": "PowerUpStats.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PowerUpStats.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\PowerUpStats.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PowerUpStats.cs",
+              "RelativeToolTip": "Assets\\Scripts\\PowerUpStats.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAQAAAAUAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-13T04:43:33.713Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 43,
+              "Title": "UpgradeUi.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Upgrades\\UpgradeUi.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Upgrades\\UpgradeUi.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Upgrades\\UpgradeUi.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Upgrades\\UpgradeUi.cs",
+              "ViewState": "AQIAABQAAAAAAAAAAAAQwBsAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-19T00:39:39.982Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 46,
+              "Title": "CardWithTooltip.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\CardWithTooltip.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\CardWithTooltip.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\CardWithTooltip.cs",
+              "RelativeToolTip": "Assets\\Scripts\\CardWithTooltip.cs",
+              "ViewState": "AQIAABYAAAAAAAAAAAA1wA0AAAAoAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-20T00:49:52.741Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 53,
+              "Title": "Destroy.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\OverAll\\Destroy.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\OverAll\\Destroy.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\OverAll\\Destroy.cs",
+              "RelativeToolTip": "Assets\\Scripts\\OverAll\\Destroy.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-19T16:56:32.869Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 55,
+              "Title": "Exp_Coin.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Exp_Coin.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Player\\Exp_Coin.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Exp_Coin.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Player\\Exp_Coin.cs",
+              "ViewState": "AQIAABYAAAAAAAAAAAA1wCgAAAAFAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-19T00:40:11.349Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 45,
+              "Title": "TooltipManager.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\TooltipManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\TooltipManager.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\TooltipManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\TooltipManager.cs",
+              "ViewState": "AQIAACcAAAAAAAAAAAAowFMAAAAFAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-20T00:51:50.751Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 48,
+              "Title": "DontDestroyOnLoad_.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\DontDestroyOnLoad_.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\DontDestroyOnLoad_.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\DontDestroyOnLoad_.cs",
+              "RelativeToolTip": "Assets\\Scripts\\DontDestroyOnLoad_.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABYAAAAFAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-20T02:11:21.134Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 61,
+              "Title": "PlayerGold.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PlayerGold.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\PlayerGold.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PlayerGold.cs",
+              "RelativeToolTip": "Assets\\Scripts\\PlayerGold.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABMAAAABAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-20T14:31:29.293Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 47,
+              "Title": "PermanentUpgradeManager.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PermanentUpgradeManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\PermanentUpgradeManager.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\PermanentUpgradeManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\PermanentUpgradeManager.cs",
+              "ViewState": "AQIAAA8AAAAAAAAAAIBJwBIAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-20T14:32:39.435Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 49,
+              "Title": "CharacterToolTip.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\CharacterToolTip.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\CharacterToolTip.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\CharacterToolTip.cs",
+              "RelativeToolTip": "Assets\\Scripts\\CharacterToolTip.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABAAAAAFAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-20T00:58:25.249Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "Damage_Enemy.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Damage_Enemy.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Player\\Damage_Enemy.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Player\\Damage_Enemy.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Player\\Damage_Enemy.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAwAAAAFAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-19T16:54:21.09Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 50,
+              "Title": "ClassesUi.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\ClassesUi.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\ClassesUi.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\ClassesUi.cs",
+              "RelativeToolTip": "Assets\\Scripts\\ClassesUi.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAB4AAAABAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-19T00:42:24.584Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 52,
+              "Title": "UpgradeScriptableObject.cs",
+              "DocumentMoniker": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Upgrades\\UpgradeScriptableObject.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Upgrades\\UpgradeScriptableObject.cs",
+              "ToolTip": "C:\\Users\\on\\Desktop\\GameDev\\Vampire Survivors\\Assets\\Scripts\\Upgrades\\UpgradeScriptableObject.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Upgrades\\UpgradeScriptableObject.cs",
+              "ViewState": "AQIAAAMAAAAAAAAAAAAAABoAAAAUAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-19T00:28:34.262Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

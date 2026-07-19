@@ -1,0 +1,11 @@
+vspeed = -8 - random(8);
+image_speed = 1;
+gravity = 0.1 + random(0.4);
+hspeed = -5 + random(10);
+rotSpeed = random(60);
+size = random(1);
+image_xscale = 0.2 + size;
+image_yscale = 0.2 + size;
+alarm[0] = 240;
+image_angle = random(360);
+image_index = floor(random(8));

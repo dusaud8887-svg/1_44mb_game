@@ -1,0 +1,12 @@
+followPlayerID = instance_find(obj_Player, 0);
+depth = -y - 2;
+isInView = false;
+direction = irandom(360);
+speed = 4 + random(3);
+range = 30;
+buffConfig = {};
+SPD = 0;
+picked = false;
+canTake = false;
+alarm[0] = 30;
+audio_play_sound(snd_aceroladrop, 10, 0);

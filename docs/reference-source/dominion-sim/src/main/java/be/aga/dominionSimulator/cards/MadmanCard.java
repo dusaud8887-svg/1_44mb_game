@@ -1,0 +1,55 @@
+package be.aga.dominionSimulator.cards;
+
+import be.aga.dominionSimulator.DomCard;
+import be.aga.dominionSimulator.enums.DomCardName;
+import be.aga.dominionSimulator.enums.DomPlayStrategy;
+
+public class MadmanCard extends DomCard {
+    public MadmanCard() {
+      super( DomCardName.Madman);
+    }
+
+    public void play() {
+      if (owner==null)
+          return;
+      owner.addActions(2);
+      owner.drawCards(owner.getCardsInHand().size());
+      if (owner.getCardsFromPlay(DomCardName.Madman).isEmpty())
+          return;
+      owner.returnToSupply(owner.removeCardFromPlay(this));
+    }
+
+    @Override
+    public boolean wantsToBePlayed() {
+        if (owner.getCardsInHand().size()<5)
+            return false;
+        if (owner.getPlayStrategyFor(this)== DomPlayStrategy.MarketSquareCombo) {
+          if ((owner.count(DomCardName.Madman)>4 || owner.getCardsInHand().size()>5)
+                  && (owner.count(DomCardName.Market_Square)-owner.countInPlay(DomCardName.Market_Square)>5 || owner.getCurrentGame().countInSupply(DomCardName.Market_Square)==0)
+                  && owner.getDeck().getDeckAndDiscardSize() > 3 )
+              return true;
+          else
+              if (owner.getCardsInHand().size()>10 && owner.getDeck().getDeckAndDiscardSize() > 3 )
+                  return true;
+              else
+                  return false;
+        }
+        if (owner.getPlayStrategyFor(this)==DomPlayStrategy.bigTurnBridge) {
+            if ((owner.count(DomCardName.Madman)>4 || owner.getCardsInHand().size()>5)
+                    && owner.count(DomCardName.Bridge)>4 )
+                return true;
+            else
+                return false;
+        }
+        //quick trial with Dominate
+//        return owner.getTotalMoneyInDeck()>13 && owner.getTotalPotentialCurrency().getCoins()<14 && owner.getDeck().getDeckAndDiscardSize() > 3;
+        return owner.getDeck().getDeckAndDiscardSize() > 3;
+    }
+
+    @Override
+    public int getDiscardPriority(int aActionsLeft) {
+        if (!wantsToBePlayed())
+            return 5;
+        return super.getDiscardPriority(aActionsLeft);
+    }
+}

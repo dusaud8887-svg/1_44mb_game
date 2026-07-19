@@ -1,0 +1,12 @@
+followPlayerID = -4;
+isInView = false;
+xPos = 0;
+yPos = 0;
+arrowDir = 0;
+lifetime = 0;
+image_alpha = 0;
+image_speed = 0;
+vis = 0.8;
+soundPlay([83], "alertattack", 30, 50);
+image_xscale = 2;
+image_yscale = 2;
