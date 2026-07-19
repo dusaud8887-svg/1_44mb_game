@@ -77,7 +77,22 @@ def write_png(path: Path, width: int, height: int, rgb: bytes) -> None:
         return struct.pack(">I", len(data)) + name + data + struct.pack(">I", zlib.crc32(name + data) & 0xFFFFFFFF)
     scan = b"".join(b"\0" + rgb[y * width * 3:(y + 1) * width * 3] for y in range(height))
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(scan, 9)) + chunk(b"IEND", b""))
+    data = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(scan, 9)) + chunk(b"IEND", b"")
+    if path.exists() and png_content(path.read_bytes()) == png_content(data): return
+    path.write_bytes(data)
+
+
+def png_content(data: bytes):
+    try:
+        pos, metadata, compressed = 8, [], bytearray()
+        while pos < len(data):
+            size = struct.unpack(">I", data[pos:pos + 4])[0]
+            name, payload = data[pos + 4:pos + 8], data[pos + 8:pos + 8 + size]
+            (compressed.extend(payload) if name == b"IDAT" else metadata.append((name, payload)))
+            pos += size + 12
+        return metadata, zlib.decompress(compressed)
+    except (struct.error, zlib.error):
+        return None
 
 
 def emit(glyphs: dict[str, list[int]]) -> None:

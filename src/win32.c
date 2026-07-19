@@ -23,8 +23,9 @@ static void save_load(void){
     if(!ok||read!=sizeof(loaded)||loaded.magic!=0x34313445u||loaded.version!=1||loaded.checksum!=save_checksum(&loaded)){g.save_corrupt=true;return;}save_data=loaded;
 }
 static void save_write(void){
-    save_data.magic=0x34313445u;save_data.version=1;save_data.checksum=save_checksum(&save_data);wchar_t path[MAX_PATH];save_path(path);
-    HANDLE file=CreateFileW(path,GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);if(file==INVALID_HANDLE_VALUE)return;DWORD written=0;WriteFile(file,&save_data,sizeof(save_data),&written,NULL);CloseHandle(file);
+    save_data.magic=0x34313445u;save_data.version=1;save_data.checksum=save_checksum(&save_data);wchar_t path[MAX_PATH],temp[MAX_PATH];save_path(path);lstrcpyW(temp,path);lstrcpyW(temp+lstrlenW(temp)-3,L"TMP");
+    HANDLE file=CreateFileW(temp,GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);if(file==INVALID_HANDLE_VALUE)return;DWORD written=0;BOOL ok=WriteFile(file,&save_data,sizeof(save_data),&written,NULL)&&written==sizeof(save_data)&&FlushFileBuffers(file);CloseHandle(file);
+    if(!ok||!MoveFileExW(temp,path,MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH))DeleteFileW(temp);
 }
 static void save_result(void){
     if(g.today)save_data.last_daily_seed=g.seed;
@@ -39,7 +40,7 @@ static void audio_fill(WAVEHDR *h){
     for(int i=0;i<735;i++){
         audio_phase+=step;audio_phase2+=harmony;audio_noise=(audio_noise>>1)^((uint32_t)-(int32_t)(audio_noise&1)&0xB400u);
         int v=(audio_phase&0x8000)?260:-260;if(g.sync>=1)v+=(audio_phase2&0x8000)?110:-110;
-        if(g.sync>=2)v+=(int)((audio_phase2>>8)&255)-128;if(g.effect_ticks)v+=((audio_phase2&0x4000)?620:-620)+(int)(audio_noise&63)-32;
+        if(g.sync>=2)v+=(int)((audio_phase2>>8)&255)-128;if(g.effect_ticks)v+=((audio_phase2&0x4000)?620:-620)+(int)(audio_noise&63)-32;if(g.mirror_label_ticks>PROGRAM_LABEL_TICKS-24)v+=(audio_phase&0x8000)?340:-340;
         if(g.mode==EDIT||g.mode==BREAK)v/=2;if(g.muted)v=0;out[i]=(int16_t)v;
     }
     waveOutWrite(wave,h,sizeof(*h));
@@ -48,7 +49,8 @@ static void CALLBACK audio_callback(HWAVEOUT w,UINT msg,DWORD_PTR user,DWORD_PTR
 static void audio_init(void){
     WAVEFORMATEX f={WAVE_FORMAT_PCM,1,22050,44100,2,16,0};
     if(waveOutOpen(&wave,WAVE_MAPPER,&f,(DWORD_PTR)audio_callback,0,CALLBACK_FUNCTION)!=MMSYSERR_NOERROR)return;
-    for(int i=0;i<3;i++){wave_headers[i].lpData=(LPSTR)wave_samples[i];wave_headers[i].dwBufferLength=sizeof(wave_samples[i]);waveOutPrepareHeader(wave,&wave_headers[i],sizeof(WAVEHDR));}
+    int prepared=0;for(;prepared<3;prepared++){wave_headers[prepared].lpData=(LPSTR)wave_samples[prepared];wave_headers[prepared].dwBufferLength=sizeof(wave_samples[prepared]);if(waveOutPrepareHeader(wave,&wave_headers[prepared],sizeof(WAVEHDR))!=MMSYSERR_NOERROR)break;}
+    if(prepared<3){while(prepared--)waveOutUnprepareHeader(wave,&wave_headers[prepared],sizeof(WAVEHDR));waveOutClose(wave);return;}
     audio_ready=true;for(int i=0;i<3;i++)audio_fill(&wave_headers[i]);
 }
 static void audio_shutdown(void){if(!audio_ready)return;audio_ready=false;waveOutReset(wave);for(int i=0;i<3;i++)waveOutUnprepareHeader(wave,&wave_headers[i],sizeof(WAVEHDR));waveOutClose(wave);}

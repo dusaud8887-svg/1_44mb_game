@@ -2,6 +2,34 @@
 setlocal
 cd /d "%~dp0"
 
+if /i "%~1"=="clean" (
+  if exist build rmdir /s /q build
+  if exist out rmdir /s /q out
+  exit /b 0
+)
+if /i "%~1"=="help" (
+  echo Usage: build.bat [test^|sim1000^|debug^|gun^|dummy^|package^|report^|clean^|help]
+  exit /b 0
+)
+if /i "%~1"=="package" (
+  call "%~f0" debug || exit /b 1
+  powershell -NoProfile -Command "Compress-Archive -Force -LiteralPath 'build\ECHO144_DEBUG.EXE','docs\PLAYTEST_README.txt' -DestinationPath 'build\ECHO144_PLAYTEST.zip'" || exit /b 1
+  echo playtest package: build\ECHO144_PLAYTEST.zip
+  exit /b 0
+)
+if /i "%~1"=="report" (
+  where python >nul 2>nul || (echo Python 3 is required to summarize playtests. & exit /b 1)
+  python tools\playtest_report.py %2 %3 %4 %5 %6 %7 %8 %9
+  exit /b %errorlevel%
+)
+set "VALID="
+if "%~1"=="" set "VALID=1"
+for %%A in (test sim1000 debug gun dummy) do if /i "%~1"=="%%A" set "VALID=1"
+if not defined VALID (
+  echo Unknown command: %~1
+  exit /b 2
+)
+
 set "VSDEV=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat"
 where cl >nul 2>nul
 if errorlevel 1 (
@@ -10,12 +38,6 @@ if errorlevel 1 (
     exit /b 1
   )
   call "%VSDEV%" -arch=x64 -host_arch=x64 >nul || exit /b 1
-)
-
-if /i "%~1"=="clean" (
-  if exist build rmdir /s /q build
-  if exist out rmdir /s /q out
-  exit /b 0
 )
 
 if not exist build mkdir build
@@ -53,7 +75,7 @@ if /i "%~1"=="dummy" (
 )
 
 set "CFLAGS=/nologo /utf-8 /std:c11 /W4 /O1 /GL /Gy /Gw /GS /MT /DNDEBUG /DUNICODE /D_UNICODE"
-set "LFLAGS=/link /SUBSYSTEM:WINDOWS /LTCG /OPT:REF,ICF /INCREMENTAL:NO /MAP:build\ECHO144.map user32.lib gdi32.lib winmm.lib"
+set "LFLAGS=/link /SUBSYSTEM:WINDOWS /LTCG /OPT:REF,ICF /INCREMENTAL:NO /Brepro /MAP:build\ECHO144.map user32.lib gdi32.lib winmm.lib"
 set "OUTPUT=out\ECHO144.EXE"
 if /i "%~1"=="debug" (
   set "CFLAGS=/nologo /utf-8 /std:c11 /W4 /Od /Zi /MTd /DDEV_LOG /DUNICODE /D_UNICODE"
@@ -79,4 +101,5 @@ if %TOTAL% GTR 1474560 (
 echo ECHO144.EXE: %SIZE% bytes
 echo submission total: %TOTAL% bytes
 dumpbin /nologo /dependents out\ECHO144.EXE
+powershell -NoProfile -Command "$allowed='USER32.dll','GDI32.dll','WINMM.dll','KERNEL32.dll'; $deps=(dumpbin /nologo /dependents 'out\ECHO144.EXE' | Select-String '^\s+([^\s]+\.dll)\s*$').Matches.Groups[1].Value; $bad=@($deps | Where-Object { $_ -notin $allowed }); if($bad){Write-Error ('unexpected DLL dependency: '+($bad -join ', ')); exit 1}" || exit /b 1
 powershell -NoProfile -Command "(Get-FileHash '.\out\ECHO144.EXE' -Algorithm SHA256).Hash" || exit /b 1

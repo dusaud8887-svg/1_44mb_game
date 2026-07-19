@@ -6,7 +6,7 @@
 
 16×16 2bpp 1프레임 = 64B, 24×24 4bpp 1프레임 = 288B. 주요 캐릭터 애니메이션 100프레임을 추가해도 원시 데이터 약 28.8KB다. **"용량이 작아서 애니메이션·엔딩·적 변주를 못 넣는다"는 사고를 금지한다.**
 
-ECHO/144의 실제 제한은 바이트가 아니라: 소수 인력의 제작 시간 / 카드·이펙트의 가독성 / 320×240 정보 밀도 / 전투·편성 템포 / 테스트 가능한 규칙 수 / 마감까지의 안정화 시간. **바이트 예산보다 디자인 복잡도 예산을 관리한다.** (용량 운용은 [30_TECH.md](30_TECH.md) §9 — 내부 소프트 캡 900KB.)
+ECHO/144의 실제 제한은 바이트가 아니라: 소수 인력의 제작 시간 / 카드·이펙트의 가독성 / 400×240 정보 밀도 / 전투·편성 템포 / 테스트 가능한 규칙 수 / 마감까지의 안정화 시간. **바이트 예산보다 디자인 복잡도 예산을 관리한다.** (용량 운용은 [30_TECH.md](30_TECH.md) §9 — 내부 소프트 캡 900KB.)
 
 ## 2. 여덟 가지 차용 원칙
 
@@ -57,9 +57,13 @@ ECHO/144의 실제 제한은 바이트가 아니라: 소수 인력의 제작 시
 
 Treasure → **TX/RX 양면 CARRIER** ([10](10_MECHANICS.md) §3-1, ADR-0007) / Action → CUE 소비 PROGRAM / Victory → OPEN에서 반전되는 ARCHIVE / Curse → NOISE·MIMIC / 솔로 오토마·Curse Race → 적 의도 덱·감사 프로토콜.
 
+Vaccarino가 설명한 핵심은 카드 수가 아니라 **만든 덱을 빨리 다시 보게 하는 5장 드로우**, 단순한 행동·구매 1회 제한, 구매한 카드의 버림→셔플→귀환이다([설계 인터뷰](https://cardboardedison.com/blog/meaningful-decisions-donald-x-vaccarino-dominion), [공식 규칙서](https://www.riograndegames.com/wp-content/uploads/2016/09/Dominion2nd.pdf)). 본작도 구매 순간의 섬광보다 귀환한 카드가 다음 편성·생존을 바꾸는지를 측정한다. BREAK의 `덱/뽑기/버림`과 귀환 HUD를 별도 덱 화면으로 확장하지 않는다.
+
 ### HoloCure Super Collab — 수십 개 진화표가 아니라 딱 하나
 
 한 런의 후반 목표가 되는 강한 최종 결합 **하나**: 덱 전체 → 최종 방송 프로토콜 컴파일. 핵심 효과 3~4개 × 수정자 4개지만 플레이어에게는 여러 최종 빌드로 보인다.
+
+HoloCure의 Super Collab은 한 런에 하나뿐이며, 완성 전부터 망치 진행 표시로 합성 경로를 예고한다([Collab](https://holocure.wiki.gg/wiki/Collab), [Super Collab](https://holocure.wiki.gg/wiki/Super_Collab)). 본작이 가져올 것은 다중 조합표가 아니라 **단 하나의 최종 합성과 그 예고**다. 8턴 이후 BREAK에서 현재 `형태 / modifier / 강도`를 보여 주고, 실제 상환은 OPEN CHANNEL 한 번에 집중한다.
 
 ### Cat Survivors (js13k 12.91KB) — 경고
 

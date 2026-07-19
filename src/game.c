@@ -11,14 +11,18 @@ static uint8_t held_keys[256], pressed_keys[256];
 static int deck_total(void);
 #ifdef DEV_LOG
 static bool dev_cheated;
+static bool dev_auto_cued;
+static unsigned dev_run;
+static unsigned card_mask(const uint8_t *counts){unsigned mask=0;for(int id=0;id<CARD_COUNT;id++)if(counts[id])mask|=1u<<id;return mask;}
 static void telemetry_transition(Mode before,Mode after){
     if(before==after)return;
     const char *event=after==ON_AIR?"on_air":after==BREAK?"break":after==EDIT?"edit":after==OPEN_CHANNEL?"open":after==RESULT?"result":"state";
     int tx=0,rx=0;for(int i=0;i<g.deck.hand_n;i++)if(CARD_DEF[g.deck.hand[i]].type==CARRIER){if(g.carrier_rx[i])rx++;else tx++;}
-    wchar_t path[MAX_PATH];DWORD n=GetModuleFileNameW(NULL,path,MAX_PATH);while(n&&path[n-1]!=L'\\')n--;lstrcpyW(path+n,L"playtest.csv");
+    wchar_t path[MAX_PATH];DWORD n=GetModuleFileNameW(NULL,path,MAX_PATH);while(n&&path[n-1]!=L'\\')n--;lstrcpyW(path+n,L"playtest_v2.csv");
     FILE *file=NULL;if(_wfopen_s(&file,path,L"a+"))return;fseek(file,0,SEEK_END);
-    if(ftell(file)==0)fputs("seed,tick,event,turn,intent,deck,tx,rx,cued,hp,live,archived,mimicked,trend,result,cheated\n",file);
-    fprintf(file,"%u,%d,%s,%u,%u,%d,%d,%d,%u,%u,%d,%d,%d,%u,%u,%d\n",g.seed,g.anim_ticks,event,g.turn,g.intent,deck_total(),tx,rx,g.queue_n,g.hp,g.echo_live,g.echo_archived,g.echo_mimicked,g.trend_card,g.result_reason,dev_cheated?1:0);fclose(file);
+    unsigned choice_mask=0;for(int i=0;i<g.queue_n;i++)choice_mask|=1u<<g.queue[i];
+    if(ftell(file)==0)fputs("run,seed,tick,event,turn,intent,deck,tx,rx,cued,choice_mask,bought_mask,auto_cued,hp,live,archived,mimicked,trend,result,cheated\n",file);
+    fprintf(file,"%u,%u,%d,%s,%u,%u,%d,%d,%d,%u,%u,%u,%d,%u,%d,%d,%d,%u,%u,%d\n",dev_run,g.seed,g.anim_ticks,event,g.turn,g.intent,deck_total(),tx,rx,g.queue_n,choice_mask,card_mask(g.cards_bought),dev_auto_cued?1:0,g.hp,g.echo_live,g.echo_archived,g.echo_mimicked,g.trend_card,g.result_reason,dev_cheated?1:0);fclose(file);
 }
 #endif
 
@@ -92,7 +96,7 @@ static CardId draw_one(void) {
     return g.deck.draw[--g.deck.draw_n];
 }
 
-static CardId note_card_return(CardId id){if(g.new_card==id+1)g.new_ticks=90;return id;}
+static CardId note_card_return(CardId id){if(g.new_card==id+1)g.new_ticks=NEW_CARD_TICKS;return id;}
 
 static void draw_hand(void) {
     g.deck.hand_n = 0;
@@ -234,7 +238,7 @@ static void program_effect(CardId id,bool mirrored,int scale) {
     case CARD_MACRO: if(g.last_program<CARD_COUNT&&g.last_program!=CARD_MACRO)program_effect((CardId)g.last_program,mirrored,70);break;
     case CARD_MARKER: if(mirrored)for(int i=0;i<3;i++)spawn_edge(MOD_MASK,i);else mark_nearest(5);break;
     case CARD_SURGE:
-        if(mirrored)for(int i=0;i<3;i++)bullet((float)(40+i*120),20.0f,g.px-(40.0f+i*120.0f),g.py-20.0f,1,true,1);else{surge(scale);g.surge_ticks=180;}
+        if(mirrored)for(int i=0;i<3;i++){float x=40.0f+i*(SCREEN_W-80.0f)/2.0f;bullet(x,20.0f,g.px-x,g.py-20.0f,1,true,1);}else{surge(scale);g.surge_ticks=180;}
         break;
     case CARD_CHECKSUM:
         if(mirrored){for(int i=0;i<64;i++)if(g.ring[i].state==ECHO_LIVE){g.ring[i].state=ECHO_MIMICKED;recount_echo();break;}}else checksum();
@@ -251,7 +255,8 @@ static void program_effect(CardId id,bool mirrored,int scale) {
 
 static void execute_program_scaled(CardId id,bool mirrored,int scale) {
     if(!mirrored&&g.sync>=2)scale=scale*110/100;
-    if(!mirrored){g.program_uses[id]++;g.program_recent[(g.turn-1)%6][id]++;g.cards_fired[id]++;g.program_fired=true;g.effect_card=id;g.effect_ticks=24;}
+    if(!mirrored){g.program_uses[id]++;g.program_recent[(g.turn-1)%6][id]++;g.cards_fired[id]++;g.program_fired=true;g.effect_card=id;g.effect_ticks=24;g.message_ticks=PROGRAM_LABEL_TICKS;}
+    else{g.mirror_card=(uint8_t)(id+1);g.mirror_label_ticks=PROGRAM_LABEL_TICKS;}
     program_effect(id,mirrored,scale);
     if(!mirrored)g.last_program=id;
 }
@@ -331,11 +336,21 @@ static void generate_kingdom(void) {
 static void begin_open(void);
 
 static void begin_edit(void) {
+#ifdef DEV_LOG
+    dev_auto_cued=false;
+#endif
     g.mode=EDIT;g.cursor=0;g.cue=CUE_START;g.queue_n=g.queue_at=0;g.seek_used=false;g.contract_applied=false;g.phase_ticks=EDIT_RECOMMEND_TICKS;
     g.cache_mode=g.prefetch_mode=false;memset(g.program_recent[(g.turn-1)%6],0,CARD_COUNT);
     memset(g.selected,0,sizeof(g.selected));memset(g.carrier_rx,0,sizeof(g.carrier_rx));
     g.intent=g.intent_deck[g.turn-1];
     draw_hand();
+    if(g.turn==1){
+        bool carrier_seen=false;
+        for(int i=0;i<g.deck.hand_n;i++){
+            if(CARD_DEF[g.deck.hand[i]].type==CARRIER){g.carrier_rx[i]=carrier_seen;carrier_seen=true;}
+            if(g.deck.hand[i]==CARD_MULTI)g.cursor=(uint8_t)i;
+        }
+    }
     if(g.intent==MUTE)for(int i=0;i<g.deck.hand_n;i++)if(CARD_DEF[g.deck.hand[i]].type==PROGRAM){g.selected[i]=3;break;}
     if(g.contract_boost){g.cue++;g.contract_boost=0;g.contract_applied=true;add_echo(ECHO_MIMICKED,2,1);}
 }
@@ -355,10 +370,11 @@ static void begin_air(void) {
     memset(g.enemies,0,sizeof(g.enemies));memset(g.bullets,0,sizeof(g.bullets));
     int count=3+g.turn/2;
     uint8_t type=g.intent==GIFT_DROP?SPON_GIFT:g.intent==MUTE?MOD_MASK:g.intent==COMMENT_WALL?POP_AD:g.intent==MIRROR?POP_AD:BOT_CHAT;
-    for(int i=0;i<count;i++)spawn_edge(type,g.intent==BOT_RAID?1:(int)(rng(&g.encounter_rng)&3));
-    /* Encounter texture: the BOT_CHAT swarm deals no HP damage (it only delays the queue), so a
-       raid used to be risk-free. Mix in a few POP.AD shooters from mid-game on so those waves
-       actually threaten and the deck's combat build has something to bite on (10_MECHANICS s4). */
+    if(g.intent==COMMENT_WALL){
+        bool vertical=(rng(&g.encounter_rng)&1)!=0;float fixed=vertical?(g.px<SCREEN_W/2?SCREEN_W-80.0f:80.0f):(g.py<112?168.0f:56.0f);
+        for(int i=0;i<count;i++){float along=(float)(i+1)/(float)(count+1);spawn_enemy(POP_AD,vertical?fixed:16.0f+(SCREEN_W-32.0f)*along,vertical?32.0f+160.0f*along:fixed);}
+    } else for(int i=0;i<count;i++)spawn_edge(type,g.intent==BOT_RAID?1:(int)(rng(&g.encounter_rng)&3));
+    /* BOT_CHAT only delays the queue, so mix in shooters from mid-game to make raids dangerous. */
     if(type==BOT_CHAT&&g.turn>=4){int shooters=1+g.turn/6;for(int i=0;i<shooters;i++)spawn_edge(POP_AD,(int)(rng(&g.encounter_rng)&3));}
     if(g.turn==2)spawn_edge(BUF_WORM,0);
     if(g.turn==7){
@@ -374,7 +390,8 @@ static void end_air(void) {
     if(!g.turn_hit&&g.sync<3)g.sync++; else if(g.turn_hit&&g.sync)g.sync--;
     g.mode=BREAK;g.shop_cursor=0;g.baud=0;
     for(int i=0;i<g.deck.hand_n;i++) if(CARD_DEF[g.deck.hand[i]].type==CARRIER&&g.carrier_rx[i])g.baud+=CARD_DEF[g.deck.hand[i]].baud;
-    choose_trend();
+    if(g.turn==1){g.baud+=FIRST_TURN_BAUD_BONUS;g.shop_cursor=1;}
+    choose_trend();compile_finale();
 }
 
 static void begin_open(void) {
@@ -492,7 +509,10 @@ static void edit_activate(void) {
     if(c->type==CARRIER){g.carrier_rx[g.cursor]^=1;return;}
     if(c->type!=PROGRAM||g.selected[g.cursor]||!g.cue)return;
     g.selected[g.cursor]=1;g.cue--;g.cards_cued[id]++;
-    if(id==CARD_MULTI){g.cue+=2;g.program_uses[id]++;g.program_recent[(g.turn-1)%6][id]++;}
+    if(id==CARD_MULTI){
+        g.cue+=2;g.program_uses[id]++;g.program_recent[(g.turn-1)%6][id]++;
+        if(g.turn==1)for(int i=0;i<g.deck.hand_n;i++)if(!g.selected[i]&&CARD_DEF[g.deck.hand[i]].type==PROGRAM){g.cursor=(uint8_t)i;break;}
+    }
     else if(id==CARD_CACHE){
         int target=-1;for(int i=0;i<g.deck.hand_n;i++)if(i!=g.cursor&&!g.selected[i]&&CARD_DEF[g.deck.hand[i]].type==PROGRAM){target=i;break;}
         if(target<0||!(g.deck.draw_n||g.deck.discard_n)){g.selected[g.cursor]=0;g.cue++;g.cards_cued[id]--;return;}
@@ -509,7 +529,11 @@ static void edit_activate(void) {
 }
 
 static void recommend_program(void){
-    for(int pass=0;pass<2&&g.cue;pass++)for(int i=0;i<g.deck.hand_n;i++)if(!g.selected[i]&&CARD_DEF[g.deck.hand[i]].type==PROGRAM&&((g.deck.hand[i]==CARD_MULTI)==(pass==0))){g.cursor=(uint8_t)i;edit_activate();return;}
+    for(int pass=0;pass<2&&g.cue;pass++)for(int i=0;i<g.deck.hand_n;i++)if(!g.selected[i]&&CARD_DEF[g.deck.hand[i]].type==PROGRAM&&((g.deck.hand[i]==CARD_MULTI)==(pass==0))){g.cursor=(uint8_t)i;
+#ifdef DEV_LOG
+        dev_auto_cued=true;
+#endif
+        edit_activate();return;}
 }
 
 static void resolve_cache(void){
@@ -552,7 +576,7 @@ void game_start(uint32_t seed) {
     memset(&g,0,sizeof(g));g.running=true;g.muted=muted;g.low_fx=low_fx;g.seed=seed;g.deck_rng=seed^0x12345678u;g.encounter_rng=seed^0x9e3779b9u;g.reward_rng=seed^0xa5a5a5a5u;
     g.today=today;g.save_corrupt=save_corrupt;
 #ifdef DEV_LOG
-    dev_cheated=false;
+    dev_cheated=false;dev_auto_cued=false;dev_run++;
 #endif
     g.hp=HP_START;g.turn=1;g.px=SCREEN_W/2;g.py=112;g.last_dx=1;g.trend_card=CARD_FIREWALL;g.last_program=255;
     uint8_t intents[12]={BOT_RAID,GIFT_DROP,BOT_RAID,COMMENT_WALL,MUTE,GIFT_DROP,COMMENT_WALL,MUTE,BOT_RAID,MIRROR,CLIP_THEFT,TREND};
@@ -570,6 +594,7 @@ const wchar_t *intent_name(uint8_t intent) {
 }
 
 const wchar_t *ending_name(uint8_t ending){static const wchar_t *names[]={L"열린 채널",L"마지막 보관",L"완벽한 관객",L"미해결 메아리"};return names[ending%4];}
+const wchar_t *result_reason_name(uint8_t reason){static const wchar_t *names[]={L"",L"양방향 연결",L"체력 0 / 송출 중단",L"64 미완성 / 채널 종료"};return names[reason<4?reason:0];}
 const wchar_t *final_form_name(uint8_t form){static const wchar_t *names[]={L"채팅 폭풍",L"공명",L"열린 메아리"};return names[form%3];}
 const wchar_t *final_modifier_name(uint8_t modifier){static const wchar_t *names[]={L"반복",L"회선",L"안전",L"재생"};return names[modifier%4];}
 
@@ -584,12 +609,12 @@ void game_tick(void) {
     if(pressed_keys[VK_F1])g.low_fx=!g.low_fx;
     if(pressed_keys[VK_ESCAPE]&&g.mode!=TITLE&&!(g.mode==BREAK&&(g.defrag_mode||g.trade_mode))){g.paused=!g.paused;memset(pressed_keys,0,sizeof(pressed_keys));return;}
     if(g.paused){memset(pressed_keys,0,sizeof(pressed_keys));return;}
-    g.anim_ticks++;if(g.invuln_ticks)g.invuln_ticks--;if(g.echo_convert_ticks)g.echo_convert_ticks--;if(g.firewall_ticks)g.firewall_ticks--;if(g.effect_ticks)g.effect_ticks--;if(g.flash_ticks)g.flash_ticks--;if(g.shake_ticks)g.shake_ticks--;if(g.threshold_ticks&&!--g.threshold_ticks)start_next_threshold();if(g.new_ticks&&!--g.new_ticks)g.new_card=0;if(g.message_ticks)g.message_ticks--;
+    g.anim_ticks++;if(g.invuln_ticks)g.invuln_ticks--;if(g.echo_convert_ticks)g.echo_convert_ticks--;if(g.firewall_ticks)g.firewall_ticks--;if(g.effect_ticks)g.effect_ticks--;if(g.flash_ticks)g.flash_ticks--;if(g.shake_ticks)g.shake_ticks--;if(g.threshold_ticks&&!--g.threshold_ticks)start_next_threshold();if(g.new_ticks&&!--g.new_ticks)g.new_card=0;if(g.message_ticks)g.message_ticks--;if(g.mirror_label_ticks)g.mirror_label_ticks--;
 #ifdef DEV_LOG
     if(pressed_keys[VK_F6]||pressed_keys[VK_F7]||pressed_keys[VK_F8]||pressed_keys[VK_F9])dev_cheated=true;
     if(pressed_keys[VK_F9]&&g.mode!=TITLE&&g.mode!=RESULT)begin_open();
     if(pressed_keys[VK_F8]&&g.mode==EDIT){CardId p1[]={CARD_PREFETCH,CARD_MARKER,CARD_SURGE,CARD_MACRO,CARD_CHECKSUM};memcpy(g.deck.hand,p1,sizeof(p1));g.deck.hand_n=5;g.cursor=0;g.cue=3;memset(g.selected,0,sizeof(g.selected));}
-    if(pressed_keys[VK_F7]&&g.mode==EDIT){g.mode=BREAK;g.baud=9;g.shop_cursor=0;}
+    if(pressed_keys[VK_F7]&&g.mode==EDIT){end_air();g.baud=9;}
     if(pressed_keys[VK_F6]&&g.mode==OPEN_CHANNEL)add_echo(ECHO_LIVE,32,0);
 #endif
     if(g.mode==TITLE){if(pressed_keys[VK_RETURN])game_start(0x14401997u);}
@@ -631,25 +656,31 @@ static void test_edit_recommendation(void){
     game_start(48);for(int i=0;i<EDIT_RECOMMEND_TICKS;i++)game_tick();assert(g.cards_cued[CARD_MULTI]==1&&g.cue==2);
     game_start(49);g.deck.hand[0]=CARD_CACHE;g.deck.hand[1]=CARD_FIREWALL;g.deck.hand_n=2;g.cursor=0;g.cue=2;edit_activate();for(int i=0;i<EDIT_RECOMMEND_TICKS;i++)game_tick();assert(g.cache_mode&&g.cue==1);
 }
+static void test_first_turn_onboarding(void){
+    game_start(50);assert(g.deck.hand[g.cursor]==CARD_MULTI);
+    int tx=0,rx=0;for(int i=0;i<g.deck.hand_n;i++)if(CARD_DEF[g.deck.hand[i]].type==CARRIER){if(g.carrier_rx[i])rx++;else tx++;}
+    assert(tx==1&&rx==1);edit_activate();assert(g.deck.hand[g.cursor]==CARD_FIREWALL&&g.cue==2);edit_activate();assert(g.queue_n==1&&g.queue[0]==CARD_FIREWALL);end_air();assert(g.baud==2&&g.shop_cursor==1);
+}
 static void test_rule_feedback(void){
     game_start(43);g.mode=OPEN_CHANNEL;add_echo(ECHO_LIVE,2,0);damage_player();int mimicked=g.echo_mimicked;g.invuln_ticks=0;damage_player();assert(g.echo_mimicked==mimicked&&g.echo_convert_ticks>0);
     game_start(44);g.hp=4;memset(g.enemies,0,sizeof(g.enemies));spawn_enemy(SPON_GIFT,g.px,g.py);update_enemies();assert(g.echo_mimicked==1&&g.hp==5&&!g.enemies[0].active);
     game_start(45);g.sync=0;memset(g.enemies,0,sizeof(g.enemies));spawn_enemy(SPON_GIFT,40,40);damage_enemy(0,99);assert(g.sync==1&&g.echo_mimicked==0);
     game_start(46);g.mode=BREAK;g.defrag_mode=true;g.deck.draw_n=5;g.deck.discard_n=g.deck.hand_n=0;g.shop_cursor=CARD_2400;game_press(VK_RETURN);game_tick();assert(deck_total()==5&&g.mode==BREAK);
     g.deck.draw[g.deck.draw_n++]=CARD_NOISE;g.shop_cursor=CARD_NOISE;g.ring[0].origin=0;g.ring[0].state=ECHO_MIMICKED;recount_echo();game_press(VK_RETURN);game_tick();assert(deck_count(CARD_NOISE)==0&&g.echo_live==1);
-    game_start(47);g.new_card=CARD_FIREWALL+1;g.deck.draw_n=1;g.deck.draw[0]=CARD_FIREWALL;assert(note_card_return(draw_one())==CARD_FIREWALL&&g.new_ticks==90);
+    game_start(47);g.new_card=CARD_FIREWALL+1;g.deck.draw_n=1;g.deck.draw[0]=CARD_FIREWALL;assert(note_card_return(draw_one())==CARD_FIREWALL&&g.new_ticks==NEW_CARD_TICKS);
 }
 static void test_cache_no_duplicate(void){game_start(5);g.deck.hand[0]=CARD_CACHE;g.deck.hand[1]=CARD_FIREWALL;g.deck.hand_n=2;g.cursor=0;int before=deck_total();edit_activate();assert(g.cache_mode);g.cursor=1;resolve_cache();assert(g.cached_card==CARD_FIREWALL+1&&deck_total()==before);cleanup();assert(deck_total()==before);game_start(5);g.cached_card=CARD_FIREWALL+1;g.deck.hand_n=0;draw_hand();g.cursor=0;edit_activate();assert(g.queue_n==1&&g.queue_scale[0]==150);}
 static int simulate_open_echo(void){for(int tick=0;tick<OPEN_TICKS;tick++)if(--g.open_card_ticks<=0){open_archive_tick();g.open_card_ticks=next_open_delay();}return g.echo_total;}
-static void test_open_scheduler(void){game_start(6);begin_open();assert(g.final_power==1&&simulate_open_echo()==26);game_start(6);g.deck.discard[g.deck.discard_n++]=CARD_VOICE;begin_open();assert(simulate_open_echo()==60);game_start(6);g.deck.discard[g.deck.discard_n++]=CARD_CACHE;begin_open();assert(g.final_modifier==MOD_REPEAT&&g.final_power==2&&simulate_open_echo()==52);}
+static void test_open_scheduler(void){game_start(6);g.turn=8;for(int i=0;i<3;i++)g.deck.discard[g.deck.discard_n++]=CARD_VOICE;end_air();assert(g.mode==BREAK&&g.final_form==FORM_RESONANCE);game_start(6);begin_open();assert(g.final_power==1&&simulate_open_echo()==26);game_start(6);g.deck.discard[g.deck.discard_n++]=CARD_VOICE;begin_open();assert(simulate_open_echo()==60);game_start(6);g.deck.discard[g.deck.discard_n++]=CARD_CACHE;begin_open();assert(g.final_modifier==MOD_REPEAT&&g.final_power==2&&simulate_open_echo()==52);}
 static void test_p1_cards(void){
     game_start(7);g.deck.hand[0]=CARD_PREFETCH;g.cursor=0;int total=deck_total();edit_activate();assert(g.prefetch_mode&&g.prefetch_n==3);resolve_prefetch();assert(!g.prefetch_mode&&deck_total()==total);
     game_start(8);g.deck.hand[0]=CARD_MARKER;g.cursor=0;total=deck_total();edit_activate();assert(g.queue_n==1&&g.queue[0]==CARD_MARKER&&deck_total()==total);
-    memset(g.enemies,0,sizeof(g.enemies));spawn_enemy(BOT_CHAT,40.0f,40.0f);spawn_enemy(BOT_CHAT,80.0f,40.0f);execute_program(CARD_MARKER,false);assert(g.enemies[0].marked&&g.enemies[1].marked);int hp=g.enemies[0].hp;execute_program(CARD_SURGE,false);assert(g.enemies[0].hp<hp||!g.enemies[0].active);
+    memset(g.enemies,0,sizeof(g.enemies));spawn_enemy(BOT_CHAT,40.0f,40.0f);spawn_enemy(BOT_CHAT,80.0f,40.0f);execute_program(CARD_MARKER,false);assert(g.enemies[0].marked&&g.enemies[1].marked&&g.message_ticks==PROGRAM_LABEL_TICKS&&g.effect_card==CARD_MARKER);int hp=g.enemies[0].hp;execute_program(CARD_SURGE,false);assert(g.enemies[0].hp<hp||!g.enemies[0].active);execute_program(CARD_SURGE,true);assert(g.mirror_card==CARD_SURGE+1&&g.mirror_label_ticks==PROGRAM_LABEL_TICKS);
     g.deck.discard[g.deck.discard_n++]=CARD_NOISE;int noise=deck_count(CARD_NOISE);execute_program(CARD_CHECKSUM,false);assert(deck_count(CARD_NOISE)==noise-1);
     g.last_program=CARD_FIREWALL;g.firewall_ticks=0;execute_program(CARD_MACRO,false);assert(g.firewall_ticks==FIREWALL_TICKS*70/100);
 }
 static void test_p1_content(void){for(uint32_t seed=1;seed<=100;seed++){game_start(seed);assert(kingdom_valid(g.kingdom));}game_start(9);int counts[INTENT_COUNT]={0};for(int i=0;i<12;i++)counts[g.intent_deck[i]]++;assert(counts[BOT_RAID]==3&&counts[MUTE]==2&&counts[GIFT_DROP]==2&&counts[COMMENT_WALL]==2&&counts[MIRROR]==1&&counts[CLIP_THEFT]==1&&counts[TREND]==1);}
+static void test_comment_wall(void){game_start(19);g.turn=4;g.intent=COMMENT_WALL;begin_air();int n=0;float x=-1,y=-1;bool same_x=true,same_y=true;for(int i=0;i<MAX_ENEMIES;i++)if(g.enemies[i].active){assert(g.enemies[i].type==POP_AD&&g.enemies[i].x>4&&g.enemies[i].x<SCREEN_W-4&&g.enemies[i].y>20&&g.enemies[i].y<204);if(n++){same_x&=g.enemies[i].x==x;same_y&=g.enemies[i].y==y;}else{x=g.enemies[i].x;y=g.enemies[i].y;}}assert(n==5&&(same_x||same_y));if(same_x)assert(x==80.0f||x==SCREEN_W-80.0f);else assert(y==56.0f||y==168.0f);}
 static void test_seek_intervention(void){
     game_start(10);g.turn=7;g.intent=COMMENT_WALL;int archives=deck_count(CARD_CHAT)+deck_count(CARD_VOICE);begin_air();assert(g.stolen_card&&deck_count(CARD_CHAT)+deck_count(CARD_VOICE)==archives-1);int worm=-1;for(int i=0;i<MAX_ENEMIES;i++)if(g.enemies[i].active&&g.enemies[i].type==BUF_WORM){worm=i;break;}assert(worm>=0);damage_enemy(worm,99);assert(!g.stolen_card&&g.echo_live==1&&deck_count(CARD_CHAT)+deck_count(CARD_VOICE)==archives);
     game_start(11);g.turn=7;g.intent=COMMENT_WALL;begin_air();assert(g.stolen_card);end_air();assert(!g.stolen_card&&g.echo_archived==1);
@@ -702,6 +733,8 @@ static void test_combat_diversity(void){
     assert(nk>bk&&rk>bk);     /* NETWORK/REPEAT out-kill baseline */
     assert(ps>=bs&&pk>=bk);   /* REPLAY never worse than baseline (monotonic force-multiplier) */
 }
+static void test_result_feedback(void){game_start(20);g.hp=1;damage_player();assert(g.mode==RESULT&&g.result_reason==RESULT_STREAM_LOST&&!wcscmp(result_reason_name(g.result_reason),L"체력 0 / 송출 중단"));game_start(21);g.mode=OPEN_CHANNEL;g.open_ticks=1;g.open_card_ticks=100;g.carrier_ticks=100;update_open();assert(g.mode==RESULT&&g.result_reason==RESULT_OFFLINE&&!wcscmp(result_reason_name(g.result_reason),L"64 미완성 / 채널 종료"));}
+
 static bool sim_available(CardId id){if(id==CARD_14K||id==CARD_CHAT||id==CARD_VOICE)return true;for(int i=0;i<5;i++)if(g.kingdom[i]==id)return true;return false;}
 static int program_count(void){int n=0;for(int id=CARD_MULTI;id<=CARD_CHECKSUM;id++)n+=deck_count((CardId)id);return n;}
 static CardId sim_pick(int policy,int baud){
@@ -723,27 +756,26 @@ static CardId sim_pick(int policy,int baud){
 static void sim_cue_card(CardId id){
     for(int i=0;i<g.deck.hand_n&&g.cue;i++)if(g.deck.hand[i]==id&&!g.selected[i]){g.cursor=(uint8_t)i;edit_activate();if(g.cache_mode)resolve_cache();if(g.prefetch_mode)resolve_prefetch();return;}
 }
-static bool sim_air(int policy,int turn,uint32_t seed){
+static bool sim_air(int policy,int turn,uint32_t seed,bool mortal){
     int carriers=0,tx_goal=(policy==2||policy==5||policy==6)?0:policy==3?2:1;
     if((policy==1||policy==4)&&program_count()>=3)tx_goal=0;
     for(int i=0;i<g.deck.hand_n;i++)if(CARD_DEF[g.deck.hand[i]].type==CARRIER)g.carrier_rx[i]=(uint8_t)(carriers++>=tx_goal);
     begin_air();game_hold(VK_SPACE,true);
     for(int tick=0;tick<ON_AIR_TICKS+1&&g.mode==ON_AIR;tick++){
-        /* ponytail: the balance bot is invulnerable; it measures deck throughput while still executing real combat effects. */
-        g.invuln_ticks=2;
+        if(!mortal)g.invuln_ticks=2;
         game_hold('W',false);game_hold('A',false);game_hold('S',false);game_hold('D',false);
         int direction=(tick/60+turn+(int)(seed&3))&3;game_hold(direction==0?'D':direction==1?'S':direction==2?'A':'W',true);game_tick();
     }
     game_hold(VK_SPACE,false);game_hold('W',false);game_hold('A',false);game_hold('S',false);game_hold('D',false);
     return g.mode==BREAK;
 }
-static int sim_run_policy(int policy,uint32_t seed,int *terminal){
+static int sim_run_policy(int policy,uint32_t seed,int *terminal,bool mortal){
     game_start(seed);
     for(int turn=1;turn<=12;turn++){
         int programs=0,cued=0;for(int i=0;i<g.deck.hand_n;i++)programs+=CARD_DEF[g.deck.hand[i]].type==PROGRAM;for(int id=0;id<CARD_COUNT;id++)cued+=g.cards_cued[id];
         sim_cue_card(CARD_MULTI);if(policy==1){sim_cue_card(CARD_CACHE);sim_cue_card(CARD_PREFETCH);}else if(policy==4){sim_cue_card(CARD_MARKER);sim_cue_card(CARD_SURGE);sim_cue_card(CARD_MACRO);sim_cue_card(CARD_CACHE);}
         for(int i=0;i<g.deck.hand_n&&g.cue;i++)if(CARD_DEF[g.deck.hand[i]].type==PROGRAM&&!g.selected[i]){g.cursor=(uint8_t)i;edit_activate();if(g.cache_mode)resolve_cache();if(g.prefetch_mode)resolve_prefetch();}
-        int used=-cued;for(int id=0;id<CARD_COUNT;id++)used+=g.cards_cued[id];*terminal+=programs>used?programs-used:0;if(!sim_air(policy,turn,seed))return g.echo_total;
+        int used=-cued;for(int id=0;id<CARD_COUNT;id++)used+=g.cards_cued[id];*terminal+=programs>used?programs-used:0;if(!sim_air(policy,turn,seed,mortal))return g.echo_total;
         if(policy==5&&turn>=5&&(turn&1)){g.contract_boost=1;cleanup();continue;}
         if(policy==6&&turn>=7&&turn%3==1){if(deck_total()>5)deck_remove_one(CARD_2400);add_echo(ECHO_ARCHIVED,2,0);cleanup();continue;}
         CardId buy_id=sim_pick(policy,g.baud);if(buy_id<CARD_COUNT&&deck_total()<MAX_DECK){g.deck.discard[g.deck.discard_n++]=buy_id;g.cards_bought[buy_id]++;}
@@ -753,8 +785,15 @@ static int sim_run_policy(int policy,uint32_t seed,int *terminal){
 }
 static void test_strategy_sim(void){
     static const char *name[]={"BIG_BAUD","LOOP_ENGINE","ECHO_RUSH","CLEAN_SIGNAL","CACHE_COMBO","PERFECT_SHOW","THREE_WAY"};int total_wins=0,max_wins=0,positive=0;
-    for(int policy=0;policy<7;policy++){int wins=0,echoes=0,terminal=0;for(uint32_t seed=1;seed<=SIM_SEEDS;seed++){int echo=sim_run_policy(policy,seed,&terminal);echoes+=echo;wins+=echo>=64;}printf("SIM %-12s win %d/%d echo %d terminal %d\n",name[policy],wins,SIM_SEEDS,echoes/SIM_SEEDS,terminal);assert(echoes>=0&&echoes<=64*SIM_SEEDS);positive+=wins>0;total_wins+=wins;if(wins>max_wins)max_wins=wins;}
+    for(int policy=0;policy<7;policy++){int wins=0,echoes=0,terminal=0;for(uint32_t seed=1;seed<=SIM_SEEDS;seed++){int echo=sim_run_policy(policy,seed,&terminal,false);echoes+=echo;wins+=echo>=64;}printf("SIM %-12s win %d/%d echo %d terminal %d\n",name[policy],wins,SIM_SEEDS,echoes/SIM_SEEDS,terminal);assert(echoes>=0&&echoes<=64*SIM_SEEDS);positive+=wins>0;total_wins+=wins;if(wins>max_wins)max_wins=wins;}
     assert(positive>=5&&max_wins*10<=total_wins*4);
 }
-int main(void){setvbuf(stdout,NULL,_IONBF,0);test_movement();test_ring();test_finale_model();test_turn_flow();test_controls();test_edit_recommendation();test_rule_feedback();test_cache_no_duplicate();test_open_scheduler();test_p1_cards();test_p1_content();test_seek_intervention();test_finale_effects();test_combat_diversity();test_strategy_sim();puts("V2 P1 selftest: PASS");return 0;}
+static void test_mortal_strategy_sim(void){
+    static const char *name[]={"BIG_BAUD","LOOP_ENGINE","ECHO_RUSH","CLEAN_SIGNAL","CACHE_COMBO","PERFECT_SHOW","THREE_WAY"};
+    int turns[7]={0};
+    for(int policy=0;policy<7;policy++)for(uint32_t seed=1;seed<=30;seed++){int terminal=0;sim_run_policy(policy,seed,&terminal,true);turns[policy]+=g.turn;}
+    printf("SIM MORTAL       ");for(int policy=0;policy<7;policy++)printf("%s%s %.1f",policy?"|":"",name[policy],turns[policy]/30.0f);puts("");
+    assert(turns[3]>turns[0]&&turns[3]>turns[6]);
+}
+int main(void){setvbuf(stdout,NULL,_IONBF,0);test_movement();test_ring();test_finale_model();test_turn_flow();test_controls();test_edit_recommendation();test_first_turn_onboarding();test_rule_feedback();test_cache_no_duplicate();test_open_scheduler();test_p1_cards();test_p1_content();test_comment_wall();test_seek_intervention();test_finale_effects();test_result_feedback();test_combat_diversity();test_strategy_sim();test_mortal_strategy_sim();puts("V2 P1 selftest: PASS");return 0;}
 #endif

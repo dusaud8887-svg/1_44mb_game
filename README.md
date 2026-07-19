@@ -8,6 +8,8 @@ Windows 10/11용 1.44MB 덱빌딩 서바이버. 현재 빌드는 문서의 **V2 
 - [docs/10_MECHANICS.md](docs/10_MECHANICS.md) — 규칙 명세
 - [docs/15_CARDS.md](docs/15_CARDS.md) — 카드 설계
 - [docs/20_BALANCE.md](docs/20_BALANCE.md) — 모든 튜닝 수치의 단일 정본
+- [docs/24_DESIGN_METHOD.md](docs/24_DESIGN_METHOD.md) — 고전·현대 게임 디자인 이론의 프로젝트 적용·인과 지도
+- [docs/25_DDD.md](docs/25_DDD.md) — DDD 제품 가설·증거 루프·반복 개선 절차
 - [docs/30_TECH.md](docs/30_TECH.md) — 기술 설계 (P0 결함·아키텍처·파이프라인)
 - [docs/35_REFERENCES.md](docs/35_REFERENCES.md) — 레퍼런스 분석·차용 원칙
 - [docs/40_ART_AUDIO_TEXT.md](docs/40_ART_AUDIO_TEXT.md) — V2 아트 바이블 (팔레트·캐릭터·사운드·텍스트)
@@ -32,7 +34,7 @@ build.bat sim1000
 build.bat
 ```
 
-릴리스는 `out/ECHO144.EXE` 하나이며, 빌드가 전체 제출 용량·의존 DLL·SHA-256을 출력한다. `build.bat test`는 이동·덱·링·턴 경계, P1 카드·의도·시크 개입·최종 방송/엔딩, 7정책×30 seed SIM을 검사한다. `build.bat sim1000`은 같은 결정론 SIM을 1,000시드로 확장한다. 디버그 빌드는 실행 파일 옆 `playtest.csv`, 일반 빌드는 60B `ECHO144.SAV`를 사용하며 쓰기 실패 시에도 플레이를 계속한다.
+릴리스는 `out/ECHO144.EXE` 하나이며, 빌드가 전체 제출 용량·허용 DLL·결정론 SHA-256을 검사한다. `build.bat test`는 이동·덱·링·턴 경계, P1 카드·의도·시크 개입·최종 방송/엔딩, 무적 처리량과 실제 피격 7정책×30 seed SIM을 검사한다. `build.bat sim1000`은 처리량 SIM을 1,000시드로 확장한다. `build.bat package`는 DEV 실행 파일과 안내문을 플레이테스트 zip으로 만든다. 디버그 빌드는 실행 파일 옆 `playtest_v2.csv`, 일반 빌드는 60B `ECHO144.SAV`를 사용하며 쓰기 실패 시에도 플레이를 계속한다.
 
 ## 조작 (V2 P1)
 

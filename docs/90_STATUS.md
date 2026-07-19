@@ -5,8 +5,8 @@
 ```yaml
 status: p1-feature-complete-automated-gates
 verified_commit: working-tree
-verified_at: 2026-07-17
-verified_by: MSVC /W4 selftest + release build + Windows 실실행 화면 검수
+verified_at: 2026-07-19
+verified_by: MSVC /W4 selftest + throughput 7x1000 + mortal 7x30 + reproducible release build + Windows 타이틀·EDIT·ON AIR·BREAK·OPEN·RESULT 화면 검수
 ```
 
 ## 1. 큰 그림
@@ -17,9 +17,9 @@ verified_by: MSVC /W4 selftest + release build + Windows 실실행 화면 검수
 | 문서가 기술하는 게임 | **V2** (수동 편성·노아·3색 링) — 00~50 전체 |
 | V2 구현 | **W‑V2‑P1 기능 완결 + 코드 통합 아트 패스 플레이 가능.** 정본 P1 자동 게이트와 실제 Windows 화면 검수 완료. 사람 대상 GV2/G3′와 최종 Aseprite 원본 게이트는 미실시 |
 | 소스 | `echo144.c` unity 진입점 + `game.h/game.c/render.c/win32.c` 변경 이유별 분리 |
-| 릴리스 exe | 179,200B (2026-07-17, 상한의 12.2%, SHA-256 `B4D7963BA401A899406BCAAC321D0B17B17AF86857D18D34918DB766043F323E`) |
+| 릴리스 exe | 185,344B (2026-07-19, 상한의 12.6%, 결정론 2회 동일 SHA-256 `E9D9115450DB98F724213DDD8FED14EA6F11C67FBB8CD26CBCA6772476B27DCE`) |
 | 카드 수 | 13종: P0 8종 + MACRO / PREFETCH / MARKER / SURGE / CHECKSUM + NØA BOOST 계약 + DEFRAG SERVICE |
-| selftest | MSVC `/W4` PASS: P0 회귀 + P1 카드·킹덤·의도·시크·입력/접근성·링 전환·OC 컴파일 강도/4엔딩 + 7정책×30 및 별도 1,000 seed SIM. 복잡 엔진 처리량이 BIG_BAUD를 넘는 자동 목표 PASS, 실제 생존·조작 고점은 사람 검증 필요([91](91_COMPLETENESS_AUDIT.md) §4) |
+| selftest | MSVC `/W4` PASS: P0 회귀 + P1 카드·킹덤·의도·시크·입력/접근성·링 전환·OC 컴파일 강도/4엔딩 + 무적 처리량 7정책×30/1,000 및 실제 피격 7정책×30. 복잡 엔진 고점과 CLEAN_SIGNAL 방어 우위 PASS, 조작 재미는 사람 검증 필요([91](91_COMPLETENESS_AUDIT.md) §4) |
 | 자산 | V2 수작업 PNG: 에코 24×24×10·표정 8종, 시크 아바타 24×24×8·표정 4종·셸 16×16×4, 노아 대리체 24×24×6·보스 48×64×3, 초상 64×64×3, 적 5종×2프레임, 카드 아이콘 13종, 직접 구성한 192×108 키아트 A~F. 로고 2종과 120×45·184×69·300×168·462×174·920×430·1232×706·748×896 수동 구도 마케팅 PNG를 함께 생성한다. 런타임은 4bpp 패킹 |
 
 V1의 초기 정적 평가(콘셉트 9/10, 런타임 정확성 신뢰도 4.5/10, 기능 완성도 ≈80%·제출 준비도 ≈55~65% — 이동·스케줄러·GDI 수정 전 기준)는 [archive/ECHO144_complete_design_history.md](archive/ECHO144_complete_design_history.md) 부록 A에 동결. V1 자산의 검수 상태 분리 표기 원칙(단품 검수 PASS / Windows 실빌드 검수 PENDING / 외부 테스터 검수 PENDING)은 아래 §2에 반영되어 있다.
@@ -48,14 +48,14 @@ V2 재작성으로 구 라인 위치는 폐기됐다. 이동 좌표는 상태에
 | TREND MIRROR 1종 | [10](10_MECHANICS.md) §9 | P0 완료 |
 | P1 카드 5종 + DEFRAG | [15](15_CARDS.md) §4 | P1 완료 |
 | 의도 덱·BUF.WRM·COMMENT WALL·시크 탈취 | [10](10_MECHANICS.md) §5·§9 | P1 완료 |
-| 전략 봇·SIM 확장 | [20](20_BALANCE.md) §SIM | 실제 ON AIR 전투·PROGRAM 발동·정책별 TX/RX와 CUE 우선순위를 실행하는 무적 처리량 봇. 7정책×30 + 1,000 seed PASS, LOOP 899/1000·CACHE 892/1000로 복잡 엔진 고점 회복 / 실제 생존 모델은 미달 |
+| 전략 봇·SIM 확장 | [20](20_BALANCE.md) §SIM | 실제 ON AIR 전투·PROGRAM 발동·정책별 TX/RX와 CUE 우선순위를 실행하는 무적 처리량 봇. 7정책×30 + 1,000 seed PASS, LOOP 904/1000·CACHE 894/1000로 복잡 엔진 고점 유지 / 실제 생존 모델은 미달 |
 | balance.def·콘텐츠 컴파일러·이벤트·구조 분리 | [30](30_TECH.md) §4~7 | P0 balance.def·파일 구조 완료 / 생성기·이벤트 미착수 |
 | 내장 비트맵 폰트 | [30](30_TECH.md) §9 | ASCII + 게임 노출 한글 subset 완료, 전 화면 한글화 |
-| 접근성·재시작 | [45](45_UI_UX.md) §6 | M 음소거·F1 저자극·ESC 일시정지·Space 홀드·10초 무입력 PROGRAM 추천·결과 0.5초 입력 보호·같은/새 시드 재시작 완료 / 자동 TX/RX 옵션 미착수 |
-| HUD 정보 설계·계기 값 인코딩 | [45](45_UI_UX.md) §1·§3, [46](46_UX_EVALUATION.md) | 헤더 HP 핍·SYNC 3핍·ECHO 3색 스택 구성 막대·TURN 경과 막대, EDIT 위협 텔레그래프·SEEK 상태·CUE 핍, ON AIR 다음 발동 프로그램 문구·카운트다운 막대 코드 반영 / render.c 실제 화면 검수는 Windows 빌드 게이트 대기 |
+| 접근성·재시작 | [45](45_UI_UX.md) §6·§11 | M 음소거·F1 저자극·ESC 일시정지·Space 홀드·10초 무입력 PROGRAM 추천·첫 구절 MULTI→FIREWALL 2단계 포커스와 송신1/수신1 기본값·카드 효과 한 줄·발동 카드명 1초·귀환 강조 3초·NØA 복제 카드명/자홍 테두리/정렬 화음·실패 원인/다음 조정 축/도달 구절·결과 0.5초 입력 보호·같은/새 시드 재시작 완료 / 전체 자동 TX/RX 옵션 미착수 |
+| HUD 정보 설계·계기 값 인코딩 | [45](45_UI_UX.md) §1·§3, [46](46_UX_EVALUATION.md) | 헤더 HP 핍·SYNC 3핍·ECHO 3색 스택 구성 막대·TURN 경과 막대, EDIT 위협 텔레그래프·SEEK 상태·CUE 핍, ON AIR 다음 발동 프로그램 문구·카운트다운 막대 반영·Windows 실화면 검수 완료 |
 | 덱 태그→실시간 전투 상환 | [10](10_MECHANICS.md) §4, [15](15_CARDS.md) §9 | 확산(NETWORK)·다발(REPEAT)·연사(REPLAY)·내성(SAFE) 네 무기 정체성을 ON AIR CARRIER 전투에 상시 적용(전부 additive, never worse), tier 2/4/6, balance.def B2-전투 정본. BOT.CHAT 웨이브에 POP.AD 슈터 혼합으로 위협 부여. **필사 전투 테스트(test_combat_diversity)로 스쿨별 생존·킬 우위 상시 검증** — 무적 SIM 불변·전략 게이트 통과 / 실제 조작 체감 고점은 사람 검증 대기 |
-| 와이드 해상도 400×240 | [45](45_UI_UX.md) §1 | SCREEN_W 320→400, 아레나·정렬 요소 SCREEN_W 상대식 리팩터·손패 카드 확대(59→74)·전투 정체성 readout. 아레나 확대로 SIM 승수 소폭 이동(게이트 통과) / render.c 화면 정렬 검수는 Windows 빌드 게이트 대기 |
-| P1 규칙 완결 | [10](10_MECHANICS.md) §8~11, [15](15_CARDS.md) §9 | CACHE 대상 선택, FIREWALL 개구부, OFF AIR 3종, BOT/MOD 덱 공격, 시크 거래·OC 케이블, 최근 6구절 TREND, 4 modifier·4엔딩·실패 원인 완료 |
+| 와이드 해상도 400×240 | [45](45_UI_UX.md) §1 | SCREEN_W 320→400, 아레나·정렬 요소 SCREEN_W 상대식 리팩터·손패 카드 확대(59→74)·전투 정체성 readout. COMMENT WALL·복제 SURGE 좌표까지 400px 전장으로 통합·Windows 실화면 정렬 검수 완료 |
+| P1 규칙 완결 | [10](10_MECHANICS.md) §8~11, [15](15_CARDS.md) §9 | CACHE 대상 선택, FIREWALL 개구부, OFF AIR 3종, BOT/MOD 덱 공격, COMMENT WALL 내부 축 지형, 시크 거래·OC 케이블, 최근 6구절 TREND, BREAK 8턴+ 최종 컴파일 미리보기, 4 modifier·4엔딩·실패 원인 완료 |
 | TODAY·저장·계측 | [10](10_MECHANICS.md) §1·§13, [30](30_TECH.md) §8 | F2 로컬 날짜 시드, 60B 체크섬 저장, 손상 시 시크 문구, 읽기/쓰기 실패 무시, DEV 전이별 CSV 완료 |
 | V2 자산 재설계 (DNA 계승) | [41](41_PIXEL_ART.md) §1~§2·§7, [43](43_ART_COMPETITIVE_RESEARCH.md) | 전장 표현 분리·3인 표정/동작 확장·적 5종 2프레임·사건형 키아트·편성/계약/보관/결과 행동·원형 최종 프로토콜·스토어 캡슐 7규격·4bpp 런타임·AI-slop 검수 완료 / 타인 재현·사람 대상 선호도·레이어드 Aseprite 원본 게이트 미실시 |
 

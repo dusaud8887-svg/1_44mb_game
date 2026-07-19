@@ -47,7 +47,7 @@
 
 1. **정확성**: W-FIX 완료 전제.
 2. **턴 구조**: EDIT → ON AIR → BREAK(매 턴) → CLEANUP. 셔플과 `NEW` 귀환 포함.
-3. **TX/RX + CUE 1**: CARRIER 양면 지정(ADR-0007), 첫 3턴 추천 표시.
+3. **TX/RX + CUE 1**: CARRIER 양면 지정(ADR-0007), 첫 구절 송신1/수신1 추천 기본값 + 2~3구절 단계 안내.
 4. **SYNC 0~3**: 안전장치 포함 최소 구현.
 5. **카드 8장**: 2400 / 14K / MULTI / CACHE / FIREWALL / CHAT / VOICE / NOISE (+BREAK에 NØA BOOST 1종, `BREAK_CONTRACT` phase — 구매 즉시가 아니라 다음 EDIT 시작 시 1회 발동, [15](15_CARDS.md) §1·§7).
 6. **적 의도 4종**: BOT RAID / MUTE / GIFT DROP / MIRROR. 적은 BOT.CHAT / POP.AD / SPON.GIFT / MOD.MASK.
@@ -97,7 +97,9 @@ P0가 답해야 하는 질문 (GV2의 사람 문항이 이것이다):
 
 ## 5. 테스터 물류
 
-V1 계획 승계: 모집 7/28까지 5명(GV2용, 대면 우선), G3′용 신규 5명은 8월 중순 별도. zip(exe+안내문 — SmartScreen `추가 정보→실행` 절차, Defender 오탐 대응, 삭제 방법). 발화 프로토콜("보이는 대로 말해 주세요") + 게이트 문항은 플레이 후. `playtest.csv` 회수(cheated 컬럼 분리). 대조 빌드(고정 총·무적 더미)는 G3′에서 재사용.
+V1 계획 승계: 모집 7/28까지 5명(GV2용, 대면 우선), G3′용 신규 5명은 8월 중순 별도. zip(exe+안내문 — SmartScreen `추가 정보→실행` 절차, Defender 오탐 대응, 삭제 방법). 발화 프로토콜("보이는 대로 말해 주세요") + 게이트 문항은 플레이 후. `playtest_v2.csv` 회수(cheated 컬럼 분리). 대조 빌드(고정 총·무적 더미)는 G3′에서 재사용.
+
+실제 세션의 준비·진행·관찰표·로그 자동 요약·판정 순서는 [52_PLAYTEST_PROTOCOL.md](52_PLAYTEST_PROTOCOL.md)를 따른다.
 
 ## 6. 리스크 레지스터 (2026-07-16 갱신)
 
