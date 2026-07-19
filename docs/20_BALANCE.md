@@ -224,6 +224,7 @@ COMMENT WALL 배치: `count = 3 + floor(turn/2)`, 세로/가로는 encounter RNG
 | `COMBO_SCALE_PER_TIER` + `REPEAT_COMBO_PER_TIER` | 8% + 3%/티어 | 프로그램 배율 상한 ≈ (8+9)×4 = 68% (다발 3티어 기준) — SYNC와 곱연산 |
 | `COMBO_DECAY_TICKS` + `REPLAY_COMBO_WINDOW_PER_TIER` | 84 + 30/티어 | 체인 유지 부담을 연사 학파가 완화 |
 | `COMBO_CUE_KILLS` | 9 | 큰 체인만 편성 +1(도미니언 +액션) — 초·중반 남발 방지 |
+| `RESONANCE_FIELD_*` (90/15/42/6) | 정점 장판 지속/주기/반경/피해 | 37 §10.3 질적 변화 — 프로그램 발동에만 걸어 기본 전투 회귀 불변 |
 
 불변식(1000시드 SIM, 융합 후): 어느 정책도 지배하지 않고(`max×10 ≤ total×4`), 방어 정책 CLEAN_SIGNAL의 필사 생존 우위가 유지된다. 전투 자금 도입으로 최약 공격 정책 BIG_BAUD가 상향(6/30→300/1000)됐으나 상한 정책 THREE_WAY와의 격차는 유지된다.
 

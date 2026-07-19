@@ -65,3 +65,9 @@ BALANCE(COMBO_TIER_MAX, 4)
 BALANCE(COMBO_SCALE_PER_TIER, 8)     /* +% program scale per combo tier */
 BALANCE(REPEAT_COMBO_PER_TIER, 3)    /* 다발 school sharpens combo scaling */
 BALANCE(COMBO_CUE_KILLS, 9)          /* a big chain earns +1 편성(cue) next verse (VS->Dominion) */
+/* 공명 정점: at MAX combo, firing a program leaves a following damage field — a *qualitative*
+   change, not more %, per 37_VS/HoloCure §10.3 & §12 lesson 3 ("진화는 방식 자체를 바꾼다"). */
+BALANCE(RESONANCE_FIELD_TICKS, 90)   /* field lifetime after a program fires at max chain */
+BALANCE(RESONANCE_FIELD_INTERVAL, 15)/* pulse cadence */
+BALANCE(RESONANCE_FIELD_RADIUS, 42)
+BALANCE(RESONANCE_FIELD_DAMAGE, 6)

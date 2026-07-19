@@ -2,7 +2,7 @@
 
 **이 문서는 ON AIR 전투와 덱빌딩 경제를 하나로 묶는 융합 루프의 설계 정본이다.** 기존 [10_MECHANICS](10_MECHANICS.md)의 4-태그 학파 전투([10](10_MECHANICS.md) §4, [15](15_CARDS.md) §9)를 확장해, "덱을 사면 마지막 60초뿐 아니라 매 구절의 전투·경제가 바뀐다"는 약속을 완성한다. 수치의 기계적 정본은 [`content/balance.def`](../content/balance.def) `B3-융합` 블록이며, 이 문서는 그 의도·인과·레퍼런스 매핑을 사람이 읽는 정본이다.
 
-> **레퍼런스 정본 주의** — 이 설계는 `docs/36_DOMINION_DEEP_RESEARCH`, `docs/37_VAMPIRE_SURVIVORS_HOLOCURE_RESEARCH`, `docs/38_DOMINION_DIGITAL_IMPLEMENTATION_RESEARCH`, `docs/reference-source/`의 심층 조사를 반영하도록 의도됐다. **이 원본들은 아직 리포지토리에 커밋되지 않았다**(로컬 `D:\` 사본만 존재). 본 개정은 도미니언과 뱀파이어 서바이버즈/홀로큐어에 대한 일반적 설계 지식으로 작성했으며, 원본이 push되면 수치·명칭을 정밀 정합한다.
+> **레퍼런스 정본** — 이 설계는 [36_DOMINION_DEEP_RESEARCH](36_DOMINION_DEEP_RESEARCH.md), [37_VAMPIRE_SURVIVORS_HOLOCURE_RESEARCH](37_VAMPIRE_SURVIVORS_HOLOCURE_RESEARCH.md), [38_DOMINION_DIGITAL_IMPLEMENTATION_RESEARCH](38_DOMINION_DIGITAL_IMPLEMENTATION_RESEARCH.md), `docs/reference-source/`의 심층 조사에 근거한다. 원본이 리포에 커밋된 뒤(커밋 `13c4663`) **조사 절 번호로 정합**했다 — 각 메커니즘의 근거는 §8 "조사 정합"에 §번호로 명시한다.
 
 ## 1. 왜 — 두 절반을 하나로
 
@@ -41,6 +41,7 @@
   - **조각 가치**를 올린다(2.1).
 - **피격은 체인을 끊는다**(뱀서식 리스크): `damage_player`에서 연쇄 0. 단 SAFE 학파 티어≥1이면 절반만 깎인다.
 - **VS→도미니언 페이오프**: 한 구절의 최고 연쇄(`combo_best`)가 `COMBO_CUE_KILLS` 이상이면 다음 EDIT에서 **편성 +1**(도미니언 +액션에 해당). 전투 기량이 덱빌딩 템포를 산다.
+- **공명 정점 — 질적 변화**([37](37_VAMPIRE_SURVIVORS_HOLOCURE_RESEARCH.md) §10.3, §12 교훈 3): 연쇄가 **최대 티어**일 때 프로그램을 발동하면, 발동 후 짧게 **플레이어를 따라오는 피해 장판**(`resonance_ticks`)이 남는다. 조사는 "진화는 `공격력 +50%`보다 **공격 방식 자체를 바꾸는** 편이 강한 보상"이라 못박는다 — 그래서 연쇄의 보상을 순수 %배율에서 멈추지 않고, 정점에서 **새 공격 유형**(따라오는 장판)이 켜지는 질적 전환을 둔다. 반송파(기본 전투)가 아니라 프로그램 발동에 걸어, 기본 전투 다양성 회귀(`test_combat_diversity`)를 건드리지 않는다.
 
 ### 2.3 덱이 융합을 재구성 — 4학파 경제·연쇄 정체성 (도미니언 아키타입)
 기존 전투 정체성([10](10_MECHANICS.md) §4)에 경제·연쇄 정체성을 겹쳐, "무엇을 사느냐"가 경제와 체인까지 바꾼다.
@@ -69,6 +70,9 @@
 | `COMBO_SCALE_PER_TIER` | 8 | 티어당 프로그램 배율 % |
 | `REPEAT_COMBO_PER_TIER` | 3 | 다발 학파 배율 가산 |
 | `COMBO_CUE_KILLS` | 9 | 이 이상 최고 연쇄 → 다음 편성 +1 |
+| `RESONANCE_FIELD_TICKS` | 90 | 정점 발동 후 장판 지속 |
+| `RESONANCE_FIELD_INTERVAL` | 15 | 장판 타격 주기 |
+| `RESONANCE_FIELD_RADIUS` / `_DAMAGE` | 42 / 6 | 장판 반경·틱당 피해 |
 
 **모든 값은 `[시드값]`** — SIM·플레이테스트로 조정한다.
 
@@ -91,7 +95,7 @@
 
 ## 5. 연출 (render.c)
 - **draw_world**: 신호 조각을 호박색(가치>1은 자홍) 점으로.
-- **draw_air**: 상단 중앙에 `연쇄x{n}` + 티어 핍, `신호{n}` 은행량.
+- **draw_air**: 상단 중앙에 `연쇄x{n}` + 티어 핍, `신호{n}` 은행량. 최대 티어에서 `공명` 라벨 + 플레이어를 따라오는 장판 링(저자극 모드에서는 링 생략).
 - **draw_break**: `신호+{n}` — 이번 구절 전투가 번 BAUD.
 
 ## 6. 미구현 스펙 — 새 킹덤 카드 (아트 파이프라인 의존)
@@ -107,7 +111,24 @@
 
 착수 시: `Card` enum + `CARD_DEF` + `balance.def` 비용 + `build_art.py` 아이콘(kind 13+) + 킹덤 풀 + `card_hint` + 회귀 테스트.
 
-## 7. 관련 문서
+## 7. 조사 정합 (레퍼런스 §번호 매핑)
+
+원본이 리포에 들어온 뒤, 각 융합 메커니즘을 조사 절과 대조해 확정한 근거다.
+
+| 융합 요소 | 조사 근거 | 정합 판정 |
+|---|---|---|
+| 신호→BAUD, 연쇄→편성 | [36](36_DOMINION_DEEP_RESEARCH.md) §2-4 "핵심 자원 네 가지" (Card·Action·Coin·Buy) | **일치** — 편성=Action, BAUD=Coin. 전투가 이 두 자원을 생산하도록 매핑 |
+| 처치 드롭 + 이동 수집 | [37](37_VAMPIRE_SURVIVORS_HOLOCURE_RESEARCH.md) §12 교훈 1 "처치 속도와 경험치 회수 속도가 함께 성장" | **일치** — 조각=경험치 회수, 연쇄 배율=처치 속도, NETWORK 자석=회수 속도 성장 |
+| 4학파 공간 역할 | [37](37_VAMPIRE_SURVIVORS_HOLOCURE_RESEARCH.md) §12 교훈 2 "무기는 피해량보다 공간 역할이 달라야" | **일치**(기존) — 확산/다발/연사/내성이 이미 공간 역할. 융합은 여기에 경제·연쇄 정체성만 덧댐 |
+| 공명 정점 장판 | [37](37_VAMPIRE_SURVIVORS_HOLOCURE_RESEARCH.md) §10.3, §12 교훈 3 "진화는 방식 자체를 바꾼다" | **정합 보강** — 순수 %였던 연쇄 보상에 질적 전환(따라오는 장판)을 추가 |
+| 빌드가 스스로 작동 | [37](37_VAMPIRE_SURVIVORS_HOLOCURE_RESEARCH.md) §10.6 | **일치** — 산 덱이 실시간 전투·경제로 실행됨 |
+| 종료 통제·그리닝 보존 | [36](36_DOMINION_DEEP_RESEARCH.md) §8 "반드시 보존할 것" | **불변** — 융합은 OPEN CHANNEL 진입/링 계산을 건드리지 않음 |
+| 편성 생성 = GAIN_CUE | [38](38_DOMINION_DIGITAL_IMPLEMENTATION_RESEARCH.md) §13-3 효과 op 목록 | **일치** — 연쇄→편성은 조사가 예시한 `GAIN_CUE` op와 동일 의미 |
+| cosmetic 불변 회귀 | [38](38_DOMINION_DIGITAL_IMPLEMENTATION_RESEARCH.md) §10-3 #4 "low_fx가 gameplay digest를 안 바꿈" | **회귀 추가** — `test_signal_combo` 말미에 low_fx on/off 동일 상태 단언 |
+
+**미정합/의도적 이탈**: 신호→BAUD·연쇄→편성은 덱 바깥에서 자원을 생성하므로 도미니언의 "덱 순도"([36](36_DOMINION_DEEP_RESEARCH.md) §5-3)를 일부 희석한다. 이는 뱀서식 "전투가 성장을 산다"를 위한 **의도적 융합점**이며, 상한(`SIGNAL_BAUD_CAP`)·문턱(`COMBO_CUE_KILLS`)으로 RX 경제를 대체하지 않고 보완하도록 제한했다.
+
+## 8. 관련 문서
 - [10_MECHANICS](10_MECHANICS.md) §4 (4학파 전투), §8 (링/경제)
 - [15_CARDS](15_CARDS.md) §9 (최종 컴파일)
 - [20_BALANCE](20_BALANCE.md) `B3-융합`

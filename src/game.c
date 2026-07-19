@@ -259,6 +259,9 @@ static int combo_scale_pct(void);
 static void execute_program_scaled(CardId id,bool mirrored,int scale) {
     if(!mirrored&&g.sync>=2)scale=scale*110/100;
     if(!mirrored)scale=scale*(100+combo_scale_pct())/100; /* live combo resonance boosts your payoff */
+    /* 공명 정점 (37 §10.3): at MAX chain, a fired program leaves a following damage field —
+       a qualitative attack, not just a bigger number. */
+    if(!mirrored&&g.mode==ON_AIR&&combo_tier()>=COMBO_TIER_MAX)g.resonance_ticks=RESONANCE_FIELD_TICKS;
     if(!mirrored){g.program_uses[id]++;g.program_recent[(g.turn-1)%6][id]++;g.cards_fired[id]++;g.program_fired=true;g.effect_card=id;g.effect_ticks=24;g.message_ticks=PROGRAM_LABEL_TICKS;}
     else{g.mirror_card=(uint8_t)(id+1);g.mirror_label_ticks=PROGRAM_LABEL_TICKS;}
     program_effect(id,mirrored,scale);
@@ -392,7 +395,7 @@ static void cleanup(void) {
 
 static void begin_air(void) {
     g.mode=ON_AIR;g.phase_ticks=ON_AIR_TICKS;g.carrier_ticks=1;g.turn_hit=false;g.program_fired=false;
-    g.combo=g.combo_best=0;g.combo_ticks=0;g.signal=0;g.signal_baud=0;
+    g.combo=g.combo_best=0;g.combo_ticks=0;g.signal=0;g.signal_baud=0;g.resonance_ticks=0;
     memset(g.enemies,0,sizeof(g.enemies));memset(g.bullets,0,sizeof(g.bullets));memset(g.pickups,0,sizeof(g.pickups));
     int count=3+g.turn/2;
     uint8_t type=g.intent==GIFT_DROP?SPON_GIFT:g.intent==MUTE?MOD_MASK:g.intent==COMMENT_WALL?POP_AD:g.intent==MIRROR?POP_AD:BOT_CHAT;
@@ -427,7 +430,7 @@ static void end_air(void) {
 
 static void begin_open(void) {
     g.mode=OPEN_CHANNEL;g.open_ticks=OPEN_TICKS;g.open_card_ticks=1;g.protocol_ticks=0;g.mirror_ticks=MIRROR_TICKS;g.seek_ticks=1;g.open_sequence_at=0;
-    choose_trend();compile_finale();g.carrier_ticks=1;g.combo=g.combo_best=0;g.combo_ticks=0;
+    choose_trend();compile_finale();g.carrier_ticks=1;g.combo=g.combo_best=0;g.combo_ticks=0;g.resonance_ticks=0;
     memset(g.enemies,0,sizeof(g.enemies));memset(g.bullets,0,sizeof(g.bullets));memset(g.pickups,0,sizeof(g.pickups));
 }
 
@@ -488,6 +491,7 @@ static void update_air(void) {
     if(!g.queue_delay_ticks&&(pressed_keys[VK_SPACE]||(held_keys[VK_SPACE]&&!g.auto_fire_ticks))&&g.queue_at<g.queue_n){int at=g.queue_at++;CardId id=g.queue[at];execute_program_scaled(id,false,g.queue_scale[at]);g.auto_fire_ticks=10;if(g.intent==MIRROR&&g.queue_at==1)execute_program(id,true);if(g.intent==CLIP_THEFT&&g.queue_at==1){g.stolen_program=id+1;g.mirror_ticks=90;}}
     if(g.stolen_program&&--g.mirror_ticks<=0){execute_program((CardId)(g.stolen_program-1),true);g.stolen_program=0;}
     if(g.surge_ticks){g.surge_ticks--;if(g.surge_ticks%30==0)surge(100);}
+    if(g.resonance_ticks){g.resonance_ticks--;if(g.resonance_ticks%RESONANCE_FIELD_INTERVAL==0)area_damage(g.px,g.py,RESONANCE_FIELD_RADIUS,RESONANCE_FIELD_DAMAGE);}
     update_enemies();update_bullets();update_pickups();
     if(g.combo_ticks&&!--g.combo_ticks)g.combo=0;
     if(--g.phase_ticks<=0)end_air();
@@ -813,6 +817,18 @@ static void test_signal_combo(void){
     cleanup();assert(g.cue==CUE_START+1&&g.bonus_cue==0);
     /* SIGNAL_BAUD_CAP prevents runaway funding. */
     game_start(80);g.turn=3;g.signal=SIGNAL_PER_BAUD*99;for(int i=0;i<g.deck.hand_n;i++)g.carrier_rx[i]=0;end_air();assert(g.signal_baud==SIGNAL_BAUD_CAP);
+    /* 공명 정점 (37 §10.3): firing a program at MAX chain leaves a following damage field
+       that clears nearby enemies over time — a qualitative attack, below max it does not appear. */
+    game_start(81);g.mode=ON_AIR;g.phase_ticks=1000;g.combo=COMBO_TIER_STEP*COMBO_TIER_MAX;assert(combo_tier()==COMBO_TIER_MAX);
+    g.queue[0]=CARD_MARKER;g.queue_n=1;g.queue_at=0;execute_program_scaled(CARD_MARKER,false,100);assert(g.resonance_ticks==RESONANCE_FIELD_TICKS);
+    memset(g.enemies,0,sizeof(g.enemies));spawn_enemy(BOT_CHAT,g.px+30,g.py);int ehp=g.enemies[0].hp;
+    for(int t=0;t<RESONANCE_FIELD_INTERVAL+1;t++)update_air();assert(!g.enemies[0].active||g.enemies[0].hp<ehp);
+    game_start(82);g.mode=ON_AIR;g.combo=COMBO_TIER_STEP;assert(combo_tier()<COMBO_TIER_MAX);g.resonance_ticks=0;execute_program_scaled(CARD_MARKER,false,100);assert(g.resonance_ticks==0);
+    /* 38 §10-3 #4: cosmetic low_fx must not change gameplay state (combo/signal/hp/echo). */
+    game_start(83);g.low_fx=false;g.mode=ON_AIR;memset(g.enemies,0,sizeof(g.enemies));spawn_enemy(BOT_CHAT,40,40);damage_enemy(0,99);
+    uint8_t c1=g.combo;int s1=g.signal,p1=active_pickups();
+    game_start(83);g.low_fx=true;g.mode=ON_AIR;memset(g.enemies,0,sizeof(g.enemies));spawn_enemy(BOT_CHAT,40,40);damage_enemy(0,99);
+    assert(g.combo==c1&&g.signal==s1&&active_pickups()==p1);
 }
 static bool sim_available(CardId id){if(id==CARD_14K||id==CARD_CHAT||id==CARD_VOICE)return true;for(int i=0;i<5;i++)if(g.kingdom[i]==id)return true;return false;}
 static int program_count(void){int n=0;for(int id=CARD_MULTI;id<=CARD_CHECKSUM;id++)n+=deck_count((CardId)id);return n;}

@@ -177,8 +177,10 @@ static void draw_edit(void){
 
 static void draw_air(void){
     draw_background();draw_world();draw_header();
+    /* 공명 정점 field — a following damage ring while a program's resonance is active (docs 60 §3.4). */
+    if(!g.low_fx&&g.resonance_ticks){int x=(int)g.px,y=(int)g.py,r=RESONANCE_FIELD_RADIUS;uint32_t rc=(g.resonance_ticks/3&1)?COL_MAGENTA:COL_CYAN;for(int a=0;a<16;a++){double t=a*6.283185307/16;rect(x+(int)(cos(t)*r)-1,y+(int)(sin(t)*r)-1,2,2,rc);}}
     /* Live fusion readout: the kill chain and the signal it is banking toward the shop (docs 60). */
-    if(g.combo>1){int tier=combo_tier();uint32_t cc=tier>=3?COL_MAGENTA:tier>=1?COL_CYAN:COL_INK;number_at(SCREEN_W/2-30,20,cc,L"연쇄x%d",g.combo);for(int k=0;k<tier;k++)rect(SCREEN_W/2-30+k*5,32,3,3,cc);}
+    if(g.combo>1){int tier=combo_tier();uint32_t cc=tier>=3?COL_MAGENTA:tier>=1?COL_CYAN:COL_INK;if(tier>=COMBO_TIER_MAX)text_at(SCREEN_W/2-58,20,COL_MAGENTA,L"공명");number_at(SCREEN_W/2-30,20,cc,L"연쇄x%d",g.combo);for(int k=0;k<tier;k++)rect(SCREEN_W/2-30+k*5,32,3,3,cc);}
     if(g.signal)number_at(SCREEN_W/2+34,20,COL_AMBER,L"신호%d",g.signal);
     if(!g.low_fx&&g.mirror_label_ticks>PROGRAM_LABEL_TICKS-12)frame(2,18,SCREEN_W-4,188,COL_MAGENTA);
     rect(0,208,SCREEN_W,32,COL_PANEL);

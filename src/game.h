@@ -71,7 +71,7 @@ typedef struct {
     float px, py, last_dx, last_dy, spawn_budget;
     /* Signal economy + combo resonance (docs 60): the ON AIR combat<->deck economy loop. */
     uint8_t combo, combo_best, bonus_cue;
-    int combo_ticks, signal, signal_baud;
+    int combo_ticks, signal, signal_baud, resonance_ticks;
     Deck deck;
     EchoCell ring[64];
     Enemy enemies[MAX_ENEMIES];
