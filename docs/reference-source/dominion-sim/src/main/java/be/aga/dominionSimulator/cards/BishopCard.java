@@ -1,0 +1,113 @@
+package be.aga.dominionSimulator.cards;
+
+import java.util.ArrayList;
+import java.util.Collections;
+
+import be.aga.dominionSimulator.DomCard;
+import be.aga.dominionSimulator.DomEngine;
+import be.aga.dominionSimulator.DomPlayer;
+import be.aga.dominionSimulator.enums.DomCardName;
+import be.aga.dominionSimulator.enums.DomCardType;
+
+public class BishopCard extends DomCard {
+    public BishopCard () {
+      super( DomCardName.Bishop);
+    }
+
+    public void play() {
+      owner.addAvailableCoins( 1 );
+      owner.addVP( 1);
+      DomCard theCardToTrash = null;
+      if (!owner.getCardsInHand().isEmpty()) {
+      	if (owner.isHumanOrPossessedByHuman()) {
+      		theCardToTrash=handleHuman();
+		} else {
+			theCardToTrash = findCardToTrash();
+			if (theCardToTrash == null) {
+				//this is needed when card is played with Throne Room effect
+				Collections.sort(owner.getCardsInHand(), SORT_FOR_TRASHING);
+				theCardToTrash = owner.getCardsInHand().get(0);
+			}
+		}
+        owner.trash(owner.removeCardFromHand( theCardToTrash ));
+        if (theCardToTrash.getCost(owner.getCurrentGame()).getCoins()>0)
+          owner.addVP(theCardToTrash.getCost(owner.getCurrentGame()).getCoins()/2);
+      }
+      handleOpponents();
+    }
+
+	private DomCard handleHuman() {
+		ArrayList<DomCardName> theChooseFrom = new ArrayList<DomCardName>();
+		for (DomCard theCard : owner.getCardsInHand()) {
+			theChooseFrom.add(theCard.getName());
+		}
+		DomCardName theChosenCard = owner.getEngine().getGameFrame().askToSelectOneCard("Trash a card", theChooseFrom, "Mandatory!");
+		return owner.getCardsFromHand(theChosenCard).get(0);
+	}
+
+	private DomCard findCardToTrash() {
+      Collections.sort( owner.getCardsInHand(), SORT_FOR_TRASHING);
+      DomCard theCardToTrash = owner.getCardsInHand().get( 0 );
+      if (theCardToTrash==this && owner.getCardsInHand().size()>1)
+    	  theCardToTrash = owner.getCardsInHand().get( 1 );
+      if (owner.countAllCards()<10) {
+      	//this is to enable the 5-card deck of Bishop, 2 Silvers, a Gold and a Province
+      	ArrayList<DomCard> theProvinces = owner.getCardsFromHand(DomCardName.Province);
+      	if (!theProvinces.isEmpty()) {
+      		theCardToTrash=theProvinces.get(0);
+      	}
+      }
+  	  if (owner.countAllCards()<7 && !owner.getCardsFromHand(DomCardName.Bishop).isEmpty() ) {
+		return owner.getCardsFromHand(DomCardName.Bishop).get(0);
+	  }
+	  if (!owner.getCardsFromHand(DomCardName.Market_Square).isEmpty() && !owner.getCardsFromHand(DomCardName.Gold).isEmpty())
+	    theCardToTrash=owner.getCardsFromHand(DomCardName.Gold).get(0);
+      return theCardToTrash;
+	}
+
+	private void handleOpponents() {
+		for (DomPlayer thePlayer : owner.getOpponents()) {
+		    boolean trashes=false;
+		    if (thePlayer.getCardsInHand().size()>0) {
+		      if (thePlayer.isHumanOrPossessedByHuman()) {
+				  thePlayer.setNeedsToUpdateGUI();
+				  ArrayList<DomCardName> theChooseFrom = new ArrayList<DomCardName>();
+				  for (DomCard theCard : thePlayer.getCardsInHand()) {
+					  theChooseFrom.add(theCard.getName());
+				  }
+				  DomCardName theChosenCard = owner.getEngine().getGameFrame().askToSelectOneCard("Trash a card", theChooseFrom, "Don't trash");
+				  if (theChosenCard != null) {
+					  thePlayer.trash(thePlayer.removeCardFromHand(thePlayer.getCardsFromHand(theChosenCard).get(0)));
+					  trashes = true;
+				  }
+			  } else {
+				  Collections.sort(thePlayer.getCardsInHand(), SORT_FOR_TRASHING);
+				  DomCard theCardToTrash = thePlayer.getCardsInHand().get(0);
+				  if (theCardToTrash.getTrashPriority() < 16) {
+					  if (!thePlayer.removingReducesBuyingPower(theCardToTrash)) {
+						  thePlayer.trash(thePlayer.removeCardFromHand(theCardToTrash));
+						  trashes = true;
+					  }
+				  }
+			  }
+		    }
+		    if (DomEngine.haveToLog && !trashes) DomEngine.addToLog( thePlayer + " trashes nothing");
+		  }
+	}
+
+	@Override
+	public boolean wantsToBePlayed() {
+		if (owner.getTotalMoneyInDeck()<7 && owner.countAllCards()<5)
+		  //little fix to prevent The Golden deck from trashing itself to death
+		  return false;
+		return super.wantsToBePlayed();
+	}
+
+	@Override
+	public boolean hasCardType(DomCardType aType) {
+		if (aType==DomCardType.Treasure && owner != null && owner.hasBuiltProject(DomCardName.Capitalism))
+			return true;
+		return super.hasCardType(aType);
+	}
+
+}

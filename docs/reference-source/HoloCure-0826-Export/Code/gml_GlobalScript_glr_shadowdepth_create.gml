@@ -1,0 +1,34 @@
+function glr_shadowdepth_create(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+{
+    var l = ds_list_create();
+    ds_list_set(l, UnknownEnum.Value_0, true);
+    ds_list_set(l, UnknownEnum.Value_1, arg0);
+    ds_list_set(l, UnknownEnum.Value_2, arg1);
+    ds_list_set(l, UnknownEnum.Value_3, arg2);
+    ds_list_set(l, UnknownEnum.Value_4, arg3);
+    ds_list_set(l, UnknownEnum.Value_5, arg4);
+    ds_list_set(l, UnknownEnum.Value_6, arg5);
+    ds_list_set(l, UnknownEnum.Value_7, arg6);
+    ds_list_set(l, UnknownEnum.Value_8, arg7);
+    var width = sprite_get_width(arg0);
+    var height = sprite_get_height(arg0);
+    var xo = sprite_get_xoffset(arg0);
+    var yo = sprite_get_yoffset(arg0);
+    ds_list_set(l, UnknownEnum.Value_10, max(point_distance(0, 0, xo, yo), point_distance(width, 0, xo, yo), point_distance(width, height, xo, yo), point_distance(0, height, xo, yo)));
+    ds_list_add(global.GLR_DEP_DYN_LIST, l);
+    return l;
+}
+
+enum UnknownEnum
+{
+    Value_0,
+    Value_1,
+    Value_2,
+    Value_3,
+    Value_4,
+    Value_5,
+    Value_6,
+    Value_7,
+    Value_8,
+    Value_10 = 10
+}

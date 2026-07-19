@@ -1,0 +1,16 @@
+function input_profile_export(arg0, arg1 = 0, arg2 = true, arg3 = false)
+{
+    static _global = __input_global();
+    
+    if (arg1 < 0)
+    {
+        __input_error("Invalid player index provided (", arg1, ")");
+        return undefined;
+    }
+    if (arg1 >= 4)
+    {
+        __input_error("Player index too large (", arg1, " must be less than ", 4, ")\nIncrease INPUT_MAX_PLAYERS to support more players");
+        return undefined;
+    }
+    return _global.__players[arg1].__profile_export(arg0, arg2, arg3);
+}

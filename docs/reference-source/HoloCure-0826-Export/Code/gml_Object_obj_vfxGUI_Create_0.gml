@@ -1,0 +1,11 @@
+add = false;
+followCharacter = -1;
+color = 16777215;
+duration = 0;
+rotSpeed = 5;
+loop = false;
+offset_x = 0;
+offset_y = 0;
+fadeSpeed = 0.05;
+growthSpeed = 0.15;
+homingPlayer = false;

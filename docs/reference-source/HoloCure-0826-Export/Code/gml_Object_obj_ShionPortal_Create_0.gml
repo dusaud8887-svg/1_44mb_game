@@ -1,0 +1,10 @@
+canTeleport = false;
+alarm[0] = 60;
+otherPortal = -1;
+alarm[1] = 120;
+depth = 150;
+radius = 100;
+damage = 1;
+creator = -1;
+alarm[2] = 1;
+telePortState = 0;

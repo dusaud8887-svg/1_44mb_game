@@ -1,0 +1,16 @@
+event_inherited();
+isStrafing = false;
+armor = 0;
+ATK = 1;
+specCd = 30;
+idleSprite = 2097;
+runSprite = 2097;
+weaponIcon = 1595;
+specialIcon = 901;
+portraitIcon = 2458;
+specialid = "GuraSharkSpecial";
+isEnemy = false;
+charName = "NAME";
+charId = "test";
+SPD = 1;
+HP = 15;

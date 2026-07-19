@@ -1,0 +1,10 @@
+event_inherited();
+request_phone = -4;
+request_code = -4;
+request_recaptchaToken = -4;
+recaptchaToken = "";
+phone = "";
+sessionInfo = "";
+request_reCaptcha_web = -4;
+listener_reCaptcha = -4;
+request_recatch_delete = -4;

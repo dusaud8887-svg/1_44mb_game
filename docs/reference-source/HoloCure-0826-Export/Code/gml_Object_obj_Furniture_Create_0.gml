@@ -1,0 +1,10 @@
+clones = false;
+event_inherited();
+sprites = [];
+currentRotation = 0;
+furnitureData = -1;
+highlighted = false;
+glowTime = 0;
+tallObject = false;
+scripts = {};
+customDrawScriptAbove = {};

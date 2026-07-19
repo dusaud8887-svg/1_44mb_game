@@ -1,0 +1,12 @@
+add = false;
+followCharacter = -1;
+rotSpeed = 5;
+duration = 0;
+loop = false;
+offset_x = 0;
+offset_y = 0;
+fadeSpeed = 0.05;
+growthSpeed = 0.15;
+homingPlayer = false;
+followAngle = -1;
+spriteColor = 16777215;

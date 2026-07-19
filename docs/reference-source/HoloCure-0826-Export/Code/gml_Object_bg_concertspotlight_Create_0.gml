@@ -1,0 +1,10 @@
+currentDir = 0;
+currentDir = irandom(359);
+moveRate = 0.3 + random(1.2);
+randomSign = -1 + (2 * irandom(1));
+size = 100 + irandom(200);
+color = [255, 65535, 16711680, 32768, 8388736, 16777215];
+currentColor = color[irandom(array_length(color) - 1)];
+alarm[0] = 900;
+lifetime = 0;
+image_alpha = 0;

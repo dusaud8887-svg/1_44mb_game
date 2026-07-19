@@ -1,0 +1,15 @@
+damageValue = 0;
+duration = round((duration * 1) / (1 + (instance_number(obj_damageText) / 200)));
+maxDuration = duration;
+isEnemy = true;
+gravity = 0.1;
+alpha = 1;
+alarm[0] = 1;
+critted = false;
+depth = -9999;
+heal = false;
+CritMod = 0.5;
+shield = false;
+reflected = false;
+cringe = false;
+hspeed = 0;

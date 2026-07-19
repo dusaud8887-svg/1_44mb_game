@@ -1,0 +1,15 @@
+event = "";
+value = "";
+url = "";
+method_ = "";
+header_json = "";
+body = "";
+path = "";
+from = -4;
+request = -1;
+countError = 0;
+errorCountLimit = 5;
+errorResetAlarm = room_speed;
+identifiquer = id;
+dropListenerFromArgs = false;
+errorMessage = undefined;

@@ -1,0 +1,9 @@
+sprite_index = spr_clouds;
+image_speed = 0;
+image_index = irandom(image_number - 1);
+image_alpha = 0.25;
+var size = 1 + random(2);
+image_xscale = size;
+image_yscale = size;
+hspeed = 0.2 + random(0.3);
+followPlayerID = instance_find(obj_Player, 0);
