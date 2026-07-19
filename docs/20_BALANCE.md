@@ -211,6 +211,22 @@ COMMENT WALL 배치: `count = 3 + floor(turn/2)`, 세로/가로는 encounter RNG
 
 승률 50%가 목적이 아니다. 첫 실패의 원인이 보이고, 학습 후 승률이 실제로 오르는지가 우선한다.
 
+## B3-융합 — 신호 경제 + 연쇄 공명
+
+전투↔경제 융합 루프의 튜닝값. 설계 의도·인과·레퍼런스 매핑은 [60_FUSION_SIGNAL_COMBO.md](60_FUSION_SIGNAL_COMBO.md) 정본이며, 기계값은 `content/balance.def` `B3-융합` 블록이다. **모두 `[시드값]`.**
+
+| 상수 | 값 | 견제 관계 |
+|---|---:|---|
+| `SIGNAL_PER_BAUD` / `SIGNAL_BAUD_CAP` | 5 / 3 | 전투 자금이 RX 경제를 대체하지 않고 보완하도록: 구절당 최대 +3 BAUD |
+| `PICKUP_MAGNET_BASE` + `NETWORK_MAGNET_PER_TIER` | 16 + 9/티어 | 수집을 이동 보상으로 남기되 확산 학파가 회수를 특화 |
+| `PICKUP_LIFE_TICKS` / `PICKUP_ATTRACT_MUL` | 600 / 3 | 조각이 오래 남고 근접 시 흡인 — 손맛과 접근성 균형 |
+| `COMBO_TIER_STEP` / `COMBO_TIER_MAX` | 4 / 4 | 4처치=1티어, 최대 4티어(16처치) |
+| `COMBO_SCALE_PER_TIER` + `REPEAT_COMBO_PER_TIER` | 8% + 3%/티어 | 프로그램 배율 상한 ≈ (8+9)×4 = 68% (다발 3티어 기준) — SYNC와 곱연산 |
+| `COMBO_DECAY_TICKS` + `REPLAY_COMBO_WINDOW_PER_TIER` | 84 + 30/티어 | 체인 유지 부담을 연사 학파가 완화 |
+| `COMBO_CUE_KILLS` | 9 | 큰 체인만 편성 +1(도미니언 +액션) — 초·중반 남발 방지 |
+
+불변식(1000시드 SIM, 융합 후): 어느 정책도 지배하지 않고(`max×10 ≤ total×4`), 방어 정책 CLEAN_SIGNAL의 필사 생존 우위가 유지된다. 전투 자금 도입으로 최약 공격 정책 BIG_BAUD가 상향(6/30→300/1000)됐으나 상한 정책 THREE_WAY와의 격차는 유지된다.
+
 ## SIM — 전략 봇과 시뮬레이션 계층
 
 "봇 AI"가 아니라 **스크립트된 구매·편성 정책의 몬테카를로**다. 주 계층은 전투를 무적 더미로 두고 덱·경제·CUE·링만 시뮬레이션한다(회피 실력 변수 제거). 보조 계층은 같은 7정책×30시드를 실제 피격 가능한 고정 이동으로 실행해 방어 가치와 위험 전략을 비교한다. 사람의 조작 재미를 대신하지 않으며, 두 계층의 목적과 합격선을 섞지 않는다.

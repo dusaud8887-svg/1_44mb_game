@@ -51,3 +51,17 @@ BALANCE(COMBAT_TAG_TIER3, 6)
 BALANCE(CARRIER_SPEED_PER_TIER, 6)
 BALANCE(CARRIER_RELOAD_MIN, 24)
 BALANCE(SAFE_INVULN_PER_TIER, 12)
+/* B3-융합: signal economy + combo resonance — the ON AIR combat<->deck loop (docs 60). */
+BALANCE(PICKUP_LIFE_TICKS, 600)      /* a shard waits ~10s before it dissolves */
+BALANCE(PICKUP_MAGNET_BASE, 16)      /* collect radius (px); NETWORK widens it */
+BALANCE(NETWORK_MAGNET_PER_TIER, 9)  /* 확산 school = wider vacuum */
+BALANCE(PICKUP_ATTRACT_MUL, 3)       /* shards inside magnet*this get pulled toward you */
+BALANCE(SIGNAL_PER_BAUD, 5)          /* banked signal / this = bonus baud at the shop */
+BALANCE(SIGNAL_BAUD_CAP, 3)          /* max combat-funded baud per verse (anti-runaway) */
+BALANCE(COMBO_DECAY_TICKS, 84)       /* chain window without a kill; REPLAY extends it */
+BALANCE(REPLAY_COMBO_WINDOW_PER_TIER, 30)
+BALANCE(COMBO_TIER_STEP, 4)          /* kills per combo tier */
+BALANCE(COMBO_TIER_MAX, 4)
+BALANCE(COMBO_SCALE_PER_TIER, 8)     /* +% program scale per combo tier */
+BALANCE(REPEAT_COMBO_PER_TIER, 3)    /* 다발 school sharpens combo scaling */
+BALANCE(COMBO_CUE_KILLS, 9)          /* a big chain earns +1 편성(cue) next verse (VS->Dominion) */

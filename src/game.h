@@ -9,6 +9,7 @@
 #define MAX_DECK 40
 #define MAX_ENEMIES 96
 #define MAX_BULLETS 192
+#define MAX_PICKUPS 64
 #define HAND_SIZE 5
 #define QUEUE_SIZE 5
 
@@ -43,6 +44,9 @@ typedef struct {
     int16_t damage, life;
     uint8_t hostile, active, hits;
 } Bullet;
+/* Signal shard: dropped by a kill during ON AIR (VS-style pickup), collected by proximity,
+   banked into baud at the shop. worth = per-shard value frozen at drop by the combo tier. */
+typedef struct { float x, y; uint16_t life; uint8_t active, worth; } Pickup;
 typedef struct {
     CardId draw[MAX_DECK], discard[MAX_DECK], hand[HAND_SIZE];
     uint8_t draw_n, discard_n, hand_n;
@@ -65,10 +69,14 @@ typedef struct {
     int invuln_ticks, echo_convert_ticks, firewall_ticks, flash_ticks, shake_ticks, message_ticks, mirror_label_ticks;
     int baud, mirror_ticks, surge_ticks, effect_ticks, anim_ticks, echo_total, echo_live, echo_archived, echo_mimicked;
     float px, py, last_dx, last_dy, spawn_budget;
+    /* Signal economy + combo resonance (docs 60): the ON AIR combat<->deck economy loop. */
+    uint8_t combo, combo_best, bonus_cue;
+    int combo_ticks, signal, signal_baud;
     Deck deck;
     EchoCell ring[64];
     Enemy enemies[MAX_ENEMIES];
     Bullet bullets[MAX_BULLETS];
+    Pickup pickups[MAX_PICKUPS];
 } Game;
 
 extern Game g;
@@ -86,6 +94,8 @@ const wchar_t *final_modifier_name(uint8_t modifier);
 uint8_t program_modifier(CardId id);
 int program_modifier_count(uint8_t modifier);
 int combat_tier(uint8_t modifier);
+int combo_tier(void);
+int pickup_magnet(void);
 int final_protocol_cooldown(void);
 
 #endif

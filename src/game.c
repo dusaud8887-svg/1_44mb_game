@@ -168,6 +168,7 @@ static void spawn_edge(uint8_t type, int side) {
     spawn_enemy(type,x,y);
 }
 
+static void on_enemy_killed(float x,float y);
 static void damage_enemy(int i,int damage) {
     if (!g.enemies[i].active) return;
     if(g.enemies[i].marked)damage=(damage*3+1)/2;
@@ -175,6 +176,7 @@ static void damage_enemy(int i,int damage) {
     if (g.enemies[i].hp<=0) {
         if(g.enemies[i].type==SPON_GIFT&&g.sync<3)g.sync++;
         if(g.enemies[i].type==BUF_WORM&&g.stolen_card){g.deck.discard[g.deck.discard_n++]=(CardId)(g.stolen_card-1);g.stolen_card=0;add_echo(ECHO_LIVE,1,0);}
+        on_enemy_killed(g.enemies[i].x,g.enemies[i].y);
         g.enemies[i].active=0; g.flash_ticks=g.low_fx?0:2;
     }
 }
@@ -253,8 +255,10 @@ static void program_effect(CardId id,bool mirrored,int scale) {
     }
 }
 
+static int combo_scale_pct(void);
 static void execute_program_scaled(CardId id,bool mirrored,int scale) {
     if(!mirrored&&g.sync>=2)scale=scale*110/100;
+    if(!mirrored)scale=scale*(100+combo_scale_pct())/100; /* live combo resonance boosts your payoff */
     if(!mirrored){g.program_uses[id]++;g.program_recent[(g.turn-1)%6][id]++;g.cards_fired[id]++;g.program_fired=true;g.effect_card=id;g.effect_ticks=24;g.message_ticks=PROGRAM_LABEL_TICKS;}
     else{g.mirror_card=(uint8_t)(id+1);g.mirror_label_ticks=PROGRAM_LABEL_TICKS;}
     program_effect(id,mirrored,scale);
@@ -288,6 +292,26 @@ int program_modifier_count(uint8_t modifier){int n=0;for(int id=CARD_MULTI;id<=C
    baseline, 2+ rewards (mirrors s9). */
 int combat_tier(uint8_t modifier){int n=program_modifier_count(modifier);return n>=COMBAT_TAG_TIER3?3:n>=COMBAT_TAG_TIER2?2:n>=COMBAT_TAG_TIER1?1:0;}
 static int carrier_reload(void){int r=CARRIER_TICKS-CARRIER_SPEED_PER_TIER*combat_tier(MOD_REPLAY);return r<CARRIER_RELOAD_MIN?CARRIER_RELOAD_MIN:r;}
+
+/* Combo resonance (VS/HoloCure kill chain). The tier scales your PROGRAM payoff and the
+   worth of the signal shards you collect — REPEAT sharpens it, REPLAY lengthens the window. */
+int combo_tier(void){int t=g.combo/COMBO_TIER_STEP;return t>COMBO_TIER_MAX?COMBO_TIER_MAX:t;}
+/* Live combat throughput -> deck economy: collect radius, widened by the NETWORK school. */
+int pickup_magnet(void){return PICKUP_MAGNET_BASE+NETWORK_MAGNET_PER_TIER*combat_tier(MOD_NETWORK);}
+static int combo_scale_pct(void){return combo_tier()*(COMBO_SCALE_PER_TIER+REPEAT_COMBO_PER_TIER*combat_tier(MOD_REPEAT));}
+
+/* A kill during ON AIR feeds both halves of the loop: it drops a signal shard (economy) and
+   extends the combo chain (resonance). Guarded to ON AIR so the finale echo math is untouched. */
+static void on_enemy_killed(float x,float y){
+    if(g.mode!=ON_AIR)return;
+    if(g.combo<250)g.combo++;
+    if(g.combo>g.combo_best)g.combo_best=g.combo;
+    g.combo_ticks=COMBO_DECAY_TICKS+REPLAY_COMBO_WINDOW_PER_TIER*combat_tier(MOD_REPLAY);
+    for(int i=0;i<MAX_PICKUPS;i++)if(!g.pickups[i].active){
+        Pickup *p=&g.pickups[i];p->active=1;p->x=x;p->y=y;p->life=PICKUP_LIFE_TICKS;
+        p->worth=(uint8_t)(1+combo_tier());return;
+    }
+}
 
 static void compile_finale(void){
     int chat=deck_count(CARD_CHAT),voice=deck_count(CARD_VOICE);
@@ -353,6 +377,7 @@ static void begin_edit(void) {
     }
     if(g.intent==MUTE)for(int i=0;i<g.deck.hand_n;i++)if(CARD_DEF[g.deck.hand[i]].type==PROGRAM){g.selected[i]=3;break;}
     if(g.contract_boost){g.cue++;g.contract_boost=0;g.contract_applied=true;add_echo(ECHO_MIMICKED,2,1);}
+    if(g.bonus_cue){g.cue+=g.bonus_cue;g.bonus_cue=0;} /* combo chain from last verse -> extra cue */
 }
 
 static void cleanup(void) {
@@ -367,7 +392,8 @@ static void cleanup(void) {
 
 static void begin_air(void) {
     g.mode=ON_AIR;g.phase_ticks=ON_AIR_TICKS;g.carrier_ticks=1;g.turn_hit=false;g.program_fired=false;
-    memset(g.enemies,0,sizeof(g.enemies));memset(g.bullets,0,sizeof(g.bullets));
+    g.combo=g.combo_best=0;g.combo_ticks=0;g.signal=0;g.signal_baud=0;
+    memset(g.enemies,0,sizeof(g.enemies));memset(g.bullets,0,sizeof(g.bullets));memset(g.pickups,0,sizeof(g.pickups));
     int count=3+g.turn/2;
     uint8_t type=g.intent==GIFT_DROP?SPON_GIFT:g.intent==MUTE?MOD_MASK:g.intent==COMMENT_WALL?POP_AD:g.intent==MIRROR?POP_AD:BOT_CHAT;
     if(g.intent==COMMENT_WALL){
@@ -391,17 +417,25 @@ static void end_air(void) {
     g.mode=BREAK;g.shop_cursor=0;g.baud=0;
     for(int i=0;i<g.deck.hand_n;i++) if(CARD_DEF[g.deck.hand[i]].type==CARRIER&&g.carrier_rx[i])g.baud+=CARD_DEF[g.deck.hand[i]].baud;
     if(g.turn==1){g.baud+=FIRST_TURN_BAUD_BONUS;g.shop_cursor=1;}
+    /* Fusion payoff: banked signal funds the shop (VS clears -> Dominion coin), and a big
+       kill chain earns +1 편성(cue) next verse (VS combo -> Dominion +Action). */
+    g.signal_baud=g.signal/SIGNAL_PER_BAUD;if(g.signal_baud>SIGNAL_BAUD_CAP)g.signal_baud=SIGNAL_BAUD_CAP;
+    g.baud+=g.signal_baud;
+    if(g.combo_best>=COMBO_CUE_KILLS)g.bonus_cue=1;
     choose_trend();compile_finale();
 }
 
 static void begin_open(void) {
     g.mode=OPEN_CHANNEL;g.open_ticks=OPEN_TICKS;g.open_card_ticks=1;g.protocol_ticks=0;g.mirror_ticks=MIRROR_TICKS;g.seek_ticks=1;g.open_sequence_at=0;
-    choose_trend();compile_finale();g.carrier_ticks=1;memset(g.enemies,0,sizeof(g.enemies));memset(g.bullets,0,sizeof(g.bullets));
+    choose_trend();compile_finale();g.carrier_ticks=1;g.combo=g.combo_best=0;g.combo_ticks=0;
+    memset(g.enemies,0,sizeof(g.enemies));memset(g.bullets,0,sizeof(g.bullets));memset(g.pickups,0,sizeof(g.pickups));
 }
 
 static void damage_player(void) {
     if(g.invuln_ticks||g.firewall_ticks)return;
     g.hp--;g.invuln_ticks=HIT_INVULN_TICKS+SAFE_INVULN_PER_TIER*combat_tier(MOD_SAFE);g.turn_hit=true;g.shake_ticks=g.low_fx?0:5;
+    /* Taking a hit breaks the chain — the SAFE school only bends it (keeps half). */
+    if(g.mode==ON_AIR){g.combo=combat_tier(MOD_SAFE)?(uint8_t)(g.combo/2):0;if(!g.combo)g.combo_ticks=0;}
     if(g.mode==OPEN_CHANNEL&&!g.echo_convert_ticks){for(int i=0;i<64;i++)if(g.ring[i].state==ECHO_LIVE){g.ring[i].state=ECHO_MIMICKED;g.echo_convert_ticks=ECHO_CONVERT_TICKS;break;}}
     recount_echo();
     if(!g.hp){g.won=false;g.result_reason=RESULT_STREAM_LOST;g.mode=RESULT;g.phase_ticks=RESULT_INPUT_TICKS;}
@@ -432,6 +466,15 @@ static void update_bullets(void) {
     }
 }
 
+static void update_pickups(void) {
+    int r=pickup_magnet(),r2=r*r,attract=r*PICKUP_ATTRACT_MUL,a2=attract*attract;
+    for(int i=0;i<MAX_PICKUPS;i++)if(g.pickups[i].active){Pickup *p=&g.pickups[i];
+        float dx=g.px-p->x,dy=g.py-p->y,d2=dx*dx+dy*dy;
+        if(d2<=(float)r2){g.signal+=p->worth;p->active=0;continue;} /* collected -> banked */
+        if(d2<=(float)a2){normalize(&dx,&dy);p->x+=dx*90.0f/TICK_HZ;p->y+=dy*90.0f/TICK_HZ;} /* vacuum pull */
+        if(!p->life||!--p->life)p->active=0; /* shard dissolves if left uncollected */
+    }
+}
 static void move_player(void) {
     float dx=(float)((held_keys[VK_RIGHT]||held_keys['D'])-(held_keys[VK_LEFT]||held_keys['A']));
     float dy=(float)((held_keys[VK_DOWN]||held_keys['S'])-(held_keys[VK_UP]||held_keys['W']));
@@ -445,7 +488,8 @@ static void update_air(void) {
     if(!g.queue_delay_ticks&&(pressed_keys[VK_SPACE]||(held_keys[VK_SPACE]&&!g.auto_fire_ticks))&&g.queue_at<g.queue_n){int at=g.queue_at++;CardId id=g.queue[at];execute_program_scaled(id,false,g.queue_scale[at]);g.auto_fire_ticks=10;if(g.intent==MIRROR&&g.queue_at==1)execute_program(id,true);if(g.intent==CLIP_THEFT&&g.queue_at==1){g.stolen_program=id+1;g.mirror_ticks=90;}}
     if(g.stolen_program&&--g.mirror_ticks<=0){execute_program((CardId)(g.stolen_program-1),true);g.stolen_program=0;}
     if(g.surge_ticks){g.surge_ticks--;if(g.surge_ticks%30==0)surge(100);}
-    update_enemies();update_bullets();
+    update_enemies();update_bullets();update_pickups();
+    if(g.combo_ticks&&!--g.combo_ticks)g.combo=0;
     if(--g.phase_ticks<=0)end_air();
 }
 
@@ -735,6 +779,41 @@ static void test_combat_diversity(void){
 }
 static void test_result_feedback(void){game_start(20);g.hp=1;damage_player();assert(g.mode==RESULT&&g.result_reason==RESULT_STREAM_LOST&&!wcscmp(result_reason_name(g.result_reason),L"체력 0 / 송출 중단"));game_start(21);g.mode=OPEN_CHANNEL;g.open_ticks=1;g.open_card_ticks=100;g.carrier_ticks=100;update_open();assert(g.mode==RESULT&&g.result_reason==RESULT_OFFLINE&&!wcscmp(result_reason_name(g.result_reason),L"64 미완성 / 채널 종료"));}
 
+static int active_pickups(void){int n=0;for(int i=0;i<MAX_PICKUPS;i++)n+=g.pickups[i].active;return n;}
+/* Signal economy + combo resonance — the ON AIR combat<->deck fusion loop (docs 60). */
+static void test_signal_combo(void){
+    /* A kill during ON AIR drops a signal shard and grows the combo; combo_best tracks the peak. */
+    game_start(70);g.mode=ON_AIR;memset(g.pickups,0,sizeof(g.pickups));g.combo=g.combo_best=0;
+    memset(g.enemies,0,sizeof(g.enemies));spawn_enemy(BOT_CHAT,40.0f,40.0f);damage_enemy(0,99);
+    assert(g.combo==1&&g.combo_best==1&&active_pickups()==1);
+    /* A kill outside ON AIR must not touch the fusion economy (keeps finale echo math pure). */
+    game_start(71);g.mode=OPEN_CHANNEL;memset(g.pickups,0,sizeof(g.pickups));g.combo=0;
+    memset(g.enemies,0,sizeof(g.enemies));spawn_enemy(BOT_CHAT,40.0f,40.0f);damage_enemy(0,99);
+    assert(g.combo==0&&active_pickups()==0);
+    /* Proximity collection banks the shard's worth into signal; the shard deactivates. */
+    game_start(72);g.mode=ON_AIR;memset(g.pickups,0,sizeof(g.pickups));g.signal=0;
+    g.pickups[0].active=1;g.pickups[0].x=g.px;g.pickups[0].y=g.py;g.pickups[0].worth=2;g.pickups[0].life=100;
+    update_pickups();assert(g.signal==2&&!g.pickups[0].active);
+    /* A shard out of range is not collected, and dissolves once its life runs out. */
+    game_start(73);g.mode=ON_AIR;memset(g.pickups,0,sizeof(g.pickups));g.signal=0;
+    g.pickups[0].active=1;g.pickups[0].x=g.px+200;g.pickups[0].y=g.py;g.pickups[0].worth=1;g.pickups[0].life=2;
+    update_pickups();assert(g.signal==0&&g.pickups[0].active&&g.pickups[0].life==1);update_pickups();assert(!g.pickups[0].active);
+    /* Combo tier scales your program payoff; REPEAT sharpens it. */
+    game_start(74);g.combo=0;assert(combo_scale_pct()==0);g.combo=COMBO_TIER_STEP*2;assert(combo_tier()==2&&combo_scale_pct()==2*COMBO_SCALE_PER_TIER);
+    /* Combo decays if you stop killing (window elapses -> chain resets). */
+    game_start(75);g.mode=ON_AIR;g.phase_ticks=1000;g.combo=5;g.combo_ticks=1;memset(g.enemies,0,sizeof(g.enemies));update_air();assert(g.combo==0&&g.combo_ticks==0);
+    /* Taking a hit breaks the chain; the SAFE school only bends it (keeps half). */
+    game_start(76);g.mode=ON_AIR;g.combo=8;g.invuln_ticks=0;damage_player();assert(g.combo==0);
+    game_start(77);g.mode=ON_AIR;for(int i=0;i<6;i++)g.deck.discard[g.deck.discard_n++]=CARD_FIREWALL;assert(combat_tier(MOD_SAFE)>=1);g.combo=8;g.invuln_ticks=0;damage_player();assert(g.combo==4);
+    /* NETWORK widens the collection magnet (deck reshapes the economy). */
+    game_start(78);int base=pickup_magnet();for(int i=0;i<6;i++)g.deck.discard[g.deck.discard_n++]=CARD_MARKER;assert(pickup_magnet()>base);
+    /* end_air: banked signal -> bonus baud (capped); a big chain -> +cue next verse. */
+    game_start(79);g.turn=3;g.signal=SIGNAL_PER_BAUD*2;g.combo_best=COMBO_CUE_KILLS;
+    for(int i=0;i<g.deck.hand_n;i++)g.carrier_rx[i]=0;end_air();assert(g.signal_baud==2&&g.baud==2&&g.bonus_cue==1);
+    cleanup();assert(g.cue==CUE_START+1&&g.bonus_cue==0);
+    /* SIGNAL_BAUD_CAP prevents runaway funding. */
+    game_start(80);g.turn=3;g.signal=SIGNAL_PER_BAUD*99;for(int i=0;i<g.deck.hand_n;i++)g.carrier_rx[i]=0;end_air();assert(g.signal_baud==SIGNAL_BAUD_CAP);
+}
 static bool sim_available(CardId id){if(id==CARD_14K||id==CARD_CHAT||id==CARD_VOICE)return true;for(int i=0;i<5;i++)if(g.kingdom[i]==id)return true;return false;}
 static int program_count(void){int n=0;for(int id=CARD_MULTI;id<=CARD_CHECKSUM;id++)n+=deck_count((CardId)id);return n;}
 static CardId sim_pick(int policy,int baud){
@@ -795,5 +874,5 @@ static void test_mortal_strategy_sim(void){
     printf("SIM MORTAL       ");for(int policy=0;policy<7;policy++)printf("%s%s %.1f",policy?"|":"",name[policy],turns[policy]/30.0f);puts("");
     assert(turns[3]>turns[0]&&turns[3]>turns[6]);
 }
-int main(void){setvbuf(stdout,NULL,_IONBF,0);test_movement();test_ring();test_finale_model();test_turn_flow();test_controls();test_edit_recommendation();test_first_turn_onboarding();test_rule_feedback();test_cache_no_duplicate();test_open_scheduler();test_p1_cards();test_p1_content();test_comment_wall();test_seek_intervention();test_finale_effects();test_result_feedback();test_combat_diversity();test_strategy_sim();test_mortal_strategy_sim();puts("V2 P1 selftest: PASS");return 0;}
+int main(void){setvbuf(stdout,NULL,_IONBF,0);test_movement();test_ring();test_finale_model();test_turn_flow();test_controls();test_edit_recommendation();test_first_turn_onboarding();test_rule_feedback();test_cache_no_duplicate();test_open_scheduler();test_p1_cards();test_p1_content();test_comment_wall();test_seek_intervention();test_finale_effects();test_result_feedback();test_combat_diversity();test_signal_combo();test_strategy_sim();test_mortal_strategy_sim();puts("V2 P1 selftest: PASS");return 0;}
 #endif

@@ -121,6 +121,8 @@ static void draw_world(void){
     int previous=-1;for(int i=0;i<MAX_ENEMIES;i++)if(g.enemies[i].active&&g.enemies[i].marked){if(previous>=0)line((int)g.enemies[previous].x,(int)g.enemies[previous].y,(int)g.enemies[i].x,(int)g.enemies[i].y,COL_CYAN);previous=i;frame((int)g.enemies[i].x-6,(int)g.enemies[i].y-6,12,12,COL_CYAN);}
     for(int i=0;i<MAX_ENEMIES;i++)if(g.enemies[i].active)draw_enemy(&g.enemies[i]);
     for(int i=0;i<MAX_BULLETS;i++)if(g.bullets[i].active){Bullet *b=&g.bullets[i];rect((int)b->x-1,(int)b->y-1,3,3,b->hostile?COL_RED:COL_CYAN);if(b->hostile)rect((int)b->x,(int)b->y,1,1,COL_INK);}
+    /* Signal shards — VS-style pickups that fund the shop; brighter cores are worth more. */
+    for(int i=0;i<MAX_PICKUPS;i++)if(g.pickups[i].active){int x=(int)g.pickups[i].x,y=(int)g.pickups[i].y;rect(x-1,y-1,3,3,COL_BG);rect(x-1,y-1,2,2,g.pickups[i].worth>1?COL_MAGENTA:COL_AMBER);rect(x,y,1,1,COL_INK);}
     if(g.firewall_ticks){int x=(int)g.px,y=(int)g.py;frame(x-19,y-17,38,34,COL_CYAN);if(g.firewall_open_dir==0)rect(x+18,y-4,1,8,COL_BG);else if(g.firewall_open_dir==1)rect(x-4,y+16,8,1,COL_BG);else if(g.firewall_open_dir==2)rect(x-19,y-4,1,8,COL_BG);else rect(x-4,y-17,8,1,COL_BG);}
     if(g.effect_ticks&&g.effect_card==CARD_MACRO)frame((int)g.px-13,(int)g.py-13,26,30,COL_DIM);
     if(g.effect_ticks&&g.effect_card==CARD_CHECKSUM)line(8,ARENA_TOP+(24-g.effect_ticks)*8,SCREEN_W-8,ARENA_TOP+(24-g.effect_ticks)*8,COL_CYAN);
@@ -175,6 +177,9 @@ static void draw_edit(void){
 
 static void draw_air(void){
     draw_background();draw_world();draw_header();
+    /* Live fusion readout: the kill chain and the signal it is banking toward the shop (docs 60). */
+    if(g.combo>1){int tier=combo_tier();uint32_t cc=tier>=3?COL_MAGENTA:tier>=1?COL_CYAN:COL_INK;number_at(SCREEN_W/2-30,20,cc,L"연쇄x%d",g.combo);for(int k=0;k<tier;k++)rect(SCREEN_W/2-30+k*5,32,3,3,cc);}
+    if(g.signal)number_at(SCREEN_W/2+34,20,COL_AMBER,L"신호%d",g.signal);
     if(!g.low_fx&&g.mirror_label_ticks>PROGRAM_LABEL_TICKS-12)frame(2,18,SCREEN_W-4,188,COL_MAGENTA);
     rect(0,208,SCREEN_W,32,COL_PANEL);
     /* ON AIR countdown — the verse drains as an amber sliver so time pressure is felt, not read. */
@@ -189,6 +194,7 @@ static void draw_air(void){
 
 static void draw_break(void){
     draw_background();draw_world();rect(0,16,SCREEN_W,224,0x00171322);draw_header();number_at(4,19,COL_BLUE,L"휴식  전송량%d",g.baud);
+    if(g.signal_baud)number_at(120,19,COL_AMBER,L"신호+%d",g.signal_baud); /* combat-funded baud this verse */
     if(g.echo_archived)art_blit(SCREEN_W-28,35,ART_SEEK_AVATAR,192,((g.anim_ticks/24)&1)*24,0,24,24);
     if(g.defrag_mode||g.trade_mode){int px=(SCREEN_W-192)/2;text_at(4,42,g.trade_mode?COL_AMBER:COL_INK,g.trade_mode?L"시크 보관 / 호박+2":L"정리 / 카드 한 장 제거");frame(px,72,192,70,COL_INK);draw_icon(px+14,91,(CardId)g.shop_cursor,COL_AMBER);text_at(px+44,88,COL_INK,CARD_DEF[g.shop_cursor].name);number_at(px+44,108,COL_DIM,L"보유%d",deck_count(g.shop_cursor));text_at(px-12,166,COL_DIM,L"좌우:선택  확인:결정  취소:닫기");return;}
     text_at(4,36,g.turn==1?COL_CYAN:COL_DIM,g.turn==1?(g.baud>=CARD_DEF[CARD_CHAT].cost?L"첫 응답 +1 / 지금 카드 1장을 고르세요":L"첫 응답 +1 / 다음에는 수신을 늘리세요"):L"구매 카드는 섞은 뒤 돌아옵니다.");
