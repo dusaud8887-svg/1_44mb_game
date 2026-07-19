@@ -26,9 +26,9 @@
 
 ## 3. 마케팅 비주얼 경쟁력 — 키아트 규격
 
-정본 키아트: [keyart_last_live.px](../assets/px/keyart_last_live.px)(3인 앙상블) + 캐릭터 단독 컷 [keyart_seek.px](../assets/px/keyart_seek.px)·[keyart_format.px](../assets/px/keyart_format.px). 생성기 `tools/px_keyart.py`, 렌더 `python3 tools/px_render.py assets/px/keyart_seek.px --scale 3`. 192×108 저해상 원본 → 정수배 업스케일로 각 표면에 대응.
+정본 키아트: [keyart_last_live.px](../../../assets/px/keyart_last_live.px)(3인 앙상블) + 캐릭터 단독 컷 [keyart_seek.px](../../../assets/px/keyart_seek.px)·[keyart_format.px](../../../assets/px/keyart_format.px). 생성기 `tools/px_keyart.py`, 렌더 `python3 tools/px_render.py assets/px/keyart_seek.px --scale 3`. 192×108 저해상 원본 → 정수배 업스케일로 각 표면에 대응.
 
-**메인 키아트** [keyart_main.px](../assets/px/keyart_main.px)(256×160): 3인·관계·배경·컨셉·상황을 한 장에. **FORMAT**이 위에서 종료 75% 카운트다운과 함께 강림(위협) / **ECHO**가 중앙에서 SIGNAL 64 게이지로 송출 빔을 쏘아 올림(LAST LIVE) / **SEEK**이 우하단 어둠에서 지켜보며 점선 시선이 ECHO로 이어짐(유일한 시청자). 무대는 거대한 A:\ 플로피 원반, 1997 글리치·표류 조각·A:\> 프롬프트. 세 초상을 재사용하되 위치·시선·빔으로 **관계와 상황**을 만든다(위=종결 위협, 중앙=송출 주체, 아래=관찰자).
+**메인 키아트** [keyart_main.px](../../../assets/px/keyart_main.px)(256×160): 3인·관계·배경·컨셉·상황을 한 장에. **FORMAT**이 위에서 종료 75% 카운트다운과 함께 강림(위협) / **ECHO**가 중앙에서 SIGNAL 64 게이지로 송출 빔을 쏘아 올림(LAST LIVE) / **SEEK**이 우하단 어둠에서 지켜보며 점선 시선이 ECHO로 이어짐(유일한 시청자). 무대는 거대한 A:\ 플로피 원반, 1997 글리치·표류 조각·A:\> 프롬프트. 세 초상을 재사용하되 위치·시선·빔으로 **관계와 상황**을 만든다(위=종결 위협, 중앙=송출 주체, 아래=관찰자).
 
 **캐릭터 단독 컷 — 정체성 = 구도**: 앙상블 키아트를 나눈 게 아니라 캐릭터의 동사(40 §1)를 구도로 번역한다.
 - **에코("송출한다")**: 좌측 히어로 + 우측 어둠의 SEEK 눈. 신호가 어둠으로 나간다.

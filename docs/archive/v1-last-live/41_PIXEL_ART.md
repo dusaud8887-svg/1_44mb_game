@@ -119,4 +119,4 @@ python3 tools/px_render.py assets/px/echo_16_a.px --emit-c                  # C 
 
 ### 마케팅 표면 (2026-07-15 추가)
 
-인게임 자산과 별개로 마케팅 키아트를 신설했다. 후킹 전략·마케팅 규격·픽셀 기법·AI 프롬프트 부록의 정본은 **[42_VISUAL_HOOK.md](42_VISUAL_HOOK.md)**. 키아트 소스는 [keyart_last_live.px](../assets/px/keyart_last_live.px)(192×108, 생성기 `tools/px_keyart.py`, 확장 9색 브랜드 팔레트 — 렌더 전용, `emit-c` 불가). 렌더러 `px_render.py`는 인게임 2bpp(인덱스 0..3) 규율은 그대로 두고, 팔레트 키 `1..9,a..f`를 렌더에만 허용하도록 확장했다.
+인게임 자산과 별개로 마케팅 키아트를 신설했다. 후킹 전략·마케팅 규격·픽셀 기법·AI 프롬프트 부록의 정본은 **[42_VISUAL_HOOK.md](42_VISUAL_HOOK.md)**. 키아트 소스는 [keyart_last_live.px](../../../assets/px/keyart_last_live.px)(192×108, 생성기 `tools/px_keyart.py`, 확장 9색 브랜드 팔레트 — 렌더 전용, `emit-c` 불가). 렌더러 `px_render.py`는 인게임 2bpp(인덱스 0..3) 규율은 그대로 두고, 팔레트 키 `1..9,a..f`를 렌더에만 허용하도록 확장했다.

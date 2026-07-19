@@ -1,12 +1,12 @@
 # 30 — 기술 설계와 구현 현황
 
-스택 결정의 근거 조사는 [archive/ECHO_144_FINAL_SPEC.md](archive/ECHO_144_FINAL_SPEC.md) §12에 동결. 이 문서는 **현재 코드 기준(as-built)** 정본이다.
+스택 결정의 근거 조사는 [archive/ECHO_144_FINAL_SPEC.md](../ECHO_144_FINAL_SPEC.md) §12에 동결. 이 문서는 **현재 코드 기준(as-built)** 정본이다.
 
 ## 1. 구현 현황 — 2026-07-14 실측
 
 | 항목 | 상태 |
 |---|---|
-| 소스 | [src/echo144.c](../src/echo144.c) 단일 파일 1,174줄 |
+| 소스 | [src/echo144.c](../../../src/echo144.c) 단일 파일 1,174줄 |
 | 릴리스 exe | **135,168 B** (한도 1,474,560 B의 9.2%) |
 | 의존 DLL | USER32, GDI32, WINMM, KERNEL32만 (`dumpbin /dependents` 통과) |
 | selftest | 전부 PASS — 결정론 리플레이, 9 NODE 풀런, 4빌드 경로, GO LIVE 조기/강제, 버스트/도장 경계값, 뮤트 합성 |

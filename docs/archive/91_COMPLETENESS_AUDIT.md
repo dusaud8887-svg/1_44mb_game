@@ -1,6 +1,8 @@
 # 91 — 게임 완성도 심층 감사
 
-기준일: 2026-07-17. 범위는 정본 `00~50`과 현재 V2 P1 코드·`balance.def`·selftest·30시드 SIM의 대조다. 이 문서는 스펙을 바꾸지 않으며, 구현 상태 정본은 [90_STATUS.md](90_STATUS.md)다.
+> **아카이브 — 2026-07-19.** 2026-07-17 시점의 일회성 완성도 감사다. 현행 구현 상태는 [90_STATUS.md](../90_STATUS.md), 남은 사람 검증 절차는 [52_PLAYTEST_PROTOCOL.md](../52_PLAYTEST_PROTOCOL.md)를 따른다.
+
+기준일: 2026-07-17. 범위는 정본 `00~50`과 현재 V2 P1 코드·`balance.def`·selftest·30시드 SIM의 대조다. 이 문서는 스펙을 바꾸지 않으며, 구현 상태 정본은 [90_STATUS.md](../90_STATUS.md)다.
 
 ## 1. 결론
 
@@ -76,7 +78,7 @@ SIM은 실제 ON AIR 루프와 PROGRAM 효과, 정책별 TX/RX를 실행하지�
 - 노아가 자기 플레이를 배웠다는 사실을 알아차리는가.
 - 세 색과 캐릭터 실루엣·카드 효과가 음소거 상태에서도 읽히는가.
 
-이 다섯 항목은 코드나 봇 결과로 PASS 처리하지 않는다. [50_PRODUCTION.md](50_PRODUCTION.md)의 5명 GV2/G3′가 완료 조건이다.
+이 다섯 항목은 코드나 봇 결과로 PASS 처리하지 않는다. [50_PRODUCTION.md](../50_PRODUCTION.md)의 5명 GV2/G3′가 완료 조건이다.
 
 ### 1인 실기 스모크 (2026-07-17)
 
@@ -86,7 +88,7 @@ SIM은 실제 ON AIR 루프와 PROGRAM 효과, 정책별 TX/RX를 실행하지�
 
 ### P0 — 다음 플레이테스트 전
 
-1. **GV2 5명 테스트**: DEV `playtest_v2.csv`와 [실행서](52_PLAYTEST_PROTOCOL.md)의 7문항·음소거 아트 판독을 함께 기록한다.
+1. **GV2 5명 테스트**: DEV `playtest_v2.csv`와 [실행서](../52_PLAYTEST_PROTOCOL.md)의 7문항·음소거 아트 판독을 함께 기록한다.
 2. **실기 밸런스 판정**: CLEAN_SIGNAL 생존률, CACHE/MARKER→SURGE 고점, 계약 위험을 사람 로그로 비교한다.
 3. **환경 게이트**: 한국어/영문 Windows와 읽기 전용 폴더에서 TODAY·저장 실패·오디오 실패를 확인한다.
 

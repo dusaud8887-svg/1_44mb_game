@@ -11,7 +11,7 @@
 | 한도 | 1,474,560바이트 (2026-07-14 실측 135,168B — 9.2%) |
 | 마감 | 내부 2026-09-01 / 공식 2026-09-04 (안전 운용 23:39) |
 
-이 문서는 문서군의 입구다. 규칙은 [10_MECHANICS.md](10_MECHANICS.md), 모든 수치는 [20_BALANCE.md](20_BALANCE.md), 구현은 [30_TECH.md](30_TECH.md), 표현은 [40_ART_AUDIO_TEXT.md](40_ART_AUDIO_TEXT.md), 일정·게이트·리스크는 [50_PRODUCTION.md](50_PRODUCTION.md)가 정본이다. 조사·의사결정 이력은 [archive/ECHO_144_FINAL_SPEC.md](archive/ECHO_144_FINAL_SPEC.md)에 동결한다. 문서 간 수치 중복을 금지한다 — 수치는 20에만 산다.
+이 문서는 문서군의 입구다. 규칙은 [10_MECHANICS.md](10_MECHANICS.md), 모든 수치는 [20_BALANCE.md](20_BALANCE.md), 구현은 [30_TECH.md](30_TECH.md), 표현은 [40_ART_AUDIO_TEXT.md](40_ART_AUDIO_TEXT.md), 일정·게이트·리스크는 [50_PRODUCTION.md](50_PRODUCTION.md)가 정본이다. 조사·의사결정 이력은 [archive/ECHO_144_FINAL_SPEC.md](../ECHO_144_FINAL_SPEC.md)에 동결한다. 문서 간 수치 중복을 금지한다 — 수치는 20에만 산다.
 
 ## 1. 제품 약속
 

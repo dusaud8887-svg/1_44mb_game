@@ -15,14 +15,13 @@ Windows 10/11용 1.44MB 덱빌딩 서바이버. 현재 빌드는 문서의 **V2 
 - [docs/40_ART_AUDIO_TEXT.md](docs/40_ART_AUDIO_TEXT.md) — V2 아트 바이블 (팔레트·캐릭터·사운드·텍스트)
 - [docs/41_PIXEL_ART.md](docs/41_PIXEL_ART.md) — 픽셀 제작 규격·파이프라인·작화 매뉴얼
 - [docs/42_VISUAL_HOOK.md](docs/42_VISUAL_HOOK.md) — 비주얼 후킹·마케팅
-- [docs/43_ART_COMPETITIVE_RESEARCH.md](docs/43_ART_COMPETITIVE_RESEARCH.md) — 2026 도구·커뮤니티 조사, 아트 감정·재설계·AI-slop 검수
 - [docs/45_UI_UX.md](docs/45_UI_UX.md) — UI/UX·화면 연출
-- [docs/46_UX_EVALUATION.md](docs/46_UX_EVALUATION.md) — UX 휴리스틱 평가·정보 설계 감사 (매직 넘버 7 등 UX 법칙 기준)
 - [docs/50_PRODUCTION.md](docs/50_PRODUCTION.md) — 일정·게이트·리스크
+- [docs/52_PLAYTEST_PROTOCOL.md](docs/52_PLAYTEST_PROTOCOL.md) — 사람 플레이테스트 실행·기록·판정 절차
 - [docs/90_STATUS.md](docs/90_STATUS.md) — 구현 상태 (SPEC/STATUS 분리)
 - [docs/adr/](docs/adr/) — 설계 결정 기록
 - [docs/CHANGELOG.md](docs/CHANGELOG.md) — 변경 이력
-- 동결 원문: [docs/archive/](docs/archive/) — V2 설계 통합본, 아트·비주얼 리팩터링, 1.44MB 레퍼런스 분석, V1 정본(v1-last-live/), 구 단일 스펙
+- 완료 기록·동결 원문: [docs/archive/](docs/archive/) — 완료된 아트·UX·완성도 감사, V2 설계 통합본, 1.44MB 레퍼런스 분석, V1 정본
 
 ## 빌드
 

@@ -99,7 +99,7 @@ MULTI 포커스 + 카드 효과 한 줄
 수정  → 새 시스템보다 정보·기본값·수치 순서로 최소 변경
 검증  → selftest + SIM + 같은 경로 Windows 실기
 판정  → 유지 / 되돌림 / 다음 한 축 수정
-기록  → 90_STATUS·91_COMPLETENESS_AUDIT·CHANGELOG 동기화
+기록  → 90_STATUS·CHANGELOG 동기화
 ```
 
 자동 SIM은 경제·덱·링의 도달 가능성을 거르고, 재미 PASS를 선언하지 않는다. 사람 테스트 전에는 CLEAN_SIGNAL의 생존 가치, Space+이동의 편안함, 노아 복제 자각, 3색 의미를 수치로 확정하지 않는다.

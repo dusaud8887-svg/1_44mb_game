@@ -31,8 +31,11 @@ V2 재설계의 원문(대화 통합본·결정 이력 전체)은 [archive/ECHO1
 | [42_VISUAL_HOOK.md](42_VISUAL_HOOK.md) | 비주얼 후킹·마케팅·키아트 |
 | [45_UI_UX.md](45_UI_UX.md) | UI/UX·화면 연출 — 레이아웃·카드 표시·타격감·접근성 |
 | [50_PRODUCTION.md](50_PRODUCTION.md) | 일정·go/no-go 게이트·리스크 |
+| [52_PLAYTEST_PROTOCOL.md](52_PLAYTEST_PROTOCOL.md) | 사람 플레이테스트 실행·기록·판정 절차 |
 | [90_STATUS.md](90_STATUS.md) | **구현 상태 정본** — 스펙과 상태를 섞지 않는다 |
+| [CHANGELOG.md](CHANGELOG.md) | 변경 이력 |
 | [adr/](adr/) | 아키텍처·설계 결정 기록 (왜 이렇게 되었는가) |
+| [archive/](archive/) | 완료된 감사·조사와 이전 버전 기록 (현행 정본 아님) |
 
 표기 규약 (원문 §0 승계 + 본 개정 추가):
 
