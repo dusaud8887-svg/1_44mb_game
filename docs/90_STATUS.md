@@ -17,7 +17,7 @@ verified_by: MSVC /W4 selftest + throughput 7x1000 + mortal 7x30 + reproducible 
 | 문서가 기술하는 게임 | **V2** (수동 편성·노아·3색 링) — 00~50 전체 |
 | V2 구현 | **W‑V2‑P1 기능 완결 + 코드 통합 아트 패스 플레이 가능.** 정본 P1 자동 게이트와 실제 Windows 화면 검수 완료. 사람 대상 GV2/G3′와 최종 Aseprite 원본 게이트는 미실시 |
 | 소스 | `echo144.c` unity 진입점 + `game.h/game.c/render.c/win32.c` 변경 이유별 분리 |
-| 릴리스 exe | 185,344B (2026-07-19, 상한의 12.6%, 결정론 2회 동일 SHA-256 `E9D9115450DB98F724213DDD8FED14EA6F11C67FBB8CD26CBCA6772476B27DCE`) |
+| 릴리스 exe | 185,344B (2026-07-19, 상한의 12.6%, 결정론 2회 동일 SHA-256 `F04A78CEAF6DED2134584572833EA1058FE2DCC874AA79BDBEC25A25A4BDC8D9`) |
 | 카드 수 | 13종: P0 8종 + MACRO / PREFETCH / MARKER / SURGE / CHECKSUM + NØA BOOST 계약 + DEFRAG SERVICE |
 | selftest | MSVC `/W4` PASS: P0 회귀 + P1 카드·킹덤·의도·시크·입력/접근성·링 전환·OC 컴파일 강도/4엔딩 + 무적 처리량 7정책×30/1,000 및 실제 피격 7정책×30. 복잡 엔진 고점과 CLEAN_SIGNAL 방어 우위 PASS, 조작 재미는 사람 검증 필요([91](91_COMPLETENESS_AUDIT.md) §4) |
 | 자산 | V2 수작업 PNG: 에코 24×24×10·표정 8종, 시크 아바타 24×24×8·표정 4종·셸 16×16×4, 노아 대리체 24×24×6·보스 48×64×3, 초상 64×64×3, 적 5종×2프레임, 카드 아이콘 13종, 직접 구성한 192×108 키아트 A~F. 로고 2종과 120×45·184×69·300×168·462×174·920×430·1232×706·748×896 수동 구도 마케팅 PNG를 함께 생성한다. 런타임은 4bpp 패킹 |

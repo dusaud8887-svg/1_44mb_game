@@ -150,10 +150,10 @@ static void draw_edit(void){
      art_blit(150,16,ART_ENEMY,160,nt*32,0,16,16);number_at(168,18,COL_DIM,L"x%d",3+g.turn/2);}
     if(g.turn==1){
         text_at(4,34,COL_BLUE,g.cards_cued[CARD_MULTI]?L"1. 방벽도 편성 -> 전투에서 공백":L"1. 분기 편성 -> 선택 +2");
-        text_at(4,50,COL_DIM,g.cards_cued[CARD_MULTI]?L"확인:방벽 편성 / 탭:송출":L"송신1 / 수신1 추천 적용");
+        text_at(4,50,COL_DIM,g.cards_cued[CARD_MULTI]?L"확인:방벽 편성 / 탭:전투":L"송신1 / 수신1 추천 적용");
     }
     else if(g.turn==2){text_at(4,34,COL_BLUE,L"2. 확인: 송신 공격 / 수신 구매");text_at(4,50,COL_DIM,L"다음 의도에 맞춰 모뎀을 바꾸세요");}
-    else if(g.turn==3){text_at(4,34,COL_BLUE,L"3. 탭 송출 / WASD 이동 / 공백 발동");}
+    else if(g.turn==3){text_at(4,34,COL_BLUE,L"3. 탭 전투 / WASD 이동 / 공백 발동");}
     else if(g.turn>=5){text_at(4,34,COL_DIM,L"노아가 학습 중:");text_at(126,34,COL_MAGENTA,CARD_DEF[g.trend_card].short_name);}
     if(g.new_ticks&&g.new_card){text_at(4,66,COL_CYAN,L"구매 카드 귀환:");text_at(126,66,COL_INK,CARD_DEF[g.new_card-1].short_name);}
     else if(g.message_ticks)text_at(4,50,COL_AMBER,L"버린 더미를 섞었습니다.");
@@ -164,7 +164,7 @@ static void draw_edit(void){
     number_at(4,132,COL_DIM,L"덱%d",g.deck.draw_n+g.deck.discard_n+g.deck.hand_n+(g.cached_card!=0));number_at(62,132,COL_DIM,L"뽑기%d",g.deck.draw_n);number_at(132,132,COL_DIM,L"버림%d",g.deck.discard_n);
     /* SEEK is a HUD invariant (docs 10 s15) but was never shown — surface its once-per-hand state. */
     text_at(210,132,g.seek_used?COL_DIM:COL_CYAN,g.seek_used?L"탐색 소진":L"탐색 가능");
-    text_at(4,145,COL_DIM,L"확인:배정  공백:탐색  탭:송출");
+    text_at(4,145,COL_DIM,L"확인:배정  공백:탐색  탭:전투");
     if(!g.cache_mode&&!g.prefetch_mode)draw_combat_build(4,64);
     if(!g.cache_mode&&!g.prefetch_mode)text_at(4,116,COL_INK,card_hint(g.deck.hand[g.cursor]));
     /* Hand widened to fill the roomier 400px layout — a Dominion hand should read at a glance. */
@@ -181,8 +181,8 @@ static void draw_air(void){
     rect(0,208,SCREEN_W*g.phase_ticks/ON_AIR_TICKS,1,COL_AMBER);
     if(g.mirror_label_ticks){text_at(4,211,COL_MAGENTA,L"노아 복제");text_at(4,224,COL_INK,CARD_DEF[g.mirror_card-1].short_name);}
     else if(g.message_ticks&&g.program_fired){text_at(4,211,COL_CYAN,L"송출");text_at(4,224,COL_INK,CARD_DEF[g.effect_card].short_name);}
-    else if(g.queue_at<g.queue_n){text_at(4,211,COL_DIM,g.turn<=3?L"WASD 이동":L"공백:송출");text_at(4,224,COL_CYAN,CARD_DEF[g.queue[g.queue_at]].short_name);}
-    else{text_at(4,211,COL_DIM,g.turn<=3?L"WASD 이동":L"공백:송출");text_at(4,224,COL_DIM,g.queue_n?L"편성 완료":L"편성 없음");}
+    else if(g.queue_at<g.queue_n){text_at(4,211,COL_DIM,g.turn<=3?L"WASD+공백":L"공백:송출");text_at(4,224,COL_CYAN,CARD_DEF[g.queue[g.queue_at]].short_name);}
+    else{text_at(4,211,COL_DIM,g.turn<=3?L"WASD+공백":L"공백:송출");text_at(4,224,COL_DIM,g.queue_n?L"편성 완료":L"편성 없음");}
     for(int i=0;i<g.queue_n;i++){int x=88+i*48;uint32_t c=i<g.queue_at?COL_DIM:i==g.queue_at?COL_INK:COL_CYAN;if(i)line(x-22,223,x-2,223,c);frame(x,211,38,24,c);number_at(x+2,216,c,L"%d",i+1);draw_icon(x+19,215,g.queue[i],c);if(i==g.queue_at)rect(x+2,212,34,2,COL_INK);}
     number_at(SCREEN_W-46,211,COL_INK,L"%d초",(g.phase_ticks+59)/60);
 }
